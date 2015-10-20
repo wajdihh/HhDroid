@@ -34,8 +34,7 @@ import com.hh.utility.PuUtils;
  *
  *
  */
-public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListener,
-		OnFocusChangeListener {
+public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListener,OnFocusChangeListener {
 
 
 	public static final int FLAG_AUTO_REQUERY = 0x01;
