@@ -170,9 +170,10 @@ public class TCell implements Cloneable {
         String lResult = "";
         try {
             if (_mValue != null){
-                if(_mValueType==ValueType.DATETIME)
+                if(_mValueType==ValueType.DATETIME){
                     lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
-                else
+                    System.out.println("Dans asString :"+_mName);
+                } else
                     lResult = _mValue;
             }
         } catch (Exception e) {
@@ -183,6 +184,7 @@ public class TCell implements Cloneable {
 
         if(_mCellType==CellType.CURRENCY)
             return lResult+" "+ HhDroid.getInstance().mCurrencySymbol;
+
 
         return lResult;
     }
@@ -210,7 +212,7 @@ public class TCell implements Cloneable {
         int lResult = -1;
 
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Integer.parseInt(_mValue);
 
         } catch (Exception e) {

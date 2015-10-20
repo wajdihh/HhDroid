@@ -202,7 +202,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
 
                         ((TextView) lWidget).setText(data.asString());
                     } else if (lWidget instanceof ImageView) {
-                        if (data.getValueType() == ValueType.INTEGER) {
+                        if (data.getValueType() == ValueType.INTEGER && !data.isEmpty()) {
                             ((ImageView) lWidget).setImageResource(data.asInteger());
                         } else {
                             if (!data.asString().equals(""))
