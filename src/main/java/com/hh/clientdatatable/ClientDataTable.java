@@ -1,0 +1,1200 @@
+package com.hh.clientdatatable;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+import com.hh.clientdatatable.TCell.ValueType;
+import com.hh.droid.R;
+import com.hh.listeners.MyCallback;
+import com.hh.listeners.OnCDTColumnListener;
+import com.hh.listeners.OnCDTStateListener;
+import com.hh.listeners.OnNotifyDataSetChangedListener;
+import com.hh.utility.PuException;
+import com.hh.utility.PuUtils;
+
+import java.util.*;
+
+/**
+ *
+ * @author WajdiHh
+ *
+ */
+public class ClientDataTable {
+
+	private final String TAG = "Client DataTable Content";
+	private final String TAG_Error="HhDroidError";
+
+	public enum SortType{/** Assendent*/ ASC,	/** Dessendent */	DESC}
+	public enum CDTStatus {DEFAULT,UPDATE, INSERT,DELETE};
+
+	// List of Rows
+	private ArrayList<TRow> _mListOfRows;
+	private ArrayList<TRow> _mListOfRowsBeforeDelete;
+	private TRow _mOldRow;
+	// List Of columns
+	private ArrayList<TColumn> _mListOfColumns;
+	private Context _mContext;
+	private int _mPosition;
+	private int _mTempIteration;
+	private int _mCursorSize;
+	private Resources _mRes;
+	private OnCDTStateListener _mOnCDTStateListener;
+	private SQLiteDatabase _mSqliteDataBase;
+	private String _mTableName;
+	private String _mCDTName="";
+	private StringBuffer _mWhereClause;
+	private String[] _mWhereClauseColumns;
+	private Cursor _mCursor;
+	private CDTStatus _mCDTStatus=CDTStatus.DEFAULT;
+	private ArrayList<TRow> _mListTempSortOfRows;
+	private TCell _mCellHowValueChanged;
+	private boolean _mIsExecInDateBase;
+	private boolean mIsCdtSorted;
+	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
+
+	{
+		_mListOfRows = new ArrayList<TRow>();
+		_mListOfColumns = new ArrayList<TColumn>();
+		_mPosition = -1;
+		_mTempIteration=-1;
+		_mCursorSize = -1;
+		mIsCdtSorted=false;
+	}
+
+	public ClientDataTable(Context pContext) {
+		_mContext = pContext;
+		_mRes = pContext.getResources();
+	}
+
+	public ClientDataTable(Context pContext,SQLiteDatabase pSqliteDataBase,
+						   String pTableName,String[] pWhereClauseColumns) {
+		_mContext = pContext;
+		_mRes = pContext.getResources();
+		_mSqliteDataBase=pSqliteDataBase;
+		_mTableName=pTableName;
+		_mWhereClauseColumns=pWhereClauseColumns;
+
+		if(pSqliteDataBase==null)
+			PuUtils.showMessage(_mContext, "Errueur Base de donn�e", "La base de donn�es est NULL");
+		if(_mTableName==null && _mTableName.equals(""))
+			PuUtils.showMessage(_mContext, "Errerur de table", "La table est non mentionn�e");
+
+		if(pWhereClauseColumns!=null && pWhereClauseColumns.length!=0){
+
+			_mWhereClause=new StringBuffer();
+			_mWhereClause.append(pWhereClauseColumns[0]+"= ?");
+
+			for (int i = 1; i < pWhereClauseColumns.length; i++)
+				_mWhereClause.append("AND "+pWhereClauseColumns[i]+"= ?");
+		}
+	}
+
+	public Context getContext(){
+		return _mContext;
+	}
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		_mContext = null;
+		if(_mCursor!=null){
+			_mCursor.close();
+			_mCursor=null;
+		}
+	}
+
+	public void setName(String pName){
+		_mCDTName=pName;
+	}
+	public String getName(){
+		return _mCDTName;
+	}
+	public CDTStatus getCDTStatus(){
+		return _mCDTStatus;
+	}
+
+	public boolean isConnectedToDB(){
+		if(_mSqliteDataBase!=null && !_mTableName.isEmpty() && _mIsExecInDateBase)
+			return true;
+		return false;
+	}
+
+	public Cursor getCursor(){
+		return _mCursor;
+	}
+	public TRow getCurrentRow(){
+		return _mListOfRows.get(_mPosition);
+	}
+
+
+	public void append(){
+		append(new TRow(_mContext,_mCDTStatus,getListOfColumns()));
+	}
+
+	public void append(TRow row){
+
+		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeInsert();
+
+		if(_mCDTStatus==CDTStatus.DEFAULT){
+			_mCDTStatus=CDTStatus.INSERT;
+			addRow(row);
+			_mPosition=_mListOfRows.size()-1;
+		}
+	}
+
+	public void delete(){
+		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeDelete();
+
+		if(_mCDTStatus==CDTStatus.DEFAULT){
+
+			_mCDTStatus=CDTStatus.DELETE;
+			if(_mListOfRowsBeforeDelete==null)
+				_mListOfRowsBeforeDelete=new ArrayList<>();
+		}
+
+		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
+	}
+
+
+	public void edit(){
+
+		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeEdit();
+
+		if(_mCDTStatus==CDTStatus.DEFAULT){
+
+			_mCDTStatus=CDTStatus.UPDATE;
+
+			getCurrentRow().memorizeValues();
+
+			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
+		}
+	}
+
+	/**
+	 * permet de faire un clone dela liste des celles ( prb des references)
+	 * @param list
+	 * @return
+	 */
+
+	private ArrayList<TCell> cloneListOfCells(List<TCell> list) {
+		ArrayList<TCell> clone = new ArrayList<TCell>(list.size());
+		for(TCell item: list)
+			try {
+				clone.add(item.clone());
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
+			}
+		return clone;
+	}
+
+	private void clearOldListOfbeforeDelete(){
+		if(_mListOfRowsBeforeDelete!=null)
+			_mListOfRowsBeforeDelete.clear();
+
+		_mListOfRowsBeforeDelete = null;
+	}
+
+	private void validate(boolean pIsUserCDTListener,boolean pIsExecInDateBase,MyCallback pCallback){
+
+		_mIsExecInDateBase=pIsExecInDateBase;
+		if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
+			if(getRowsCount()==0){
+				PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
+				return;
+			}
+
+		// if we have set CDTListener and the data is not valid return
+		if(_mOnCDTStateListener!=null &&  !_mOnCDTStateListener.onBeforeValidate()){
+			if(pCallback!=null ) pCallback.onError("");
+			return;
+		}
+
+
+		if(pIsExecInDateBase && isConnectedToDB())
+			if(_mSqliteDataBase.isOpen())
+				commitIntoDataBase(false);
+			else
+				PuUtils.showMessage(_mContext, "Erreur Data base", "La base de donnees est close");
+
+		commitIntoCDT(pIsUserCDTListener);
+		_mCDTStatus=CDTStatus.DEFAULT;
+
+		if(_mCellHowValueChanged!=null)
+			_mCellHowValueChanged.setValueChanged(false);
+
+		if(_mOnCDTStateListener!=null)
+			_mOnCDTStateListener.onAfterValidate();
+
+		if(pCallback!=null ) pCallback.onSuccess("");
+
+		if(pIsExecInDateBase)
+			clearOldListOfbeforeDelete();
+
+
+		if (_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty())
+			System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfRowsBeforeDelete.size());
+
+		if(_mOnNotifyDataSetChangedListener!=null)
+			_mOnNotifyDataSetChangedListener.notifyValueChanged();
+	}
+	/**
+	 * Apply changes on Date base (if connected) and refresh the layout with the new values
+	 */
+	public void commit(){
+		validate(false,false,null);
+	}
+
+	public void commitObserve(){
+		validate(true,false,null);
+	}
+
+	public void execute(){
+		validate(false,true,null);
+	}
+
+	public void executeObserve(){
+		validate(true,true,null);
+	}
+	public void commit(MyCallback pCallback){
+		validate(false,false,pCallback);
+	}
+
+	public void commitObserve(MyCallback pCallback){
+		validate(true,false,pCallback);
+	}
+
+	public void execute(MyCallback pCallback){
+		validate(false,true,pCallback);
+	}
+
+	public void executeObserve(MyCallback pCallback){
+		validate(true, true, pCallback);
+	}
+
+	public void revert(){
+
+		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeRevert();
+
+		switch (_mCDTStatus){
+			case INSERT:
+				_mListOfRows.remove(_mPosition);
+				_mCDTStatus=CDTStatus.DEFAULT;
+				break;
+
+			case UPDATE:
+				getCurrentRow().revertOldValues();
+				_mCDTStatus=CDTStatus.DEFAULT;
+				break;
+
+			case DELETE:
+				if(_mOldRow!=null) {
+					_mListOfRows.add(_mOldRow);
+					_mOldRow.getCells().clear();
+					_mOldRow = null;
+				}
+				_mCDTStatus=CDTStatus.DEFAULT;
+				break;
+		}
+
+		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onAfterRevert();
+		clearOldListOfbeforeDelete();
+	}
+
+
+	/**
+	 * Apply changes on Date base (if connected) , used when we set the _mIsTemporaryIgnoreDatabase to true
+	 */
+	public void executeAll(CDTStatus pCDTStatus){
+
+		saveCDTChangesIntoDatabase(false, pCDTStatus);
+	}
+
+	public void executeObserveAll(CDTStatus pCDTStatus){
+
+		saveCDTChangesIntoDatabase(true, pCDTStatus);
+	}
+
+	private void saveCDTChangesIntoDatabase(boolean isUseCDTListener,CDTStatus pCDTStatus){
+
+		_mCDTStatus=pCDTStatus;
+		_mIsExecInDateBase=true;
+
+		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfRowsBeforeDelete==null|| _mListOfRowsBeforeDelete.isEmpty()))
+			if(getRowsCount()==0){
+				PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
+				return;
+			}
+
+		if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (_mCDTStatus==CDTStatus.INSERT || _mCDTStatus==CDTStatus.UPDATE)){
+			int size = _mListOfRows.size();
+			for (int i = 0; i < size; i++){
+
+				moveToPosition(i);
+				commitIntoDataBase(true);
+
+				if(_mOnCDTStateListener!=null && isUseCDTListener)
+					if(_mCDTStatus==CDTStatus.INSERT)
+						_mOnCDTStateListener.onAfterInsert();
+
+					else if(_mCDTStatus==CDTStatus.UPDATE)
+						_mOnCDTStateListener.onAfterEdit(_mOldRow,getCurrentRow());
+			}
+
+
+			if (_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty()) {
+				// on doit vider le CDT actuel, et le remplir par le temporaire, car on a des traitement comme cellByName si on fait pas comme
+				// Ca il va retourner 0 comme taille
+				_mListOfRows.clear();
+				_mListOfRows.addAll(_mListOfRowsBeforeDelete);
+				clearOldListOfbeforeDelete();
+
+				size = _mListOfRows.size();
+				for (int i = 0; i < size; i++){
+					moveToPosition(i);
+					deleteRowDataBase(getCurrentRow());
+					if(_mOnCDTStateListener!=null && isUseCDTListener) _mOnCDTStateListener.onAfterDelete(getCurrentRow());
+				}
+			}
+
+			_mCDTStatus=CDTStatus.DEFAULT;
+
+			if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
+
+		}else
+			PuUtils.showMessage(_mContext, "Erreur Data base", "La base de donn�es est ferm�");
+	}
+
+
+	private void commitIntoCDT(boolean pIsUseCDTListener){
+
+		switch (_mCDTStatus) {
+			case INSERT:
+				// Pas besoin car on l a deja dans l Append()
+				//_mListOfRows.add(new TRow(_mContext, _mCDTStatus, getColumnsCount()));
+
+				if(_mOnCDTStateListener!=null && pIsUseCDTListener) _mOnCDTStateListener.onAfterInsert();
+				break;
+			case DELETE:
+				if(_mOnCDTStateListener!=null && pIsUseCDTListener) _mOnCDTStateListener.onAfterDelete(getCurrentRow());
+				_mListOfRowsBeforeDelete.add(getCurrentRow());
+				_mListOfRows.remove(_mPosition);
+				if (_mPosition == getRowsCount()){
+					_mPosition--;
+				}
+
+				_mTempIteration=-1;
+				break;
+
+			case UPDATE:
+
+				if(_mOnCDTStateListener!=null && pIsUseCDTListener && isValuesChanged()) _mOnCDTStateListener.onAfterEdit(_mOldRow, getCurrentRow());
+				if(_mOldRow!=null) {
+					_mOldRow.getCells().clear();
+					_mOldRow = null;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	private void commitIntoDataBase(boolean pInsertIfNotUpdated){
+
+		switch (_mCDTStatus) {
+			case INSERT:
+				insertInDB();
+				break;
+			case UPDATE:
+				updateInDB(pInsertIfNotUpdated);
+				break;
+			case DELETE:
+				deleteFromDB();
+				break;
+			case DEFAULT:
+				PuUtils.showMessage(_mContext, "No commit", "Acun changement n'est applique car le mode est DEFAULT");
+				break;
+			default:
+				break;
+		}
+	}
+
+	private void insertInDB(){
+
+		ContentValues lValues=new ContentValues();
+
+		int lSize=_mListOfColumns.size();
+
+		for (int i = 0; i <lSize; i++) {
+
+			TColumn column=_mListOfColumns.get(i);
+			String lColumnName=column.getName();
+
+			TCell lCell=cellByName(lColumnName);
+			String lColumnValue=lCell.asValue();
+
+			if(column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB || column.getColumnType()== TColumn.ColumnType.PrimaryKey || lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
+				continue;
+
+
+			lValues.put(lColumnName, lColumnValue);
+		}
+		if(lValues.size()==0){
+			PuUtils.showMessage(_mContext, "Erreur insertion", "Acune valeur definie pour inserer");
+			return;
+		}
+
+		_mSqliteDataBase.insertOrThrow(_mTableName, null, lValues);
+	}
+
+	private void updateInDB(boolean pInsertIfNotUpdated){
+
+		if(_mWhereClause!=null){
+
+			ContentValues lValues=new ContentValues();
+			String[] lArgs=new String[_mWhereClauseColumns.length];
+			int lSize=_mListOfColumns.size();
+
+			for (int i = 0; i <lSize; i++) {
+
+
+				TColumn column=_mListOfColumns.get(i);
+				String lColumnName=column.getName();
+				TCell lCell=cellByName(lColumnName);
+				String lColumnValue=lCell.asValue();
+
+				if(column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB || column.getColumnType()== TColumn.ColumnType.PrimaryKey || lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
+					continue;
+
+				lValues.put(lColumnName, lColumnValue);
+			}
+
+
+			for (int i = 0; i < _mWhereClauseColumns.length; i++) {
+
+				if(indexOfColumn(_mWhereClauseColumns[i])==-1){
+					PuUtils.showMessage(_mContext, "Erreur Column", "Column "+_mWhereClauseColumns[i]+" de clause Where  " +
+							"n'est pas une column de client data table :"+_mCDTName);
+					return;
+				}else if(lValues.containsKey(_mWhereClauseColumns[i])){
+					PuUtils.showMessage(_mContext, "Erreur Column", "impossible de definir la colonne "+
+							_mWhereClauseColumns[i]+" de clause Where comme colonne a modifier dans le CDT:"+_mCDTName);
+					return;
+				}
+				TCell lCell=cellByName(_mWhereClauseColumns[i]);
+				lArgs[i]=lCell.asString();
+
+			}
+
+
+			if(lValues.size()!=0){
+				int resultUpdate=_mSqliteDataBase.update(_mTableName, lValues, _mWhereClause.toString(),lArgs);
+				// If updated fails so row is not existe, so we must to add It
+				if(pInsertIfNotUpdated && resultUpdate==0)
+					_mSqliteDataBase.insertOrThrow(_mTableName,null,lValues);
+			}
+
+
+		}else
+			PuUtils.showMessage(_mContext, "Erreur Update", "Clause where non definit");
+	}
+
+	private void deleteFromDB(){
+		deleteRowDataBase(getCurrentRow());
+	}
+
+	private void deleteRowDataBase(TRow pTRow){
+
+		if(_mWhereClause!=null){
+
+			String[] lArgs=new String[_mWhereClauseColumns.length];
+
+			for (int i = 0; i < _mWhereClauseColumns.length; i++) {
+				TCell lCell=pTRow.cellByName(_mWhereClauseColumns[i]);
+
+				lArgs[i]=lCell.asString();
+				if(lCell.asString().equals(""))
+					PuUtils.showMessage(_mContext, "Erreur delete", "Valeur vide pour la clé de suppression :"+_mWhereClauseColumns[i]);
+			}
+
+			_mSqliteDataBase.delete(_mTableName, _mWhereClause.toString(), lArgs);
+		}else
+			PuUtils.showMessage(_mContext, "Erreur delete", "Clause where non definit");
+	}
+	/**
+	 * Test if the C data table is empty
+	 *
+	 * @return false/true
+	 */
+	public boolean isEmpty() {
+		if (_mListOfRows.size() > 0)
+			return false;
+		return true;
+	}
+
+	/**
+	 * Cette methode permet d intaliser le cdt pour l itération
+	 * par exemple dans une interation avec une boucle si on met un break, donc notre CDT ne va pas continuer jusqu'au bout
+	 * du coup on aura pas une intilisation de tempIteration dans la fonction moveToPosition
+	 */
+	public void initForIterate(){
+		_mTempIteration=-1;
+	}
+	/**
+	 * iterate the CDT, must user moveToFisrt Before the wihle LOOP
+	 *
+	 * NE JAMAIS METTRE UN BREAK DAANS Iterate, si c'est le cas, ajouter initForIterate()
+	 */
+	public boolean iterate() {
+		if(_mTempIteration==-1){
+			_mTempIteration=_mPosition;
+			_mPosition=-1;
+		}
+
+		return moveToPosition(_mPosition + 1);
+	}
+	/**
+	 * Move to next row
+	 */
+	public boolean moveToNext() {
+		return moveToPosition(_mPosition + 1);
+	}
+
+	/**
+	 * Move to the previous row.
+	 */
+	public boolean moveToPrevious() {
+		return moveToPosition(_mPosition -1);
+	}
+
+	/**
+	 * Move to row position at pIndex
+	 *
+	 * @param pIndex
+	 * @return true if moved
+	 */
+	public boolean moveToPosition(int pIndex) {
+
+		final int count = getRowsCount();
+		if (pIndex >= count) {
+			_mPosition = count;
+
+			if(_mTempIteration!=-1){
+				_mPosition=_mTempIteration;
+				_mTempIteration=-1;
+			}
+			return false;
+		}
+		if (pIndex < 0) {
+			_mPosition = -1;
+			return false;
+		}
+
+		if (pIndex == _mPosition) {
+			return true;
+		}
+
+		_mPosition = pIndex;
+		return true;
+	}
+
+	/**
+	 * Sort the client data table with priority of columns passed in parametres
+	 *
+	 * @param pListOfSortedColumnsNames
+	 * @param TRowSortOrder
+	 *            : The order of Sort ASSENDING or Decedding
+	 */
+	public void sort(LinkedHashMap<String, SortType> pListOfSortedFieldName) {
+
+		if (_mListTempSortOfRows == null)
+			_mListTempSortOfRows = new ArrayList<TRow>(_mListOfRows);
+
+		if (!pListOfSortedFieldName.isEmpty())
+			Collections.sort(_mListOfRows, TRowComparator.getInstance(pListOfSortedFieldName));
+
+		mIsCdtSorted=true;
+
+	}
+
+	/**
+	 * Permet d'annuler le trie sur tous les champs de CDS
+	 *  @author Wajdi Hh : 01/11/2013
+	 */
+	public void cancelAllSort(){
+		_mListOfRows.clear();
+		_mListOfRows.addAll(_mListTempSortOfRows);
+
+		mIsCdtSorted=false;
+
+	}
+
+	/**
+	 * Check if column passed on param contains value
+	 *
+	 * @param pColumnName
+	 * @param pValue
+	 * @return true if column contains / false else
+	 */
+	public boolean isColumnContains(String pColumnName, String pValue) {
+
+		boolean lIsContains = false;
+		int lColumnIndex = indexOfColumn(pColumnName);
+		if (lColumnIndex != -1) {
+			ArrayList<TCell> lColumnCells = getColumnCells(lColumnIndex);
+			int lCellsSize = lColumnCells.size();
+			for (int i = 0; i < lCellsSize; i++) {
+				if (lColumnCells.get(i).asString().equalsIgnoreCase(pValue)) {
+					lIsContains = true;
+					break;
+				}
+			}
+		}
+		return lIsContains;
+	}
+
+	public boolean isColumnContains(String pColumnName, boolean pValue) {
+
+		boolean lIsContains = false;
+		int lColumnIndex = indexOfColumn(pColumnName);
+		if (lColumnIndex != -1) {
+			ArrayList<TCell> lColumnCells = getColumnCells(lColumnIndex);
+			int lCellsSize = lColumnCells.size();
+			for (int i = 0; i < lCellsSize; i++) {
+				if (lColumnCells.get(i).asBoolean()==pValue) {
+					lIsContains = true;
+					break;
+				}
+			}
+		}
+		return lIsContains;
+	}
+
+	/**
+	 * return the index of the column Name if existe , else return -1
+	 *
+	 * @param pColumnName
+	 * @return index of columnName
+	 */
+	public int indexOfColumn(String pColumnName) {
+
+		int lIndex = -1;
+		int lColumnNumber = getColumnsCount();
+		for (int i = 0; i < lColumnNumber; i++) {
+			if (_mListOfColumns.get(i).getName().equalsIgnoreCase(pColumnName)) {
+				lIndex = i;
+				break;
+			}
+		}
+		return lIndex;
+	}
+
+	/**
+	 * get cell by Name
+	 *
+	 * @param pCellName
+	 * @return the cell
+	 */
+	public TCell cellByName(String pCellName) {
+
+		// TODO a optimiser a faire getCurrentRow.getCells(posCell)
+		if(getRowsCount()==0) {
+			PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
+			return new TCell();
+		}
+
+		TCell lResult;
+		if(isConnectedToDB())
+			lResult=new TCell(_mContext,ValueType.TEXT, _mCDTStatus,pCellName);
+		else
+			lResult=new TCell();
+
+		int lColumnSize = getColumnsCount();
+		boolean lIsCellFound=false;
+		for (int i = 0; i < lColumnSize && getRowsCount() != 0; i++) {
+			if (_mListOfColumns.get(i).getName().equalsIgnoreCase(pCellName)) {
+				lResult = getCell(_mPosition, i);
+				lResult.setCDTStatus(_mCDTStatus);
+				lResult.setValueType(_mListOfColumns.get(i).getValueType());
+				lResult.setOnCDTColumnListener(_mListOfColumns.get(i).getCDTColumnListener());
+				lIsCellFound=true;
+				break;
+			}
+
+		}
+		if(!lIsCellFound)
+			PuUtils.showMessage(_mContext, "Wrong cell Name","There no cellName called :"+pCellName);
+
+		return lResult;
+	}
+
+	/**
+	 * Get the SUM of the cells Column IF THE TYPE is a NUMBER,else the asFloat
+	 * will return 0 and the Sum will be 0
+	 *
+	 * @param pColumnName
+	 * @return Sum of CELLS
+	 */
+	public float getSumOfColumnValues(String pColumnName) {
+
+		float lResult = 0;
+		int lColumnIndex = indexOfColumn(pColumnName);
+		if (lColumnIndex != -1) {
+			ArrayList<TCell> lColumnCells = getColumnCells(lColumnIndex);
+			int lCellsSize = lColumnCells.size();
+
+			for (int i = 0; i < lCellsSize; i++) {
+				float lCellValue = lColumnCells.get(i).asFloat();
+				if (lCellValue != -1)
+					lResult += lCellValue;
+
+			}
+		}
+		return lResult;
+	}
+
+	public void requery(){
+
+		if(isConnectedToDB() && _mCursor!=null && !mIsCdtSorted){
+			_mCursor.requery();
+			fillFromCursor(_mCursor);
+		}else{
+			ArrayList<TRow> temp=new ArrayList<>();
+			temp.addAll(_mListOfRows);
+			_mListOfRows.clear();
+			_mListOfRows.addAll(temp);
+			temp.clear();
+			temp=null;
+		}
+
+	}
+
+	public void fillFromTable(String pSQLCommand){
+
+		_mCursor= _mSqliteDataBase.rawQuery(pSQLCommand, null);
+
+		try {
+			_mCursor.moveToFirst();
+			fillFromCursor(_mCursor);
+		} finally {
+
+		}
+		Log.i("fillFromTable", " Count :" + _mCursor.getCount());
+	}
+
+	/**
+	 * Fill the client Data table from an Android Cursor Database
+	 *
+	 * @param pCursor
+	 */
+	public void fillFromCursor(Cursor pCursor) {
+
+		_mCursor=pCursor;
+		_mCursorSize = pCursor.getCount();
+		_mListOfRows.clear();
+		_mListOfRows.ensureCapacity(_mCursorSize);
+
+		String[] lCursorColumnsNames = pCursor.getColumnNames();
+		int lNbrColumnsCDT = getColumnsCount();
+
+		int lNbrColumnsCursor = lCursorColumnsNames.length;
+
+		if (lNbrColumnsCDT == 0) {
+			for (int i = 0; i < lNbrColumnsCursor; i++) {
+				_mListOfColumns.add(new TColumn(lCursorColumnsNames[i],ValueType.TEXT));
+			}
+		}
+		if (_mCursorSize > 0) {
+
+			pCursor.moveToFirst();
+			_mPosition = 0;
+			while (!pCursor.isAfterLast()) {
+				TRow lRow = new TRow();
+
+				if (lNbrColumnsCDT > 0) {
+					for (int i = 0; i < lNbrColumnsCDT; i++) {
+						boolean lIsColumnFound=false;
+						TColumn lColumn = _mListOfColumns.get(i);
+						for (int j = 0; j < lNbrColumnsCursor; j++) {
+							if (lColumn != null && lColumn.getName().equals(lCursorColumnsNames[j])) {
+								lRow.addCell(_mContext,pCursor.getString(j),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),_mCDTStatus,lColumn.getCDTColumnListener());
+								lIsColumnFound=true;
+								break;
+							}
+						}
+						if(!lIsColumnFound) {
+							assert lColumn != null;
+							lRow.addCell(_mContext,_mRes.getString(R.string.cst_notInCursor),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),_mCDTStatus,lColumn.getCDTColumnListener());
+						}
+					}
+				} else {
+					for (int i = 0; i < lNbrColumnsCursor; i++) {
+						String lColumnName = lCursorColumnsNames[i];
+						if (lColumnName != null && !lColumnName.equals(""))
+							lRow.addCell(_mContext,pCursor.getString(i), ValueType.TEXT, TCell.CellType.NONE,lColumnName,_mCDTStatus,null);
+					}
+				}
+				_mListOfRows.add(lRow);
+				pCursor.moveToNext();
+			}
+		}
+		Log.i("fillFromCursor", " Count :" + _mCursorSize);
+	}
+
+	/**
+	 * Clear ClientDataTable Content
+	 */
+	public void clear() {
+		_mCursorSize = -1;
+		_mListOfRows.clear();
+	}
+	/**
+	 * Clear ClientDataTable Content And table
+	 */
+	public void clearAndExecute() {
+		_mCursorSize = -1;
+		_mListOfRows.clear();
+
+		_mIsExecInDateBase=true;
+		if(isConnectedToDB()){
+			_mSqliteDataBase.delete(_mTableName,null,null);
+			_mIsExecInDateBase=false;
+		}
+	}
+
+	/**
+	 * Returns whether the Client Data table is pointing to the last row.
+	 *
+	 * @return
+	 */
+	public boolean isLast() {
+		return (_mPosition == getRowsCount() - 1);
+	}
+
+	/**
+	 * Returns whether the Client Data table is pointing to the first row.
+	 *
+	 * @return
+	 */
+	public boolean isFirst() {
+		return (_mPosition == 0);
+	}
+
+	/**
+	 * get the current position of the ClientDataTable
+	 *
+	 * @return
+	 */
+	public int getPosition() {
+		return _mPosition;
+	}
+
+	/**
+	 * Move the CDT to the first Row
+	 */
+	public boolean moveToFirst() {
+		return moveToPosition(0);
+	}
+
+	/**
+	 * Move the CDT to the last Row
+	 */
+	public boolean moveToLast() {
+		return moveToPosition(getRowsCount()-1);
+	}
+
+
+	/**
+	 * Check if the CDT is AfterLast row
+	 *
+	 * @return
+	 */
+	public boolean isAfterLast() {
+		if (getRowsCount() == 0) {
+			return true;
+		}
+		return _mPosition == getRowsCount();
+	}
+
+	/**
+	 * allows to add a column
+	 *
+	 * @param pColumn
+	 */
+	public void addColumn(TColumn pColumn) {
+
+		_mListOfColumns.add(pColumn);
+	}
+
+	/**
+	 * Add Columns with name and Type
+	 *
+	 * @param pName
+	 * @param pType
+	 */
+	public void addColumn(String pName, ValueType pType) {
+
+		_mListOfColumns.add(new TColumn(pName, pType));
+	}
+
+	public void addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType) {
+
+		_mListOfColumns.add(new TColumn(pName, pType,pColumnType));
+	}
+
+	public void addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType,OnCDTColumnListener pListener) {
+
+		_mListOfColumns.add(new TColumn(pName, pType,pColumnType,pListener));
+	}
+
+
+	public void addColumn(String pName, ValueType pType,OnCDTColumnListener pListener) {
+
+		_mListOfColumns.add(new TColumn(pName, pType, TCell.CellType.NONE,pListener));
+	}
+	public void addColumn(String pName, ValueType pType,TCell.CellType pCellType) {
+
+		_mListOfColumns.add(new TColumn(pName, pType,pCellType,null));
+	}
+	public void addColumn(String pName, ValueType pType,TCell.CellType pCellType,OnCDTColumnListener pListener) {
+
+		_mListOfColumns.add(new TColumn(pName, pType,pCellType,pListener));
+	}
+	/**
+	 * allows to add a Row
+	 *
+	 * @param pColumn
+	 */
+	public void addRow(TRow pRow) {
+
+		_mListOfRows.add(pRow);
+	}
+
+	/**
+	 * Add row from values with differents type : boolean, String etc...
+	 *
+	 * @param values
+	 */
+	public void addRowFromValues(Object... values) {
+
+		Iterator<TColumn> columnIt = _mListOfColumns.listIterator();
+		TRow lRow = new TRow();
+
+		for (int i = 0; i < values.length && columnIt.hasNext(); i++) {
+
+			TColumn lCol = columnIt.next();
+			if(_mSqliteDataBase==null)
+				lRow.addCell(_mContext,values[i], lCol.getValueType(),lCol.getCellType(),lCol.getName(),_mCDTStatus,lCol.getCDTColumnListener());
+			else
+				lRow.addCell(_mContext,values[i], lCol.getValueType(),lCol.getCellType(),lCol.getName(),_mCDTStatus,lCol.getCDTColumnListener());
+		}
+
+		addRow(lRow);
+	}
+
+	/**
+	 * Return the number of Columns
+	 *
+	 * @return
+	 */
+	public int getColumnsCount() {
+		return _mListOfColumns.size();
+	}
+
+	/**
+	 * Return the number of rows
+	 *
+	 * @return
+	 */
+	public int getRowsCount() {
+
+		return _mListOfRows.size();
+	}
+	/**
+	 * Return the liste of columns
+	 * @return
+	 */
+	public ArrayList<TColumn> getListOfColumns(){
+		return _mListOfColumns;
+	}
+	/**
+	 * Return the liste of rows
+	 * @return
+	 */
+	public ArrayList<TRow> getListOfRows(){
+		return _mListOfRows;
+	}
+
+	/**
+	 * Retun an array of Column content
+	 * @param pFieldName
+	 * @return
+	 */
+	public ArrayList<String> values(String pFieldName){
+		ArrayList<String> list=new ArrayList<>();
+		for (TRow row:_mListOfRows){
+			list.add(row.cellByName(pFieldName).asString());
+		}
+		return list;
+	}
+	/**
+	 * Retrun List of cells of column X
+	 *
+	 * @param pColumnIndex
+	 * @return List of Cells
+	 */
+	public ArrayList<TCell> getColumnCells(int pColumnIndex) {
+
+		ArrayList<TCell> lListOfCells = new ArrayList<TCell>(getRowsCount());
+
+		for (TRow row : _mListOfRows) {
+			lListOfCells.add(row.getCell(pColumnIndex));
+		}
+
+		return lListOfCells;
+	}
+
+	/**
+	 * Return a Cell from the table
+	 *
+	 * @param pRowIndex
+	 * @param pColumnIndex
+	 * @return
+	 */
+	public TCell getCell(int pRowIndex, int pColumnIndex) {
+		return _mListOfRows.get(pRowIndex).getCell(pColumnIndex);
+	}
+
+	/**
+	 * Set Cell on the table
+	 *
+	 * @param pRowIndex
+	 * @param pColumnIndex
+	 * @param pCell
+	 * @throws PuException
+	 * @throws IndexOutOfBoundsException
+	 */
+	public void setCell(int pRowIndex, int pColumnIndex, TCell pCell)
+			throws PuException, IndexOutOfBoundsException {
+
+		TRow row = _mListOfRows.get(pRowIndex);
+
+		if (!row.getCell(pColumnIndex).getValueType()
+				.equals(pCell.getValueType())) {
+			throw new PuException(_mContext,
+					"New cell value type does not match expected value type."
+							+ " Expected type: "
+							+ row.getCell(pColumnIndex).getValueType()
+							+ " but was: " + pCell.getValueType());
+		}
+		row.setCell(pColumnIndex, pCell);
+	}
+
+	public void addCell(int pRowIndex, int pColumnIndex, TCell pCell) {
+		_mListOfRows.get(pRowIndex).setCell(pColumnIndex, pCell);
+	}
+
+
+	public boolean isValuesChanged(){
+
+		if(_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty())
+			return true;
+
+		boolean isChanged=false;
+		for (TColumn column:_mListOfColumns){
+			for (TRow row :_mListOfRows){
+				TCell cell=row.cellByName(column.getName());
+				if(cell.isValueChanged()){
+					isChanged=true;
+					_mCellHowValueChanged=cell;
+					break;
+				}
+			}
+			if(isChanged)
+				break;
+		}
+		return isChanged;
+	}
+	/**
+	 * Returns a new data table, with the same data and metadata as this one.
+	 * Any change to the returned table should not change this table and vice
+	 * versa. This is a deep clone.
+	 *
+	 * @return The cloned data table.
+	 */
+	public ClientDataTable clone() {
+
+		ClientDataTable lResult = new ClientDataTable(_mContext);
+
+		for (TColumn iTColumn : _mListOfColumns) {
+			lResult.addColumn(iTColumn);
+		}
+
+		for (TRow iTRow : _mListOfRows) {
+			lResult.addRow(iTRow);
+		}
+
+		return lResult;
+	}
+
+	/**
+	 *
+	 * {@linkplain displayContent}
+	 * to display client data table content in LogCat
+	 * @param pColumnsToDisplay : List of columns to display 
+	 * <strong>if we put * we will display all columns content</strong>
+	 */
+	public void displayContent(String ...pColumnsToDisplay) {
+
+		if(pColumnsToDisplay!=null && pColumnsToDisplay.length!=0){
+
+			StringBuffer lColumns = new StringBuffer();
+			int lSize = _mListOfRows.size();
+			if(pColumnsToDisplay.length==1 && pColumnsToDisplay[0].equals("*")){
+
+				for (int i = 0; i < _mListOfColumns.size(); i++)
+					lColumns.append(_mListOfColumns.get(i).getName() + " | ");
+				// Display columns names
+				Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
+
+				// Display rows
+				for (int i = 0; i < lSize; i++)
+					Log.v(TAG, "ROW N�" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
+
+			}else{
+				for (int i = 0; i < pColumnsToDisplay.length; i++)
+					lColumns.append(pColumnsToDisplay[i] + " | ");
+
+				// Display columns names
+				Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
+
+				for (int i = 0; i < lSize; i++) {
+
+					StringBuffer lRowContent=new StringBuffer();
+
+					for (int j = 0; j < pColumnsToDisplay.length; j++) {
+						String lCellContent=_mListOfRows.get(i).getCell(indexOfColumn(pColumnsToDisplay[j])).asString();
+						lRowContent.append(lCellContent+" | ");
+					}
+
+					Log.v(TAG, "ROW No" + (i + 1) + ":  " + lRowContent);
+				}
+			}
+			//TODO chaines dans les resources			
+		}else{
+			PuUtils.showMessage(_mContext, "Erreur DisplayContent", "il faut que la liste != null ou elle contien au moins 1 element");
+		}
+	}
+	public void setOnNotifyDataSetChangedListener(OnNotifyDataSetChangedListener pListener){
+		_mOnNotifyDataSetChangedListener=pListener;
+	}
+	public void setOnCDTStateListener(OnCDTStateListener pListener){
+		if(_mOnCDTStateListener!=null)
+			PuUtils.showMessage(_mContext, "Duplicate OnCDTStateListener", "OnCDTStateListener est déja definit pour ce CDT");
+
+		_mOnCDTStateListener=pListener;
+	}
+
+
+}

@@ -1,0 +1,65 @@
+<resources>
+
+    <string name="app_name">1FWHh</string>
+    <string name="title_err_sort">Trie impossible</string>
+    <string name="msg_err_sort">Vous devez indiquer la liste des colonnes à trier</string>
+
+    <!-- Spinner Text size -->
+    <string name="TextSize_Small">Petite</string>
+    <string name="TextSize_Normal">Normale</string>
+    <string name="TextSize_big">Grande</string>
+    <string name="TextSize_vbig">Très grande</string>
+
+    <!-- AlertBox -->
+    <string name="bt_alertbox_yes">OUI</string>
+    <string name="bt_alertbox_no">NON</string>
+    <string name="bt_alertbox_OK">OK</string>
+    <string name="bt_alertbox_Validate">Valider</string>
+    <string name="bt_alertbox_Continue">Continuer</string>
+    <string name="bt_alertbox_Settings">Config.</string>
+    <string name="bt_alertbox_Cancel">Annuler</string>
+    <string name="word_week">Semaine</string>
+
+    <!-- Jours du calendrier -->
+    <string name="Lundi">Lu.</string>
+    <string name="Mardi">Ma.</string>
+    <string name="Mercredi">Me.</string>
+    <string name="Jeudi">Je.</string>
+    <string name="Vendredi">Ve.</string>
+    <string name="Samedi">Sa.</string>
+    <string name="Dimanche">Di.</string>
+
+    <!-- Divers -->
+    <string name="lab_diez">#</string>
+    <!-- Ui -->
+    <string name="contentDescription">image_description</string>
+    <string name="hint_uieditText">Type your search</string>
+    <string name="title_dialog_colorPicker">Pick a color</string>
+    <string name="msgErr_invalidHexColor">invalid hex color</string>
+    <string name="lab_currentColor">Current : </string>
+    
+    <string name="GCM_REGISTER_ERROR">Unable to register the device on the main Server</string>
+    <string name="GCM_REGISTER_SUCCES">Succes!!Device registred on server</string>
+    <string name="error_day">Nombre des jours n\'est pas valide</string>
+    <string name="error_month">Le mois est n\'est pas valide</string>
+    <string name="error_year">Année non valide</string>
+    <string name="lab_day">Jour</string>
+    <string name="lab_month">Mois</string>
+    <string name="lab_year">Année</string>
+    <string name="text_takeImageFromGallery">Choisir parmis mes photos</string>
+    <string name="text_takeImageFromCamera">Utiliser ma caméra</string>
+    <string name="errorPickPicture">Une erreur s\'est produite lors de la prise d\'image</string>
+    <string name="title_delete_image">Supprimer l\'image ?</string>
+    <string name="msg_delete_image">Êtes vous sûr de supprimer cette image ?</string>
+    <string name="error_sharing">Sharing image error...</string>
+    <string name="lab_delete">Supprimer</string>
+    <string name="lab_no">Non</string>
+
+
+    <string name="msg_install_app_part1">Merci d\'installer</string>
+    <string name="msg_install_app_part2"> sur votre tablette, pour pouvoir continuer !</string>
+    <string name="msg_waiting_loading">Chargement en cours...</string>
+    <string name="btn_otherTime">Plus Tard</string>
+    <string name="btn_install">Installer</string>
+    <string name="lab_info">Information</string>
+</resources>

@@ -1,0 +1,4 @@
+<resources>
+    <string name="title_dialog_colorPicker">Choisir la couleur</string>
+    <string name="lab_currentColor">Actuelle : </string>
+</resources>

@@ -1,0 +1,302 @@
+package com.hh.adapters;
+
+import android.content.Context;
+import android.content.res.Resources;
+import android.net.Uri;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Checkable;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+import com.hh.clientdatatable.ClientDataTable;
+import com.hh.clientdatatable.ClientDataTable.CDTStatus;
+import com.hh.clientdatatable.TCell;
+import com.hh.listeners.OnRecycleCheckedChangeListener;
+import com.hh.listeners.OnRecycleClickListener;
+import com.hh.listeners.OnRecycleFocusedChangeListener;
+import com.hh.listeners.OnRecycleWidgetClickListener;
+import com.squareup.picasso.Picasso;
+
+import java.io.File;
+import java.util.concurrent.Executors;
+
+/**
+ * Created by Wajdi Hh on 13/08/2015.
+ * wajdihh@gmail.com
+ */
+public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
+
+    protected Context mContext;
+    protected Resources mRes;
+    protected ClientDataTable mClientDataTable;
+    private boolean _mIsEnableOnClickWidget;
+
+    private int _mLayoutRes;
+    private int _mDefaultImageRes;
+
+    private int mDefaultHeightPicassoImage;
+    private int mDefaultWidthPicassoImage;
+
+    private Picasso mPicasso;
+
+    public CDTRecycleAdapter(Context pContext, int pLayoutRes, ClientDataTable pCDT){
+        mContext=pContext;
+        mRes=pContext.getResources();
+        mClientDataTable = pCDT;
+        _mLayoutRes = pLayoutRes;
+
+        // par défaut on utilise le setter d image par défaut de CDT
+        mDefaultHeightPicassoImage=80;
+        mDefaultWidthPicassoImage=80;
+        mPicasso = new Picasso.Builder(pContext).executor(Executors.newSingleThreadExecutor()).build();
+
+    }
+    @Override
+    protected void finalize() throws Throwable {
+        mContext = null;
+        super.finalize();
+    }
+
+    @Override
+    public RecycleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(_mLayoutRes, null);
+        return new RecycleViewHolder(mContext,v,mClientDataTable,_mIsEnableOnClickWidget);
+    }
+
+
+    public void setEnableOnClickWidget(boolean pIsEnabled) {
+        _mIsEnableOnClickWidget = pIsEnabled;
+    }
+
+    /**
+     * On peut par exemple utiliser l api picasso pour les images, dans ce cas , on remet le flag à false
+     * @param pIsUseCDTImageSetter
+     */
+    public void setDefaultPicassoSize(int pDefaultHeightPicassoImage, int pDefaultWidthPicassoImage) {
+        mDefaultHeightPicassoImage = pDefaultHeightPicassoImage;
+        mDefaultWidthPicassoImage = pDefaultWidthPicassoImage;
+    }
+    /**
+     * Pour définir l image par défaut à mettre dans le binding imageView ou cas ou on a pas le fichier
+     * @param pDefaultImageRes
+     */
+    public void setDefaultImageRes(int pDefaultImageRes) {
+        _mDefaultImageRes = pDefaultImageRes;
+    }
+
+    @Override
+    public void onBindViewHolder(RecycleViewHolder holder, int position) {
+
+        mClientDataTable.moveToPosition(position);
+
+        int lListHolderSize = holder.mSparseArrayHolderViews.size();
+
+        for (int i = 0; i < lListHolderSize; i++) {
+
+            int lColumnIndex = holder.mSparseArrayHolderViews.keyAt(i);
+            View lWidget = holder.mSparseArrayHolderViews.get(lColumnIndex);
+
+            if (lWidget != null) {
+
+                final TCell data = mClientDataTable.getCell(position, lColumnIndex);
+                if (lWidget instanceof Checkable) {
+                    ((Checkable) lWidget).setChecked(data.asBoolean());
+                } else if (lWidget instanceof TextView) {
+                    ((TextView) lWidget).setText(data.asString());
+                } else if (lWidget instanceof ImageView) {
+
+                    final ImageView imageView= (ImageView) lWidget;
+                    if (data.getValueType() == TCell.ValueType.INTEGER) {
+                        imageView.setImageResource(data.asInteger());
+                    } else {
+                        if (!data.asString().equals("")) {
+
+                            // SI on a pas encore chargé l image par picosso
+                            if (data.asString().contains("http"))
+                                //  Picasso.with(mContext).load(data.asString()).into(picassoTarget(imageView));
+                                mPicasso.load(data.asString()).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
+                            else
+                                //   Picasso.with(mContext).load(new File(data.asString())).into(picassoTarget(imageView));
+                                mPicasso.load(new File(data.asString())).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
+                        }
+                        else
+                            imageView.setImageDrawable(null);
+                    }
+                } else
+                    throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
+                            " view that can be bounds by this SimpleAdapter");
+
+                onIteratedRow(lWidget, lWidget.getTag().toString());
+            }
+        }
+        int lListHolderSizeNotInCDT = holder.mSparseArrayHolderViewsNotInCDT.size();
+
+        for (int i = 0; i < lListHolderSizeNotInCDT; i++) {
+            int lColumnIndex = holder.mSparseArrayHolderViewsNotInCDT.keyAt(i);
+            View lWidget = holder.mSparseArrayHolderViewsNotInCDT.get(lColumnIndex);
+
+            if (lWidget != null) {
+                onIteratedRow( lWidget, lWidget.getTag().toString());
+            }
+        }
+
+        // ClickListener
+        holder.setClickListener(new OnRecycleClickListener() {
+            @Override
+            public void onClick(View v, int position) {
+                onClickRow(v,position);
+            }
+
+            @Override
+            public void onLongClick(View v, int position) {
+                onLongClickRow(v, position);
+            }
+        });
+
+        holder.setOnRecycleWidgetClickListener(new OnRecycleWidgetClickListener() {
+
+            @Override
+            public void onClick(View parentView,View clickedView, String tag, int position) {
+                onClickWidget(parentView,clickedView, tag, position);
+            }
+        });
+
+        holder.setOnRecycleCheckedChangeListener(new OnRecycleCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked, int position) {
+
+                String columnName=buttonView.getTag().toString();
+                mClientDataTable.moveToPosition(position);
+//
+//                if (mClientDataTable.isConnectedToDB()) {
+//
+//                    if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT){
+//                        mClientDataTable.append();
+//                        mClientDataTable.cellByName(columnName).insertIntoDB(isChecked);
+//                        mClientDataTable.commit();
+//                    }
+//
+//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE){
+//                        mClientDataTable.edit();
+//                        mClientDataTable.cellByName(columnName).updateFromDB(isChecked);
+//                        mClientDataTable.commit();
+//                    }
+//
+//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
+//                        mClientDataTable.cellByName(columnName).setValue(isChecked);
+//                } else
+                    mClientDataTable.cellByName(columnName).setValue(isChecked);
+            }
+        });
+
+        holder.setOnRecycleFocusedChangeListener(new OnRecycleFocusedChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus, int position) {
+
+                mClientDataTable.moveToPosition(position);
+
+                TextView lTextView = (TextView) v;
+                String columnName = v.getTag().toString();
+//                if (mClientDataTable.isConnectedToDB()) {
+//
+//                    if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT)
+//                        mClientDataTable.cellByName(columnName).insertIntoDB(lTextView.getText().toString());
+//
+//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE)
+//                        mClientDataTable.cellByName(columnName).updateFromDB(lTextView.getText().toString());
+//
+//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
+//                        mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
+//                } else
+//                    mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
+//
+//                mClientDataTable.commit();
+
+                mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
+            }
+        });
+    }
+
+    public void setViewImages(ImageView v, String value) {
+
+        System.out.println("I am in image");
+        try {
+            v.setImageResource(Integer.parseInt(value));
+        } catch (NumberFormatException nfe) {
+
+            if(!new File(value).exists())
+                v.setImageResource(_mDefaultImageRes);
+            else
+                v.setImageURI(Uri.parse(value));
+        }
+    }
+    @Override
+    public int getItemCount() {
+        return  mClientDataTable.getRowsCount();
+    }
+
+    public void clear() {
+        mClientDataTable.clear();
+        notifyDataRecycleChanged();
+    }
+
+    public void notifyDataRecycleChanged(){
+        mClientDataTable.requery();
+        notifyDataSetChanged();
+    }
+
+    /**
+     * override this method when we need to access to CDT content
+     * for each row when iterate all the data
+     *
+     * @param widget   : Button , TextView etc...
+     * @param position : position of row
+     */
+    protected void onIteratedRow( View widget,String widgetTag) {
+    }
+
+    ;
+
+    /**
+     * override this method to capture the click on selected row
+     *
+     * @param row
+     * @param position : position of selected row
+     */
+    protected void onClickRow(View row, int position) {
+        mClientDataTable.moveToPosition(position);
+    }
+
+    ;
+
+    /**
+     * override this method to capture the click on selected widget (Button, ImageView ...) inside a row
+     *
+     * @param tagWidget : the tag of the selected widget
+     * @param position  : the position of row of selected widget
+     */
+
+    protected void onClickWidget(View parentView,View clickedView,String tagWidget, int position) {
+        mClientDataTable.moveToPosition(position);
+    }
+
+
+    /**
+     * override this method to capture the Long click on selected Row,
+     * and we can create context Menu inside this method
+     *
+     * @param row      : selected row
+     * @param position : position of selected row
+     */
+    protected void onLongClickRow(View row, int position) {
+        mClientDataTable.moveToPosition(position);
+    }
+
+
+
+
+
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="icon_btn_actionbar">48dp</dimen>
+    <dimen name="marginLeft_btn_actionbar">5dp</dimen>
+    <dimen name="textSize_ActionBar">16sp</dimen>
+    <dimen name="dialogCalenderWidht">520dp</dimen>
+    <dimen name="dialogCalenderHeight">540dp</dimen>
+    <dimen name="heightPopUpItem">50dp</dimen>
+    <dimen name="WidthPopUpMenu">200dp</dimen>
+    <dimen name="marginLeft_uiEditText">30dp</dimen>
+    <dimen name="marginBottom_uiEditText">5dp</dimen>
+
+</resources>

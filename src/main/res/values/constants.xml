@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="DataBaseName">HhDroid_DataBase.db</string>
+    <string name="cst_notInCursor">not in cursor</string>
+</resources>

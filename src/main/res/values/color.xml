@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="marron">#523c21</color>
+    <color name="Vert">#aacc1b</color>
+    <color name="vert_clair">#c6df94</color>
+    <color name="vert_fonce">#5aa621</color>
+    <color name="white">#ffffff</color>
+    <color name="gris">#a5a5a5</color>
+    <color name="Black">#000000</color>
+    <color name="Red">#F00</color>
+    <color name="antracite">#595959</color>
+    <color name="holo_blue_lev0">#b1e3fa</color>
+    <color name="holo_gray_lev0">#e4e4e4</color>
+    <color name="holo_gray_clair">#ececec</color>
+    <color name="holo_gray_lev1">#c8c8c8</color>
+    <color name="gris_clair">#CCCCCC</color>
+    <color name="holo_blue_lev1">#7bd3f7</color>
+    <color name="holo_gray_selection">#e0eaf1</color>
+    <color name="transprent">#00ffffff</color>
+    <color name="darkOpacity">#80000000</color>
+
+    <!--Material design-->
+    <color name="md_red_light">#e74c3c</color>
+    <color name="md_red_dark">#c0392b</color>
+    <color name="md_blue_light">#3498db</color>
+    <color name="md_blue_dark">#2980b9</color>
+    <color name="md_orange_light">#e67e22</color>
+    <color name="md_orange_dark">#d35400</color>
+    <color name="md_violet_light">#9b59b6</color>
+    <color name="md_violet_dark">#8e44ad</color>
+    <color name="md_yellow_light">#f1c40f</color>
+    <color name="md_yello_dark">#f39c12</color>
+    <color name="md_white_light">#ecf0f1</color>
+    <color name="md_white_dark">#bdc3c7</color>
+    <color name="md_green_light">#2ecc71</color>
+    <color name="md_green_dark">#27ae60</color>
+    <color name="md_gray_light">#95a5a6</color>
+    <color name="md_gray_dark">#7f8c8d</color>
+    <color name="md_green2_light">#1abc9c</color>
+    <color name="md_green2_dark">#16a085</color>
+    <color name="md_black_light">#34495e</color>
+    <color name="md_black_dark">#2c3e50</color>
+    <color name="blue_moderne">#1E88E5</color>
+    <color name="blue_facebook">#3b5998</color>
+
+</resources>

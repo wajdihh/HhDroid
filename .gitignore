@@ -1,0 +1,21 @@
+.class
+
+.svn
+# Mobile Tools for Java (J2ME)
+.mtj.tmp
+
+# Package Files #
+.jar
+.war
+.ear
+build/*
+
+# virtual machine crash logs, see httpwww.java.comendownloadhelperror_hotspot.xml
+hs_err_pid
+
+*.classpath
+
+#intellij files
+.idea/*
+gen/
+gradle/
