@@ -1,9 +1,0 @@
-diff a/src/main/java/com/hh/adapters/CDTLayoutAdapter.java b/src/main/java/com/hh/adapters/CDTLayoutAdapter.java	(rejected hunks)
-@@ -34,7 +34,6 @@
-  *
-  *
-  */
--		OnFocusChangeListener {
- public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListener,OnFocusChangeListener {
- 
- 

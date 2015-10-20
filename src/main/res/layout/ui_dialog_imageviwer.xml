@@ -1,0 +1,79 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/Black">
+
+    <Button
+            android:id="@+id/uiDIalogImViewer_btnShare"
+            android:layout_margin="10dp"
+            android:layout_width="wrap_content"
+            android:minWidth="40dp"
+            style="@style/StyleButton"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:drawableLeft="@drawable/ic_action_share"/>
+
+    <android.support.v4.view.ViewPager
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/pager"
+            android:layout_below="@+id/uiDIalogImViewer_btnShare"
+            android:layout_marginBottom="50dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    <RelativeLayout
+            android:visibility="gone"
+            android:id="@+id/uiDIalogImViewer_LlNbr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:layout_marginBottom="50dp"
+            android:layout_alignParentBottom="true">
+
+        <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:background="@color/md_white_light"/>
+
+        <TextView
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="2dp"
+                android:id="@+id/uiDIalogImViewer_Nbr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="1/5"
+                android:textColor="@color/md_white_light"
+                android:textSize="20sp"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+            android:id="@+id/uiDIalogImViewer_LlBtn"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="true">
+        <Button
+                android:id="@+id/uiDIalogImViewer_btnCancel"
+                style="@style/StyleButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:textSize="20sp"
+                android:textColor="@color/white"
+                android:text="@string/bt_alertbox_Cancel"/>
+
+        <Button
+                android:id="@+id/uiDIalogImViewer_btnValidate"
+                style="@style/StyleButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:textSize="20sp"
+                android:textColor="@color/white"
+                android:text="@string/bt_alertbox_Validate"/>
+
+    </LinearLayout>
+</RelativeLayout>

@@ -1,7 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <style name="StyleLabFixe">
+        <item name="android:textColor">@color/gris_clair</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
 
+    <style name="StyleLabData">
+        <item name="android:textColor">@color/Black</item>
+        <item name="android:textSize">16sp</item>
+        <!-- <item name="android:textStyle">bold</item> -->
+        <item name="android:gravity">center_vertical</item>
+        <!-- <item name="android:singleLine">true</item> -->
+    </style>
 
+    <style name="StyleLabExpandableParent">
+        <item name="android:textColor">@color/Black</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="StyleLabEntete">
+        <item name="android:textColor">@color/gris_clair</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+    <!-- Pour le style du texte de title bar -->
+    <style name="CustomWindowTitle">
+        <item name="android:paddingLeft">50dp</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/holo_gray_lev1</item>
+    </style>
+    <!-- Pour le style background de title bar -->
+    <style name="CustomWindowTitleBackground">
+        <item name="android:background">#FFF</item>
+    </style>
+
+    <style name="StyleButton">
+        <item name="android:gravity">center_vertical|center_horizontal</item>
+        <item name="android:background">@drawable/selector_button</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
 
 </resources>
