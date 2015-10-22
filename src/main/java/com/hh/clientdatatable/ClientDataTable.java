@@ -13,8 +13,12 @@ import com.hh.listeners.MyCallback;
 import com.hh.listeners.OnCDTColumnListener;
 import com.hh.listeners.OnCDTStateListener;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
+import com.hh.parsing.PpJsonParser;
 import com.hh.utility.PuException;
 import com.hh.utility.PuUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.*;
 
@@ -54,6 +58,7 @@ public class ClientDataTable {
 	private TCell _mCellHowValueChanged;
 	private boolean _mIsExecInDateBase;
 	private boolean mIsCdtSorted;
+	private JSONObject jsonObject;
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
 	{
@@ -63,6 +68,7 @@ public class ClientDataTable {
 		_mTempIteration=-1;
 		_mCursorSize = -1;
 		mIsCdtSorted=false;
+		jsonObject=new JSONObject();
 	}
 
 	public ClientDataTable(Context pContext) {
@@ -434,7 +440,10 @@ public class ClientDataTable {
 			TCell lCell=cellByName(lColumnName);
 			String lColumnValue=lCell.asValue();
 
-			if(column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB || column.getColumnType()== TColumn.ColumnType.PrimaryKey || lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
+			if(column.getColumnType()== TColumn.ColumnType.JsonField ||column.getColumnType()== TColumn.ColumnType.JsonParent
+					||column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB
+					|| column.getColumnType()== TColumn.ColumnType.PrimaryKey
+					|| lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
 				continue;
 
 
@@ -464,7 +473,10 @@ public class ClientDataTable {
 				TCell lCell=cellByName(lColumnName);
 				String lColumnValue=lCell.asValue();
 
-				if(column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB || column.getColumnType()== TColumn.ColumnType.PrimaryKey || lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
+				if(column.getColumnType()== TColumn.ColumnType.JsonField ||column.getColumnType()== TColumn.ColumnType.JsonParent
+						||column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB
+						|| column.getColumnType()== TColumn.ColumnType.PrimaryKey
+						|| lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
 					continue;
 
 				lValues.put(lColumnName, lColumnValue);
@@ -933,33 +945,50 @@ public class ClientDataTable {
 	 * @param pName
 	 * @param pType
 	 */
-	public void addColumn(String pName, ValueType pType) {
-
-		_mListOfColumns.add(new TColumn(pName, pType));
+	public TColumn addColumn(String pName, ValueType pType) {
+		TColumn column=new TColumn(pName, pType);
+		_mListOfColumns.add(column);
+		return column;
 	}
 
-	public void addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType) {
-
-		_mListOfColumns.add(new TColumn(pName, pType,pColumnType));
+	public TColumn addColumn(String pName,TColumn.ColumnType pColumnType) {
+		TColumn column=new TColumn(pName, ValueType.TEXT,pColumnType);
+		_mListOfColumns.add(column);
+		return column;
 	}
 
-	public void addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType) {
 
-		_mListOfColumns.add(new TColumn(pName, pType,pColumnType,pListener));
+		TColumn column=new TColumn(pName, pType,pColumnType);
+		_mListOfColumns.add(column);
+		return column;
+	}
+
+	public TColumn addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType,OnCDTColumnListener pListener) {
+
+		TColumn column=new TColumn(pName, pType,pColumnType,pListener);
+		_mListOfColumns.add(column);
+		return column;
 	}
 
 
-	public void addColumn(String pName, ValueType pType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,OnCDTColumnListener pListener) {
 
-		_mListOfColumns.add(new TColumn(pName, pType, TCell.CellType.NONE,pListener));
+		TColumn column=new TColumn(pName, pType, TCell.CellType.NONE,pListener);
+		_mListOfColumns.add(column);
+		return column;
 	}
-	public void addColumn(String pName, ValueType pType,TCell.CellType pCellType) {
+	public TColumn addColumn(String pName, ValueType pType,TCell.CellType pCellType) {
 
-		_mListOfColumns.add(new TColumn(pName, pType,pCellType,null));
+		TColumn column=new TColumn(pName, pType,pCellType,null);
+		_mListOfColumns.add(column);
+		return column;
 	}
-	public void addColumn(String pName, ValueType pType,TCell.CellType pCellType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,TCell.CellType pCellType,OnCDTColumnListener pListener) {
 
-		_mListOfColumns.add(new TColumn(pName, pType,pCellType,pListener));
+		TColumn column=new TColumn(pName, pType,pCellType,pListener);
+		_mListOfColumns.add(column);
+		return column;
 	}
 	/**
 	 * allows to add a Row
@@ -1138,11 +1167,55 @@ public class ClientDataTable {
 		return lResult;
 	}
 
+	public JSONArray toJSONArray() throws JSONException {
+
+		JSONArray arrays=new JSONArray();
+		for (TRow row:_mListOfRows){
+			JSONObject jsonObject=toJSONObject(row);
+			arrays.put(jsonObject);
+		}
+
+		return arrays;
+	}
+
+	public JSONObject toJSONObject() throws JSONException {
+		return toJSONObject(getCurrentRow());
+	}
+	public JSONObject toJSONObject(TRow row) throws JSONException {
+
+		for (TColumn column:_mListOfColumns){
+
+			if(column.getJsonParent()==null ||column.getJsonParent().isEmpty()){
+				jsonObject.put(column.getName(),new JSONObject());
+			}else{
+				JSONObject ob=PpJsonParser.getChild(jsonObject, column.getJsonParent());
+				if(column.getColumnType()== TColumn.ColumnType.JsonParent)
+					ob.put(column.getName(),new JSONObject());
+				else{
+					TCell cell = row.cellByName(column.getName());
+					if(cell.getValueType()==ValueType.BOOLEAN)
+						ob.put(column.getName(),cell.asBoolean());
+					else if(cell.getValueType()==ValueType.INTEGER)
+						ob.put(column.getName(),cell.asInteger());
+					else if(cell.getValueType()==ValueType.DOUBLE)
+						ob.put(column.getName(),cell.asDouble());
+					else if(cell.getValueType()==ValueType.DATETIME)
+						ob.put(column.getName(),cell.asDate());
+					else
+						ob.put(column.getName(),cell.asString());
+
+				}
+			}
+
+		}
+
+		return jsonObject;
+	}
 	/**
 	 *
 	 * {@linkplain displayContent}
 	 * to display client data table content in LogCat
-	 * @param pColumnsToDisplay : List of columns to display 
+	 * @param pColumnsToDisplay : List of columns to display
 	 * <strong>if we put * we will display all columns content</strong>
 	 */
 	public void displayContent(String ...pColumnsToDisplay) {
@@ -1181,7 +1254,7 @@ public class ClientDataTable {
 					Log.v(TAG, "ROW No" + (i + 1) + ":  " + lRowContent);
 				}
 			}
-			//TODO chaines dans les resources			
+			//TODO chaines dans les resources
 		}else{
 			PuUtils.showMessage(_mContext, "Erreur DisplayContent", "il faut que la liste != null ou elle contien au moins 1 element");
 		}

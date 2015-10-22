@@ -10,6 +10,8 @@ import com.hh.listeners.OnCDTColumnListener;
 import com.hh.utility.PuDate;
 import com.hh.utility.PuUtils;
 
+import java.util.Date;
+
 
 public class TCell implements Cloneable {
 
@@ -255,12 +257,28 @@ public class TCell implements Cloneable {
         return lResult;
     }
 
+    public Date asDate() {
+
+        Date lResult = null;
+
+        try {
+            if (_mValue != null && !_mValue.isEmpty())
+                lResult = new Date(Long.parseLong(_mValue));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (_mOnCDTColumnListener != null)
+            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        return lResult;
+    }
+
     public long asDateTime() {
 
         long lResult = -1;
 
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Long.parseLong(_mValue);
 
         } catch (Exception e) {

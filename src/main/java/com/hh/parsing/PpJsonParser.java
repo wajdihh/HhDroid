@@ -24,6 +24,8 @@ public class PpJsonParser {
 	 * @param pJsonObject
 	 * @return key names list
 	 */
+
+	private static JSONObject obj = null;
 	public static ArrayList<String> getKeysNames(JSONObject pJsonObject){
 
 		ArrayList<String> lArrays=new ArrayList<String>();
@@ -38,11 +40,11 @@ public class PpJsonParser {
 		return lArrays;
 	}
 
-	 static void parseJsonArrayIntoCDT(JSONArray pJsArray,ClientDataTable pCDT,boolean saveInDataBase) throws JSONException{
+	static void parseJsonArrayIntoCDT(JSONArray pJsArray,ClientDataTable pCDT,boolean saveInDataBase) throws JSONException{
 
 		int lSizeJsArray = pJsArray.length();
-		 if(lSizeJsArray==0)
-			 return;
+		if(lSizeJsArray==0)
+			return;
 
 		pCDT.getListOfRows().clear();
 		pCDT.getListOfRows().ensureCapacity(lSizeJsArray);
@@ -126,7 +128,7 @@ public class PpJsonParser {
 		if(lSizeJsArray!=0){
 			ArrayList<String> lMappingColumnsName=new ArrayList<String>();
 
-			JSONObject lFirstJsObject=pJsArray.getJSONObject(0);	
+			JSONObject lFirstJsObject=pJsArray.getJSONObject(0);
 			ArrayList<String> lJsArrayColumnsNames = getKeysNames(lFirstJsObject);
 
 			ArrayList<String> lDataBaseTableColumns=PuUtils.getTableColumnsNames(pDataBase, pTableName);
@@ -146,7 +148,7 @@ public class PpJsonParser {
 				JSONObject lJsObject=pJsArray.getJSONObject(k);
 
 				ContentValues values=new ContentValues();
-				for (String lColumnName:lMappingColumnsName) 
+				for (String lColumnName:lMappingColumnsName)
 					values.put(lColumnName, lJsObject.getString(lColumnName));
 
 				pDataBase.insert(pTableName, null, values);
@@ -155,5 +157,21 @@ public class PpJsonParser {
 			Log.i("fillDataBaseTableFromJsonArray"," Count :"+ lSizeJsArray);
 		}else
 			Log.i("fillDataBaseTableFromJsonArray","JsonArray est vide");
+	}
+
+	public static JSONObject getChild(JSONObject jsonObject,String name) throws JSONException {
+
+
+		Iterator iterator = jsonObject.keys();
+		String key = null;
+		while (iterator.hasNext()) {
+			key = (String) iterator.next();
+			if ((key.equals(name))) {
+				obj = jsonObject.getJSONObject(name);
+				break;
+			}else
+				getChild(obj,name);
+		}
+		return obj;
 	}
 }
