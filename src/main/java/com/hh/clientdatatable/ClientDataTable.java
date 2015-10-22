@@ -58,11 +58,16 @@ public class ClientDataTable {
 	private TCell _mCellHowValueChanged;
 	private boolean _mIsExecInDateBase;
 	private boolean mIsCdtSorted;
+	private Map<String,ClientDataTable> _mNestedJsonArrays;
+	private List<String> _mNestedJsonArraysParentKeys;
+
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
 	{
 		_mListOfRows = new ArrayList<TRow>();
 		_mListOfColumns = new ArrayList<TColumn>();
+		_mNestedJsonArrays=new HashMap<>();
+		_mNestedJsonArraysParentKeys=new ArrayList<>();
 		_mPosition = -1;
 		_mTempIteration=-1;
 		_mCursorSize = -1;
@@ -271,7 +276,7 @@ public class ClientDataTable {
 	}
 
 	public void execute(MyCallback pCallback){
-		validate(false,true,pCallback);
+		validate(false, true, pCallback);
 	}
 
 	public void executeObserve(MyCallback pCallback){
@@ -1167,6 +1172,10 @@ public class ClientDataTable {
 
 
 
+	public void addJSONArray(String key,String parentKey,ClientDataTable arrays){
+		_mNestedJsonArrays.put(key, arrays);
+		_mNestedJsonArraysParentKeys.add(parentKey);
+	}
 	public JSONArray toJSONArray() throws JSONException {
 		return createJsonArray(false, false);
 	}
@@ -1183,10 +1192,10 @@ public class ClientDataTable {
 		return toJSONObject(getCurrentRow(),false,false);
 	}
 	public JSONObject toJSONObjectOnlyChangedFields() throws JSONException {
-		return toJSONObject(getCurrentRow(),false,true);
+		return toJSONObject(getCurrentRow(), false, true);
 	}
 	public JSONObject toJSONObjectOnlyNotEmptyFields() throws JSONException {
-		return toJSONObject(getCurrentRow(),true,false);
+		return toJSONObject(getCurrentRow(), true, false);
 	}
 
 	public JSONObject toJSONObject(TRow row,boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
@@ -1210,23 +1219,54 @@ public class ClientDataTable {
 		Map<String,JSONObject> map=new HashMap<>();
 		for (TColumn column:_mListOfColumns){
 
-			if(column.getJsonParent()==null ||column.getJsonParent().isEmpty()){
-				mainJsonObject.put(column.getName(),new JSONObject());
-				map.put(column.getName(),mainJsonObject.optJSONObject(column.getName()));
-			}else{
-				if(column.getColumnType()== TColumn.ColumnType.JsonParent) {
+			if(column.getColumnType()== TColumn.ColumnType.JsonParent) {
+
+				if(column.getJsonParent()==null ||column.getJsonParent().isEmpty()){
+					mainJsonObject.put(column.getName(),new JSONObject());
+					map.put(column.getName(),mainJsonObject.optJSONObject(column.getName()));
+				}else{
 					// if the parent has a parent
 					if(column.getJsonParent()!=null && !column.getJsonParent().isEmpty()){
 
-						JSONObject parent=map.get(column.getJsonParent());
-						parent.put(column.getName(),new JSONObject());
-						map.put(column.getName(),parent.optJSONObject(column.getName()));
+						if(column.getJsonParent().equals("MAIN")){
+							mainJsonObject.put(column.getName(),new JSONObject());
+							map.put(column.getName(),mainJsonObject.optJSONObject(column.getName()));
+						}else{
+							JSONObject parent=map.get(column.getJsonParent());
+							parent.put(column.getName(),new JSONObject());
+							map.put(column.getName(),parent.optJSONObject(column.getName()));
+						}
 					}
+				}
+			}else{
+				if(column.getJsonParent()!=null){
+					// If the json parent is "MAIN"
+					if(column.getJsonParent().equals("MAIN")){
+						map.put(column.getName(),mainJsonObject);
+						fillJsonField(row,column,map.get(column.getJsonParent()), showNoEmpty, showOnlyChanged);
+					}else
+						fillJsonField(row,column,map.get(column.getJsonParent()),showNoEmpty,showOnlyChanged);
+				}else{
+					map.put("MAIN",mainJsonObject);
+					fillJsonField(row,column,map.get("MAIN"), showNoEmpty, showOnlyChanged);
+				}
 
-				}else
-					fillJsonField(row,column,map.get(column.getJsonParent()),showNoEmpty,showOnlyChanged);
 			}
+		}
 
+		if(!_mNestedJsonArrays.isEmpty()){
+
+			int i=0;
+			for (Map.Entry<String,ClientDataTable> entry : _mNestedJsonArrays.entrySet())
+			{
+				String parentKey=_mNestedJsonArraysParentKeys.get(i);
+				JSONArray subArrays=entry.getValue().toJSONArray();
+				JSONObject jsonParent=map.get(parentKey);
+
+				jsonParent.put(entry.getKey(),subArrays);
+
+				i++;
+			}
 		}
 
 		return mainJsonObject;

@@ -86,4 +86,7 @@ public class TColumn {
     public void setJsonParent(String pRoot) {
         this._mJsonParent = pRoot;
     }
+    public void setJsonParentAsMain() {
+        this._mJsonParent = "MAIN";
+    }
 }
