@@ -25,7 +25,8 @@ public class PpJsonParser {
 	 * @return key names list
 	 */
 
-	private static JSONObject obj = null;
+
+	private static JSONObject jsonChild;
 	public static ArrayList<String> getKeysNames(JSONObject pJsonObject){
 
 		ArrayList<String> lArrays=new ArrayList<String>();
@@ -159,19 +160,4 @@ public class PpJsonParser {
 			Log.i("fillDataBaseTableFromJsonArray","JsonArray est vide");
 	}
 
-	public static JSONObject getChild(JSONObject jsonObject,String name) throws JSONException {
-
-
-		Iterator iterator = jsonObject.keys();
-		String key = null;
-		while (iterator.hasNext()) {
-			key = (String) iterator.next();
-			if ((key.equals(name))) {
-				obj = jsonObject.getJSONObject(name);
-				break;
-			}else
-				getChild(obj,name);
-		}
-		return obj;
-	}
 }

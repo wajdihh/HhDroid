@@ -58,7 +58,6 @@ public class ClientDataTable {
 	private TCell _mCellHowValueChanged;
 	private boolean _mIsExecInDateBase;
 	private boolean mIsCdtSorted;
-	private JSONObject jsonObject;
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
 	{
@@ -68,7 +67,6 @@ public class ClientDataTable {
 		_mTempIteration=-1;
 		_mCursorSize = -1;
 		mIsCdtSorted=false;
-		jsonObject=new JSONObject();
 	}
 
 	public ClientDataTable(Context pContext) {
@@ -1167,49 +1165,93 @@ public class ClientDataTable {
 		return lResult;
 	}
 
+
+
 	public JSONArray toJSONArray() throws JSONException {
+		return createJsonArray(false, false);
+	}
+
+	public JSONArray toJSONArrayOnlyChangedFields() throws JSONException {
+		return createJsonArray(false, true);
+	}
+
+	public JSONArray toJSONArrayOnlyNotEmptyFields() throws JSONException {
+		return createJsonArray(true, false);
+	}
+
+	public JSONObject toJSONObject() throws JSONException {
+		return toJSONObject(getCurrentRow(),false,false);
+	}
+	public JSONObject toJSONObjectOnlyChangedFields() throws JSONException {
+		return toJSONObject(getCurrentRow(),false,true);
+	}
+	public JSONObject toJSONObjectOnlyNotEmptyFields() throws JSONException {
+		return toJSONObject(getCurrentRow(),true,false);
+	}
+
+	public JSONObject toJSONObject(TRow row,boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
+		return createJson(row, showNoEmpty, showOnlyChanged);
+	}
+
+	private JSONArray createJsonArray(boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
 
 		JSONArray arrays=new JSONArray();
 		for (TRow row:_mListOfRows){
-			JSONObject jsonObject=toJSONObject(row);
-			arrays.put(jsonObject);
+			arrays.put(toJSONObject(row, showNoEmpty, showOnlyChanged));
 		}
 
 		return arrays;
 	}
 
-	public JSONObject toJSONObject() throws JSONException {
-		return toJSONObject(getCurrentRow());
-	}
-	public JSONObject toJSONObject(TRow row) throws JSONException {
+	private JSONObject createJson(TRow row,boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
 
+		JSONObject mainJsonObject=new JSONObject();
+		//JSONObject currentParent = null;
+		Map<String,JSONObject> map=new HashMap<>();
 		for (TColumn column:_mListOfColumns){
 
 			if(column.getJsonParent()==null ||column.getJsonParent().isEmpty()){
-				jsonObject.put(column.getName(),new JSONObject());
+				mainJsonObject.put(column.getName(),new JSONObject());
+				map.put(column.getName(),mainJsonObject.optJSONObject(column.getName()));
 			}else{
-				JSONObject ob=PpJsonParser.getChild(jsonObject, column.getJsonParent());
-				if(column.getColumnType()== TColumn.ColumnType.JsonParent)
-					ob.put(column.getName(),new JSONObject());
-				else{
-					TCell cell = row.cellByName(column.getName());
-					if(cell.getValueType()==ValueType.BOOLEAN)
-						ob.put(column.getName(),cell.asBoolean());
-					else if(cell.getValueType()==ValueType.INTEGER)
-						ob.put(column.getName(),cell.asInteger());
-					else if(cell.getValueType()==ValueType.DOUBLE)
-						ob.put(column.getName(),cell.asDouble());
-					else if(cell.getValueType()==ValueType.DATETIME)
-						ob.put(column.getName(),cell.asDate());
-					else
-						ob.put(column.getName(),cell.asString());
+				if(column.getColumnType()== TColumn.ColumnType.JsonParent) {
+					// if the parent has a parent
+					if(column.getJsonParent()!=null && !column.getJsonParent().isEmpty()){
 
-				}
+						JSONObject parent=map.get(column.getJsonParent());
+						parent.put(column.getName(),new JSONObject());
+						map.put(column.getName(),parent.optJSONObject(column.getName()));
+					}
+
+				}else
+					fillJsonField(row,column,map.get(column.getJsonParent()),showNoEmpty,showOnlyChanged);
 			}
 
 		}
 
-		return jsonObject;
+		return mainJsonObject;
+	}
+
+	private void fillJsonField(TRow row,TColumn column,JSONObject jsonObject,boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
+
+		TCell cell = row.cellByName(column.getName());
+
+		if(showNoEmpty && cell.isEmpty())
+			return;
+
+		if(showOnlyChanged && !cell.isValueChanged())
+			return;
+
+		if(cell.getValueType()==ValueType.BOOLEAN)
+			jsonObject.put(column.getName(),cell.asBoolean());
+		else if(cell.getValueType()==ValueType.INTEGER)
+			jsonObject.put(column.getName(),cell.asInteger());
+		else if(cell.getValueType()==ValueType.DOUBLE)
+			jsonObject.put(column.getName(),cell.asDouble());
+		else if(cell.getValueType()==ValueType.DATETIME)
+			jsonObject.put(column.getName(),cell.asDate());
+		else
+			jsonObject.put(column.getName(),cell.asString());
 	}
 	/**
 	 *
