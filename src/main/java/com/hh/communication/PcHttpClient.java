@@ -97,6 +97,10 @@ public class PcHttpClient {
 		headers.add(new BasicNameValuePair(name, value));
 	}
 
+	public void AddHeader(BasicNameValuePair headerParam)
+	{
+		headers.add(headerParam);
+	}
 	public void execute(String url,RequestMethod method) throws IOException
 	{
 		executeRequest(url, method, null);
