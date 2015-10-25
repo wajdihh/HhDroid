@@ -112,6 +112,11 @@ public class PpJsonParser {
 		parseJsonArrayIntoCDT(pJsArray,pCDT,false);
 	}
 
+	public static void syncJSONObjectInCdt(JSONObject pJsonObj,ClientDataTable pCDT) throws JSONException{
+
+		parseJsonArrayIntoCDT(new JSONArray().put(pJsonObj),pCDT,false);
+	}
+
 	public static void syncJsonArrayInCdtWithExec(JSONArray pJsArray,ClientDataTable pCDT) throws JSONException{
 		parseJsonArrayIntoCDT(pJsArray,pCDT,true);
 	}
