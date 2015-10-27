@@ -2,6 +2,7 @@ package com.hh.utility;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
@@ -9,6 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.hh.droid.R;
@@ -115,6 +117,20 @@ public class PuImage {
         return new MyRectangle(width,height);
     }
 
+    public static int getImageOrientationOnGallery(Context pContext,Uri imageUri){
+        String[] columns = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.ORIENTATION};
+        Cursor cursor = pContext.getContentResolver().query(imageUri, columns, null, null, null);
+
+        if (cursor == null)
+            return 0;
+
+
+        cursor.moveToFirst();
+
+        int orientationColumnIndex = cursor.getColumnIndex(columns[1]);
+
+        return cursor.getInt(orientationColumnIndex);
+    }
     /**
      * get the origine orientation of the image
      * @param imagePath
@@ -132,13 +148,15 @@ public class PuImage {
 
             switch (orientation) {
                 case ExifInterface.ORIENTATION_ROTATE_270:
-                    rotate = 270;
+                    rotate = -90;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_180:
                     rotate = 180;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_90:
                     rotate = 90;
+                case ExifInterface.ORIENTATION_TRANSVERSE:
+                    rotate = -90;
                     break;
             }
         } catch (IOException e) {
