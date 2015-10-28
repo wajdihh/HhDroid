@@ -8,9 +8,11 @@ import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.hh.droid.R;
@@ -163,6 +165,18 @@ public class PuImage {
             e.printStackTrace();
         }
         return rotate;
+    }
+
+    public static void refreshGalleryWithScan(Context pContext,File f){
+
+        MediaScannerConnection.scanFile(pContext,
+                new String[]{f.getAbsolutePath()}, null,
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    public void onScanCompleted(String path, Uri uri) {
+                        Log.i("ExternalStorage", "Scanned " + path + ":");
+                        Log.i("ExternalStorage", "-> uri=" + uri);
+                    }
+                });
     }
 
     public static class MyRectangle {
