@@ -167,14 +167,17 @@ public class PuImage {
         return rotate;
     }
 
-    public static void refreshGalleryWithScan(Context pContext,File f){
+    public static void scanFileInGallery(final Context pContext,File f, final boolean isDelete){
 
         MediaScannerConnection.scanFile(pContext,
                 new String[]{f.getAbsolutePath()}, null,
                 new MediaScannerConnection.OnScanCompletedListener() {
                     public void onScanCompleted(String path, Uri uri) {
-                        Log.i("ExternalStorage", "Scanned " + path + ":");
-                        Log.i("ExternalStorage", "-> uri=" + uri);
+                        if (isDelete) {
+                            if (uri != null) {
+                                pContext.getContentResolver().delete(uri, null, null);
+                            }
+                        }
                     }
                 });
     }
