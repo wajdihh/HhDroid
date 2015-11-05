@@ -34,6 +34,7 @@ public class ClientDataTable {
 
 	public enum SortType{/** Assendent*/ ASC,	/** Dessendent */	DESC}
 	public enum CDTStatus {DEFAULT,UPDATE, INSERT,DELETE};
+	public enum JSONObjectGeneratedMode {DEFAULT,NoEmptyField,FormatedDate};
 
 	// List of Rows
 	private ArrayList<TRow> _mListOfRows;
@@ -1176,43 +1177,30 @@ public class ClientDataTable {
 		_mNestedJsonArrays.put(key, arrays);
 		_mNestedJsonArraysParentKeys.add(parentKey);
 	}
-	public JSONArray toJSONArray() throws JSONException {
-		return createJsonArray(false, false);
+	public JSONArray toJSONArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+		return createJsonArray(jsonObjectGeneratedMode);
 	}
 
-	public JSONArray toJSONArrayOnlyChangedFields() throws JSONException {
-		return createJsonArray(false, true);
+	public JSONObject toJSONObject(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+		return toJSONObject(getCurrentRow(),jsonObjectGeneratedMode);
 	}
 
-	public JSONArray toJSONArrayOnlyNotEmptyFields() throws JSONException {
-		return createJsonArray(true, false);
+
+	public JSONObject toJSONObject(TRow row,JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+		return createJson(row,jsonObjectGeneratedMode);
 	}
 
-	public JSONObject toJSONObject() throws JSONException {
-		return toJSONObject(getCurrentRow(),false,false);
-	}
-	public JSONObject toJSONObjectOnlyChangedFields() throws JSONException {
-		return toJSONObject(getCurrentRow(), false, true);
-	}
-	public JSONObject toJSONObjectOnlyNotEmptyFields() throws JSONException {
-		return toJSONObject(getCurrentRow(), true, false);
-	}
-
-	public JSONObject toJSONObject(TRow row,boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
-		return createJson(row, showNoEmpty, showOnlyChanged);
-	}
-
-	private JSONArray createJsonArray(boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
+	private JSONArray createJsonArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
 
 		JSONArray arrays=new JSONArray();
 		for (TRow row:_mListOfRows){
-			arrays.put(toJSONObject(row, showNoEmpty, showOnlyChanged));
+			arrays.put(toJSONObject(row, jsonObjectGeneratedMode));
 		}
 
 		return arrays;
 	}
 
-	private JSONObject createJson(TRow row,boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
+	private JSONObject createJson(TRow row,JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
 
 		JSONObject mainJsonObject=new JSONObject();
 		//JSONObject currentParent = null;
@@ -1243,12 +1231,12 @@ public class ClientDataTable {
 					// If the json parent is "MAIN"
 					if(column.getJsonParent().equals("MAIN")){
 						map.put(column.getName(),mainJsonObject);
-						fillJsonField(row,column,map.get(column.getJsonParent()), showNoEmpty, showOnlyChanged);
+						fillJsonField(row,column,map.get(column.getJsonParent()),jsonObjectGeneratedMode);
 					}else
-						fillJsonField(row,column,map.get(column.getJsonParent()),showNoEmpty,showOnlyChanged);
+						fillJsonField(row,column,map.get(column.getJsonParent()),jsonObjectGeneratedMode);
 				}else{
 					map.put("MAIN",mainJsonObject);
-					fillJsonField(row,column,map.get("MAIN"), showNoEmpty, showOnlyChanged);
+					fillJsonField(row,column,map.get("MAIN"), jsonObjectGeneratedMode);
 				}
 
 			}
@@ -1272,14 +1260,21 @@ public class ClientDataTable {
 		return mainJsonObject;
 	}
 
-	private void fillJsonField(TRow row,TColumn column,JSONObject jsonObject,boolean showNoEmpty,boolean showOnlyChanged) throws JSONException {
+	private void fillJsonField(TRow row,TColumn column,JSONObject jsonObject,JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
 
 		TCell cell = row.cellByName(column.getName());
+		boolean hasNoEmptyFieldMode=false;
+		boolean hasFormatedDate=false;
 
-		if(showNoEmpty && cell.isEmpty())
-			return;
+		for (JSONObjectGeneratedMode mode:jsonObjectGeneratedMode){
+			if(mode==JSONObjectGeneratedMode.NoEmptyField)
+				hasNoEmptyFieldMode=true;
 
-		if(showOnlyChanged && !cell.isValueChanged())
+			if(mode==JSONObjectGeneratedMode.FormatedDate)
+				hasFormatedDate=true;
+		}
+
+		if(hasNoEmptyFieldMode && cell.isEmpty())
 			return;
 
 		if(cell.getValueType()==ValueType.BOOLEAN)
@@ -1289,9 +1284,9 @@ public class ClientDataTable {
 		else if(cell.getValueType()==ValueType.DOUBLE)
 			jsonObject.put(column.getName(),cell.asDouble());
 		else if(cell.getValueType()==ValueType.DATETIME)
-			jsonObject.put(column.getName(),cell.asDate());
+			jsonObject.put(column.getName(),hasFormatedDate?cell.asDateString():cell.asDate());
 		else
-			jsonObject.put(column.getName(),cell.asString());
+			jsonObject.put(column.getName(), cell.asString());
 	}
 	/**
 	 *
