@@ -51,6 +51,8 @@ public class DAOManager {
 	public int getLastPrimaryKeyValue(String tableName){
 		Cursor c=mDataBase.rawQuery("select seq from sqlite_sequence where name='"+tableName+"'",null);
 		c.moveToFirst();
+		if(c.getCount()==0)
+			return 0;
 		return c.getInt(c.getColumnIndex("seq"));
 	}
 }

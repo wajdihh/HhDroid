@@ -2,6 +2,7 @@ package com.hh.adapters;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -18,9 +19,11 @@ import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
 import com.hh.listeners.OnRecycleWidgetClickListener;
+import com.hh.utility.PuImage;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Executors;
 
 /**
@@ -116,10 +119,8 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
                             // SI on a pas encore chargé l image par picosso
                             if (data.asString().contains("http"))
-                                //  Picasso.with(mContext).load(data.asString()).into(picassoTarget(imageView));
                                 mPicasso.load(data.asString()).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
                             else
-                                //   Picasso.with(mContext).load(new File(data.asString())).into(picassoTarget(imageView));
                                 mPicasso.load(new File(data.asString())).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
                         }
                         else
@@ -170,25 +171,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
                 String columnName=buttonView.getTag().toString();
                 mClientDataTable.moveToPosition(position);
-//
-//                if (mClientDataTable.isConnectedToDB()) {
-//
-//                    if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT){
-//                        mClientDataTable.append();
-//                        mClientDataTable.cellByName(columnName).insertIntoDB(isChecked);
-//                        mClientDataTable.commit();
-//                    }
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE){
-//                        mClientDataTable.edit();
-//                        mClientDataTable.cellByName(columnName).updateFromDB(isChecked);
-//                        mClientDataTable.commit();
-//                    }
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
-//                        mClientDataTable.cellByName(columnName).setValue(isChecked);
-//                } else
-                    mClientDataTable.cellByName(columnName).setValue(isChecked);
+                mClientDataTable.cellByName(columnName).setValue(isChecked);
             }
         });
 
@@ -200,20 +183,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
                 TextView lTextView = (TextView) v;
                 String columnName = v.getTag().toString();
-//                if (mClientDataTable.isConnectedToDB()) {
-//
-//                    if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT)
-//                        mClientDataTable.cellByName(columnName).insertIntoDB(lTextView.getText().toString());
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE)
-//                        mClientDataTable.cellByName(columnName).updateFromDB(lTextView.getText().toString());
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
-//                        mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
-//                } else
-//                    mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
-//
-//                mClientDataTable.commit();
 
                 mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
             }
