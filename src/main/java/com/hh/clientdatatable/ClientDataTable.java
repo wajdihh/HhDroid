@@ -1247,6 +1247,9 @@ public class ClientDataTable {
 			int i=0;
 			for (Map.Entry<String,ClientDataTable> entry : _mNestedJsonArrays.entrySet())
 			{
+
+				if(entry.getValue()==null)
+					continue;
 				String parentKey=_mNestedJsonArraysParentKeys.get(i);
 				JSONArray subArrays=entry.getValue().toJSONArray();
 				JSONObject jsonParent=map.get(parentKey);
