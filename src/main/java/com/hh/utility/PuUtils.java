@@ -35,6 +35,7 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Patterns;
 import android.widget.Toast;
 
 import com.hh.droid.R;
@@ -84,6 +85,11 @@ public class PuUtils {
 		return lMatcher.matches();
 
 
+	}
+
+	public static boolean isValidEmail(String email) {
+		Pattern pattern = Patterns.EMAIL_ADDRESS;
+		return pattern.matcher(email).matches();
 	}
 	/**
 	 * to query columns names of a Table from database

@@ -149,7 +149,7 @@ public class PpJsonParser {
 				}
 			}
 
-			for (int k = 0; k < lSizeJsArray; k++) {
+			for (int k = 0; k < lSizeJsArray && lMappingColumnsName.size()!=0; k++) {
 
 				JSONObject lJsObject=pJsArray.getJSONObject(k);
 
