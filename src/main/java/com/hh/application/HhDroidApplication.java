@@ -7,7 +7,6 @@ import com.hh.utility.PuDate;
 
 public abstract class HhDroidApplication extends Application{
 
-	protected PuDate mDate;
 	private Thread.UncaughtExceptionHandler defaultUEH;
 	private Thread.UncaughtExceptionHandler _unCaughtExceptionHandler =
 			new Thread.UncaughtExceptionHandler() {
@@ -23,21 +22,14 @@ public abstract class HhDroidApplication extends Application{
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		mDate=new PuDate();
-		initParams();
-
 		// Pour les excetioon non gérer de l 'application
 		defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
 		Thread.setDefaultUncaughtExceptionHandler(_unCaughtExceptionHandler);
 	}
 
-	protected void initParams(){
-		HhDroid.getInstance().mDateFormat=mDate.getDateFormater();
-		HhDroid.getInstance().mLocalDate=mDate.getLocal();
-		HhDroid.getInstance().mCurrencySymbol=getCurrencySymbole();
-	}
 
-	protected abstract  String getCurrencySymbole();
+	public abstract  String getCurrencySymbole();
+	public abstract  PuDate getConfiguredDate();
 
 	protected void onHandleUncaughtException(Throwable ex){
 

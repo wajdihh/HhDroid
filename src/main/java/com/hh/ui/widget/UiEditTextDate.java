@@ -13,6 +13,9 @@ import com.hh.droid.R;
 import com.hh.features.PfKeyboard;
 import com.hh.ui.UiUtility;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Created by benhadjahameda on 04/02/2015.
  */
@@ -133,6 +136,15 @@ public class UiEditTextDate extends LinearLayout {
             return -1;
         }
         return lValue;
+    }
+
+    public void setDate(Date date){
+
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        _mEdDay.setText("" + c.get(Calendar.DAY_OF_MONTH));
+        _mEdMonth.setText(""+(c.get(Calendar.MONTH)+1));
+        _mEdYear.setText(""+c.get(Calendar.YEAR));
     }
     public int getMonth(){
         String lContent=_mEdMonth.getText().toString();

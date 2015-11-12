@@ -105,15 +105,6 @@ public class PuUtils {
 			lListOfColumns.add(lCursor.getString(1));
 		return lListOfColumns;
 	}
-	public static PuDate getCurrentDate(Context pContext){	
-
-		Calendar lCalendar = Calendar.getInstance();
-		int lDay = lCalendar.get(Calendar.DATE);
-		int lMonth = lCalendar.get(Calendar.MONTH)+1;
-		int lYear = lCalendar.get(Calendar.YEAR);
-
-		return new PuDate(lMonth, lDay, lYear);
-	}
 
     public static void printKeyHash(Activity pActivity){
         // Add code to print out the key hash

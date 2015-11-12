@@ -103,6 +103,7 @@ public class TCell implements Cloneable {
 
         if(_mValue==null || ((_mValue!=null && pValue!=null) &&!_mValue.equals(pValue.toString())))
             onValueChanged();
+
         _mValue = pValue;
     }
 
@@ -185,7 +186,7 @@ public class TCell implements Cloneable {
             lResult= _mOnCDTColumnListener.onGetValue(lResult);
 
         if(_mCellType==CellType.CURRENCY)
-            return lResult+" "+ HhDroid.getInstance().mCurrencySymbol;
+            return lResult+" "+ HhDroid.getInstance(_mContext).mCurrencySymbol;
 
 
         return lResult;
