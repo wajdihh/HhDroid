@@ -1,5 +1,7 @@
 package com.hh.communication;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.hh.listeners.MyCallback;
@@ -16,6 +18,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
@@ -25,10 +30,7 @@ import org.apache.http.protocol.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
@@ -256,6 +258,47 @@ public class PcHttpClient {
 		return sb.toString();
 	}
 
+	public void sendMultipartImage(String url,File imageFile,String multipartKeyName){
+
+		HttpPost httppost = new HttpPost(url);
+		//add headers
+		for(NameValuePair h : headers)
+		{
+			httppost.addHeader(h.getName(), h.getValue());
+		}
+
+		httppost.removeHeaders("Content-Type");
+
+		HttpClient httpClient = new DefaultHttpClient();
+
+		MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+
+		try {
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+			Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 75, bos);
+			byte[] data = bos.toByteArray();
+			ByteArrayBody bab = new ByteArrayBody(data, imageFile.getName());
+			reqEntity.addPart(multipartKeyName, bab);
+
+			httppost.setEntity(reqEntity);
+			HttpResponse response = httpClient.execute(httppost);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+			String sResponse;
+			StringBuilder s = new StringBuilder();
+			while ((sResponse = reader.readLine()) != null) {
+				s = s.append(sResponse);
+			}
+			_mResponseCode = response.getStatusLine().getStatusCode();
+			_mMessageStatus = response.getStatusLine().getReasonPhrase();
+			_mResponse=s.toString();
+		}catch (Exception e) {
+			Log.e("EX", e.getLocalizedMessage(), e);
+		}
+	}
 
 	public JSONObject getJsonObject() {
 		return _mJsonObject;

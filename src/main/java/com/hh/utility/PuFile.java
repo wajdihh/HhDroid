@@ -149,6 +149,9 @@ public class PuFile {
         }
     }
 
+    public static File getFileFromUri(Context pContext,Uri conUri){
+        return  new File(getPathFromURI(pContext,conUri));
+    }
     public static String getPathFromURI(Context context, Uri contentUri) {
         Cursor cursor = null;
         try {
