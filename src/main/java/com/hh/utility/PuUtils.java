@@ -107,21 +107,21 @@ public class PuUtils {
 		return lListOfColumns;
 	}
 
-    public static void printKeyHash(Activity pActivity){
-        // Add code to print out the key hash
-        try {
-            PackageInfo info = pActivity.getPackageManager().getPackageInfo(pActivity.getPackageName(),PackageManager.GET_SIGNATURES);
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.d("KeyHash:", e.toString());
-        } catch (NoSuchAlgorithmException e) {
-            Log.d("KeyHash:", e.toString());
-        }
-    }
+	public static void printKeyHash(Activity pActivity){
+		// Add code to print out the key hash
+		try {
+			PackageInfo info = pActivity.getPackageManager().getPackageInfo(pActivity.getPackageName(),PackageManager.GET_SIGNATURES);
+			for (Signature signature : info.signatures) {
+				MessageDigest md = MessageDigest.getInstance("SHA");
+				md.update(signature.toByteArray());
+				Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+			}
+		} catch (PackageManager.NameNotFoundException e) {
+			Log.d("KeyHash:", e.toString());
+		} catch (NoSuchAlgorithmException e) {
+			Log.d("KeyHash:", e.toString());
+		}
+	}
 
 
 	/**
@@ -343,6 +343,62 @@ public class PuUtils {
 			return s;
 		} else {
 			return Character.toUpperCase(first) + s.substring(1);
+		}
+	}
+
+	public  static void shareOnFacebook(Context pContext,String urlToShare){
+
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType("text/plain");
+		// intent.putExtra(Intent.EXTRA_SUBJECT, "Foo bar"); // NB: has no effect!
+		intent.putExtra(Intent.EXTRA_TEXT, urlToShare);
+
+		// See if official Facebook app is found
+		boolean facebookAppFound = false;
+		List<ResolveInfo> matches = pContext.getPackageManager().queryIntentActivities(intent, 0);
+		for (ResolveInfo info : matches) {
+			if (info.activityInfo.packageName.toLowerCase().startsWith("com.facebook.katana")) {
+				intent.setPackage(info.activityInfo.packageName);
+				facebookAppFound = true;
+				break;
+			}
+		}
+
+		// As fallback, launch sharer.php in a browser
+		if (!facebookAppFound) {
+			String sharerUrl = "https://www.facebook.com/sharer/sharer.php?u=" + urlToShare;
+			intent = new Intent(Intent.ACTION_VIEW, Uri.parse(sharerUrl));
+		}
+
+		pContext.startActivity(intent);
+	}
+	public  static void shareOnTwitter(Context pContext,String urlToShare){
+
+		Intent tweetIntent = new Intent(Intent.ACTION_SEND);
+		tweetIntent.putExtra(Intent.EXTRA_TEXT, urlToShare);
+		tweetIntent.setType("text/plain");
+
+		PackageManager packManager = pContext.getPackageManager();
+		List<ResolveInfo> resolvedInfoList = packManager.queryIntentActivities(tweetIntent,  PackageManager.MATCH_DEFAULT_ONLY);
+
+		boolean resolved = false;
+		for(ResolveInfo resolveInfo: resolvedInfoList){
+			if(resolveInfo.activityInfo.packageName.startsWith("com.twitter.android")){
+				tweetIntent.setClassName(
+						resolveInfo.activityInfo.packageName,
+						resolveInfo.activityInfo.name );
+				resolved = true;
+				break;
+			}
+		}
+		if(resolved){
+			pContext.startActivity(tweetIntent);
+		}else{
+			Intent i = new Intent();
+			i.putExtra(Intent.EXTRA_TEXT, urlToShare);
+			i.setAction(Intent.ACTION_VIEW);
+			i.setData(Uri.parse("https://twitter.com/intent/tweet?text=message&via=profileName"));
+			pContext.startActivity(i);
 		}
 	}
 
