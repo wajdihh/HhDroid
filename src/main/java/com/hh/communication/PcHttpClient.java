@@ -49,6 +49,7 @@ public class PcHttpClient {
 	private String _mResponse;
 	private HttpEntity _mHttpEntity;
 	private JSONObject _mJsonObject;
+	private HttpClient httpClient;
 
 
 	public String getResponse() {
@@ -57,9 +58,10 @@ public class PcHttpClient {
 
 	public PcHttpClient(){
 
-		HttpParams _mHttpParameters = new BasicHttpParams();
-		HttpConnectionParams.setConnectionTimeout(_mHttpParameters, _mConnexionTimeOut);
-		HttpConnectionParams.setSoTimeout(_mHttpParameters, _mConnexionMaxTimeOut);
+		httpClient = new DefaultHttpClient();
+		HttpParams Httpparams = httpClient.getParams();
+		HttpConnectionParams.setConnectionTimeout(Httpparams, _mConnexionTimeOut);
+		HttpConnectionParams.setSoTimeout(Httpparams, _mConnexionMaxTimeOut);
 
 		params = new ArrayList<NameValuePair>();
 		headers = new ArrayList<NameValuePair>();
@@ -67,10 +69,13 @@ public class PcHttpClient {
 
 	public void setConnexionTimeOut(int _mConnexionTimeOut) {
 		this._mConnexionTimeOut = _mConnexionTimeOut;
+		HttpConnectionParams.setConnectionTimeout(httpClient.getParams(), _mConnexionTimeOut);
+
 	}
 
 	public void setConnexionMaxTimeOut(int _mConnexionMaxTimeOut) {
 		this._mConnexionMaxTimeOut = _mConnexionMaxTimeOut;
+		HttpConnectionParams.setSoTimeout(httpClient.getParams(), _mConnexionMaxTimeOut);
 	}
 
 	public String getMessageStatus() {
@@ -203,12 +208,11 @@ public class PcHttpClient {
 	}
 	private void executeRequest(HttpUriRequest request, String url,MyCallback callback)
 	{
-		HttpClient client = new DefaultHttpClient();
 
 		HttpResponse httpResponse;
 
 		try {
-			httpResponse = client.execute(request);
+			httpResponse = httpClient.execute(request);
 			_mResponseCode = httpResponse.getStatusLine().getStatusCode();
 			_mMessageStatus = httpResponse.getStatusLine().getReasonPhrase();
 
@@ -226,11 +230,11 @@ public class PcHttpClient {
 
 		} catch (ClientProtocolException e)  {
 			Log.e("EXxception : ClientProtocolException :", PuException.getExceptionMessage(e));
-			client.getConnectionManager().shutdown();
+			httpClient.getConnectionManager().shutdown();
 			e.printStackTrace();
 		} catch (IOException e) {
 			Log.e("EXxception : IOException :", PuException.getExceptionMessage(e));
-			client.getConnectionManager().shutdown();
+			httpClient.getConnectionManager().shutdown();
 			e.printStackTrace();
 		}
 	}
@@ -269,7 +273,6 @@ public class PcHttpClient {
 
 		httppost.removeHeaders("Content-Type");
 
-		HttpClient httpClient = new DefaultHttpClient();
 
 		MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
 
