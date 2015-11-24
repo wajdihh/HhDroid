@@ -39,8 +39,8 @@ public class PcHttpClient {
 
 	public enum RequestMethod {GET,POST,PUT}
 
-	private int _mConnexionTimeOut=3000;
-	private int _mConnexionMaxTimeOut=5000;
+	private int _mConnexionTimeOut=7000;
+	private int _mConnexionMaxTimeOut=7000;
 
 	private ArrayList <NameValuePair> params;
 	private ArrayList <NameValuePair> headers;
