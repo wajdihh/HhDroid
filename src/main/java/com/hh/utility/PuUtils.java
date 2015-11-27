@@ -202,7 +202,7 @@ public class PuUtils {
 			@Override
 			public void run() {
 
-				progress.hide();
+				progress.dismiss();
 			}
 		}, delay);
 	}
