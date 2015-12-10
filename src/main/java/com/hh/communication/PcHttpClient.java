@@ -3,10 +3,8 @@ package com.hh.communication;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
-
 import com.hh.listeners.MyCallback;
 import com.hh.utility.PuException;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -23,7 +21,6 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
@@ -101,12 +98,14 @@ public class PcHttpClient {
 		/*
 		 * client.AddHeader("Content-Type", "application/json");
 		 */
-		headers.add(new BasicNameValuePair(name, value));
+		if(!isHeaderContainValue(name))
+			headers.add(new BasicNameValuePair(name, value));
 	}
 
 	public void AddHeader(BasicNameValuePair headerParam)
 	{
-		headers.add(headerParam);
+		if(!isHeaderContainValue(headerParam.getName()))
+			headers.add(headerParam);
 	}
 	public void execute(String url,RequestMethod method) throws IOException
 	{
@@ -309,5 +308,15 @@ public class PcHttpClient {
 
 	public void setJsonObjectToPost(JSONObject _mJsonObject) {
 		this._mJsonObject = _mJsonObject;
+	}
+
+	private boolean isHeaderContainValue(String valueName){
+
+		for (NameValuePair item:headers){
+			if(item.getName().equals(valueName))
+				return true;
+
+		}
+		return false;
 	}
 }
