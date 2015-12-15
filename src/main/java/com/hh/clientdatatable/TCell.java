@@ -172,7 +172,7 @@ public class TCell implements Cloneable {
 
         String lResult = "";
         try {
-            if (_mValue != null){
+            if (_mValue != null && !_mValue.isEmpty()){
                 if(_mValueType==ValueType.DATETIME){
                     lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
                     System.out.println("Dans asString :"+_mName);
