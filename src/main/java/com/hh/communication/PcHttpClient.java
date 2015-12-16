@@ -170,8 +170,8 @@ public class PcHttpClient {
 				}
 
 				if(_mJsonObject!=null){
-
-					request.setEntity(new StringEntity(_mJsonObject.toString()));
+					StringEntity se = new StringEntity( _mJsonObject.toString(),"UTF-8");
+					request.setEntity(se);
 				}
 
 				executeRequest(request, url,callback);
