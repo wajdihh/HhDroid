@@ -6,14 +6,12 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-
 import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.droid.R;
 import com.hh.listeners.MyCallback;
 import com.hh.listeners.OnCDTColumnListener;
 import com.hh.listeners.OnCDTStateListener;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
-import com.hh.parsing.PpJsonParser;
 import com.hh.utility.PuException;
 import com.hh.utility.PuUtils;
 import org.json.JSONArray;
@@ -1070,6 +1068,20 @@ public class ClientDataTable {
 			list.add(row.cellByName(pFieldName).asString());
 		}
 		return list;
+	}
+	/**
+	 * Return if value existe
+	 * @param pFieldName
+	 * @param value
+	 * @return
+	 */
+	public boolean isValueExist(String fieldName,String value){
+
+		for (TRow row:_mListOfRows){
+			if(row.cellByName(fieldName).asString().equals(value))
+				return true;
+		}
+		return false;
 	}
 	/**
 	 * Retrun List of cells of column X

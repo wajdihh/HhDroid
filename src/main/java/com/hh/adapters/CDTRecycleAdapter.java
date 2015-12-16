@@ -2,9 +2,11 @@ package com.hh.adapters;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.media.ExifInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,17 +15,14 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.hh.clientdatatable.ClientDataTable;
-import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
 import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
 import com.hh.listeners.OnRecycleWidgetClickListener;
-import com.hh.utility.PuImage;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.Executors;
 
 /**
@@ -114,6 +113,10 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                     final ImageView imageView= (ImageView) lWidget;
                     if (data.getValueType() == TCell.ValueType.INTEGER) {
                         imageView.setImageResource(data.asInteger());
+                    } else if (data.getValueType() == TCell.ValueType.BASE64) {
+                        byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        imageView.setImageBitmap(decodedByte);
                     } else {
                         if (!data.asString().equals("")) {
 

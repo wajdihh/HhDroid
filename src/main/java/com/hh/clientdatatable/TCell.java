@@ -19,7 +19,7 @@ public class TCell implements Cloneable {
         return _mName;
     }
 
-    public enum ValueType {BOOLEAN, INTEGER, DOUBLE, TEXT, DATETIME}
+    public enum ValueType {BOOLEAN, INTEGER, DOUBLE, TEXT, DATETIME,BASE64}
 
     public enum CellType {NONE,CURRENCY}
 
