@@ -202,7 +202,7 @@ public class PuUtils {
 			@Override
 			public void run() {
 
-				progress.hide();
+				progress.dismiss();
 			}
 		}, delay);
 	}
@@ -386,7 +386,7 @@ public class PuUtils {
 			if(resolveInfo.activityInfo.packageName.startsWith("com.twitter.android")){
 				tweetIntent.setClassName(
 						resolveInfo.activityInfo.packageName,
-						resolveInfo.activityInfo.name );
+						resolveInfo.activityInfo.name);
 				resolved = true;
 				break;
 			}
@@ -400,6 +400,15 @@ public class PuUtils {
 			i.setData(Uri.parse("https://twitter.com/intent/tweet?text=message&via=profileName"));
 			pContext.startActivity(i);
 		}
+	}
+
+	public static int getVersionCode(Context pContext) throws PackageManager.NameNotFoundException {
+		PackageInfo pInfo = pContext.getPackageManager().getPackageInfo(pContext.getPackageName(), 0);
+		return pInfo.versionCode;
+	}
+	public static String getVersionName(Context pContext) throws PackageManager.NameNotFoundException {
+		PackageInfo pInfo = pContext.getPackageManager().getPackageInfo(pContext.getPackageName(), 0);
+		return pInfo.versionName;
 	}
 
 }

@@ -1186,6 +1186,8 @@ public class ClientDataTable {
 
 
 	public void addJSONArray(String key,String parentKey,ClientDataTable arrays){
+
+		System.out.println("SIZE nestead :"+arrays.getRowsCount());
 		_mNestedJsonArrays.put(key, arrays);
 		_mNestedJsonArraysParentKeys.add(parentKey);
 	}

@@ -50,7 +50,9 @@ public class PuDate{
      * Format : MM/dd/yyyy HH:mm
      */
     public static final String FORMAT_DATETIME_HOUR_EN = "MM/dd/yyyy HH:mm";
-	
+
+    public static final String FORMAT_TIME = "HH:mm";
+
 	private String _mDateStringFormat;
 	private static SimpleDateFormat _mDateFormater;
 
@@ -160,6 +162,9 @@ public class PuDate{
         setDateStringFormat(pDateFormat);
         return _mDateFormater.format(date);
     }
+	public String getFormattingDate(Date date,String pDateFormat) {
+		return  new SimpleDateFormat(pDateFormat, getLocal()).format(date);
+	}
     public static String getStringFromDate(long pDateTime){
 		return _mDateFormater.format(pDateTime);
 	}
