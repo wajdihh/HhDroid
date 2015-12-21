@@ -463,7 +463,11 @@ public class ClientDataTable {
 		}
 
 		_mSqliteDataBase.insertOrThrow(_mTableName, null, lValues);
-		cellPrimaryKey().setValue(DatabaseUtils.getLastPrimaryKeyValue(_mSqliteDataBase, _mTableName));
+
+		//Updated primary Key
+		TCell tCellPrimaryKey=getPrimaryKeyCell();
+		if(tCellPrimaryKey!=null)
+			tCellPrimaryKey.setValue(DatabaseUtils.getLastPrimaryKeyValue(_mSqliteDataBase, _mTableName));
 	}
 
 	private void updateInDB(boolean pInsertIfNotUpdated){
@@ -589,6 +593,23 @@ public class ClientDataTable {
 		return moveToPosition(_mPosition -1);
 	}
 
+
+	/**
+	 * for positioning the CDT to the specific row, if the id found
+	 */
+
+	public boolean findRowByID(String idColumnName,int idValue){
+
+		int i=0;
+		for (TRow row:_mListOfRows){
+			if(row.cellByName(idColumnName).asInteger()==idValue){
+				moveToPosition(i);
+				return true;
+			}
+			i++;
+		}
+		return false;
+	}
 	/**
 	 * Move to row position at pIndex
 	 *
@@ -750,7 +771,7 @@ public class ClientDataTable {
 		return lResult;
 	}
 
-	public TCell cellPrimaryKey() {
+	public TCell getPrimaryKeyCell() {
 
 		if(getRowsCount()==0) {
 			PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
