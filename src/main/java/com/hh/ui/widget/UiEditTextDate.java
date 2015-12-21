@@ -133,6 +133,7 @@ public class UiEditTextDate extends LinearLayout {
         int lValue=Integer.parseInt(lContent);
         if(lValue<0 || lValue>31){
             _mEdDay.setError(_myContext.getString(R.string.error_day));
+            _mEdDay.requestFocus();
             return -1;
         }
         return lValue;
@@ -154,6 +155,7 @@ public class UiEditTextDate extends LinearLayout {
         int lValue=Integer.parseInt(lContent);
         if(lValue<0 || lValue>12){
             _mEdMonth.setError(_myContext.getString(R.string.error_month));
+            _mEdMonth.requestFocus();
             return -1;
         }
         return lValue;
@@ -166,6 +168,7 @@ public class UiEditTextDate extends LinearLayout {
         int lValue=Integer.parseInt(lContent);
         if(lValue<1950 || lValue>2050){
             _mEdYear.setError(_myContext.getString(R.string.error_year));
+            _mEdYear.requestFocus();
             return -1;
         }
         return lValue;

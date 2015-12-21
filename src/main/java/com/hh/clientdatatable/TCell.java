@@ -174,16 +174,29 @@ public class TCell implements Cloneable {
         try {
             if (_mValue != null && !_mValue.isEmpty()){
                 if(_mValueType==ValueType.DATETIME){
-                    lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
-                    System.out.println("Dans asString :"+_mName);
+                    long dateLong=Long.parseLong(_mValue);
+                    lResult = PuDate.getStringFromDate(dateLong);
+
+                    if (_mOnCDTColumnListener != null)
+                        lResult= _mOnCDTColumnListener.onGetValueDate(new Date(dateLong));
+
                 } else
                     lResult = _mValue;
             }
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
         }
         if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+            lResult= _mOnCDTColumnListener.onGetValue(_mValue);
+
+        if (_mOnCDTColumnListener != null && _mValueType==ValueType.INTEGER)
+            lResult= _mOnCDTColumnListener.onGetValueInt(Integer.parseInt(_mValue));
+
+        if (_mOnCDTColumnListener != null && _mValueType==ValueType.BOOLEAN)
+            lResult= _mOnCDTColumnListener.onGetValueBool(Boolean.parseBoolean(_mValue));
+
+        if (_mOnCDTColumnListener != null && _mValueType==ValueType.DOUBLE)
+            lResult= _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
 
         if(_mCellType==CellType.CURRENCY)
             return lResult+" "+ HhDroid.getInstance(_mContext).mCurrencySymbol;

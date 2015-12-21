@@ -65,6 +65,7 @@ public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListene
 		mClientDataTable=pCDT;
 		mContext=pContext;
 		mLayout=pLayout;
+		ViewHolder.clearAllTags();
 		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
 		_mIsEnableAutoNotifyDataSetChanged=false;
 		_mAutoRequery=false;

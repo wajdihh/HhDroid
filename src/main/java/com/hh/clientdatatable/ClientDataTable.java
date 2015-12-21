@@ -60,6 +60,9 @@ public class ClientDataTable {
 	private Map<String,ClientDataTable> _mNestedJsonArrays;
 	private List<String> _mNestedJsonArraysParentKeys;
 
+	private Map<String,ClientDataTable> _mNestedJSONObject;
+	private List<String> _mNestedJSONObjectParentKeys;
+
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
 	{
@@ -67,6 +70,8 @@ public class ClientDataTable {
 		_mListOfColumns = new ArrayList<TColumn>();
 		_mNestedJsonArrays=new HashMap<>();
 		_mNestedJsonArraysParentKeys=new ArrayList<>();
+		_mNestedJSONObject=new HashMap<>();
+		_mNestedJSONObjectParentKeys=new ArrayList<>();
 		_mPosition = -1;
 		_mTempIteration=-1;
 		_mCursorSize = -1;
@@ -210,7 +215,7 @@ public class ClientDataTable {
 		_mIsExecInDateBase=pIsExecInDateBase;
 		if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
 			if(getRowsCount()==0){
-				PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
+				Log.e("CDT vide","Client data table est vide");
 				return;
 			}
 
@@ -527,8 +532,8 @@ public class ClientDataTable {
 			for (int i = 0; i < _mWhereClauseColumns.length; i++) {
 				TCell lCell=pTRow.cellByName(_mWhereClauseColumns[i]);
 
-				lArgs[i]=lCell.asString();
-				if(lCell.asString().equals(""))
+				lArgs[i]=lCell.asValue();
+				if(lCell.asValue().equals(""))
 					PuUtils.showMessage(_mContext, "Erreur delete", "Valeur vide pour la clé de suppression :"+_mWhereClauseColumns[i]);
 			}
 
@@ -1187,9 +1192,13 @@ public class ClientDataTable {
 
 	public void addJSONArray(String key,String parentKey,ClientDataTable arrays){
 
-		System.out.println("SIZE nestead :"+arrays.getRowsCount());
 		_mNestedJsonArrays.put(key, arrays);
 		_mNestedJsonArraysParentKeys.add(parentKey);
+	}
+
+	public void addNestedJSONObject(String key,String parentKey,ClientDataTable jsonObjectCDT){
+		_mNestedJSONObject.put(key, jsonObjectCDT);
+		_mNestedJSONObjectParentKeys.add(parentKey);
 	}
 	public JSONArray toJSONArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
 		return createJsonArray(jsonObjectGeneratedMode);
@@ -1256,6 +1265,7 @@ public class ClientDataTable {
 			}
 		}
 
+		// Json Arrays
 		if(!_mNestedJsonArrays.isEmpty()){
 
 			int i=0;
@@ -1269,6 +1279,25 @@ public class ClientDataTable {
 				JSONObject jsonParent=map.get(parentKey);
 
 				jsonParent.put(entry.getKey(),subArrays);
+
+				i++;
+			}
+		}
+
+		// JSon Object
+		if(!_mNestedJSONObject.isEmpty()){
+
+			int i=0;
+			for (Map.Entry<String,ClientDataTable> entry : _mNestedJSONObject.entrySet())
+			{
+
+				if(entry.getValue()==null)
+					continue;
+				String parentKey=_mNestedJSONObjectParentKeys.get(i);
+				JSONObject subJSONObject=entry.getValue().toJSONObject();
+				JSONObject jsonParent=map.get(parentKey);
+
+				jsonParent.put(entry.getKey(),subJSONObject);
 
 				i++;
 			}
@@ -1301,9 +1330,9 @@ public class ClientDataTable {
 		else if(cell.getValueType()==ValueType.DOUBLE)
 			jsonObject.put(column.getName(),cell.asDouble());
 		else if(cell.getValueType()==ValueType.DATETIME)
-			jsonObject.put(column.getName(),hasFormatedDate?cell.asDateString():cell.asDate());
+			jsonObject.put(column.getName(),hasFormatedDate?cell.asDateString():cell.asDateTime());
 		else
-			jsonObject.put(column.getName(), cell.asString());
+			jsonObject.put(column.getName(), cell.asValue());
 	}
 	/**
 	 *
