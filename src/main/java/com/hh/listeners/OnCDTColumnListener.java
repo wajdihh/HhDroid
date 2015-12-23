@@ -11,7 +11,7 @@ public class OnCDTColumnListener {
     public String onGetValueInt(int pValue){return ""+pValue;}
     public String onGetValueDouble(double pValue){return ""+pValue;}
     public String onGetValueBool(boolean pValue){return ""+pValue;}
-    public String onGetValueDate(Date pValue){return ""+pValue.toString();}
+    public String onGetValueDate(long pValue){return ""+pValue;}
 
     public Date onGetValue(Date pValue){return pValue;}
     public boolean onGetValue(boolean pValue){return pValue;}

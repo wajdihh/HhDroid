@@ -171,36 +171,43 @@ public class TCell implements Cloneable {
     public String asString() {
 
         String lResult = "";
-        try {
-            if (_mValue != null && !_mValue.isEmpty()){
-                if(_mValueType==ValueType.DATETIME){
-                    long dateLong=Long.parseLong(_mValue);
-                    lResult = PuDate.getStringFromDate(dateLong);
+        if (_mOnCDTColumnListener != null){
 
-                    if (_mOnCDTColumnListener != null)
-                        lResult= _mOnCDTColumnListener.onGetValueDate(new Date(dateLong));
+            switch (_mValueType){
+                case INTEGER:
+                    lResult= _mOnCDTColumnListener.onGetValueInt(Integer.parseInt(_mValue));
+                    break;
+                case BOOLEAN:
+                    lResult= _mOnCDTColumnListener.onGetValueBool(Boolean.parseBoolean(_mValue));
+                    break;
+                case DOUBLE:
+                    lResult= _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
+                    break;
+                case DATETIME:
+                    if(!_mValue.isEmpty()){
+                        long dateLong=Long.parseLong(_mValue);
+                        lResult= _mOnCDTColumnListener.onGetValueDate(dateLong);
+                    }else
+                        lResult = _mOnCDTColumnListener.onGetValue(_mValue);
 
-                } else
-                    lResult = _mValue;
+                    break;
+                case TEXT:
+                    lResult= _mOnCDTColumnListener.onGetValue(_mValue);
+                    break;
             }
-        }catch (Exception e) {
-            e.printStackTrace();
+            lResult = _mOnCDTColumnListener.onGetValue(lResult);
+
+            // If we not define the listener
+        }else{
+            if(_mValueType==ValueType.DATETIME){
+                long dateLong=Long.parseLong(_mValue);
+                lResult = PuDate.getStringFromDate(dateLong);
+            }else
+                lResult=_mValue;
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(_mValue);
-
-        if (_mOnCDTColumnListener != null && _mValueType==ValueType.INTEGER)
-            lResult= _mOnCDTColumnListener.onGetValueInt(Integer.parseInt(_mValue));
-
-        if (_mOnCDTColumnListener != null && _mValueType==ValueType.BOOLEAN)
-            lResult= _mOnCDTColumnListener.onGetValueBool(Boolean.parseBoolean(_mValue));
-
-        if (_mOnCDTColumnListener != null && _mValueType==ValueType.DOUBLE)
-            lResult= _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
 
         if(_mCellType==CellType.CURRENCY)
             return lResult+" "+ HhDroid.getInstance(_mContext).mCurrencySymbol;
-
 
         return lResult;
     }
