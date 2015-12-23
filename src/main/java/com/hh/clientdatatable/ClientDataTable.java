@@ -60,7 +60,7 @@ public class ClientDataTable {
 	private Map<String,ClientDataTable> _mNestedJSONObject;
 	private List<String> _mNestedJSONObjectParentKeys;
 
-	private CDTStatusUtils mCDTStatusUtils;
+	private CDTStatusUtils mCdtUtils;
 
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
@@ -75,7 +75,7 @@ public class ClientDataTable {
 		_mTempIteration=-1;
 		_mCursorSize = -1;
 		mIsCdtSorted=false;
-		mCDTStatusUtils=new CDTStatusUtils();
+		mCdtUtils=new CDTStatusUtils();
 	}
 
 	public ClientDataTable(Context pContext) {
@@ -149,7 +149,7 @@ public class ClientDataTable {
 
 	public void append(TRow row){
 
-		mCDTStatusUtils.notifyOnBeforeInsert();
+		mCdtUtils.notifyOnBeforeInsert();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 			_mCDTStatus=CDTStatus.INSERT;
@@ -160,7 +160,7 @@ public class ClientDataTable {
 
 	public void delete(){
 
-		mCDTStatusUtils.notifyOnBeforeDelete();
+		mCdtUtils.notifyOnBeforeDelete();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 
@@ -175,7 +175,7 @@ public class ClientDataTable {
 
 	public void edit(){
 
-		mCDTStatusUtils.notifyOnBeforeEdit();
+		mCdtUtils.notifyOnBeforeEdit();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 
@@ -221,7 +221,7 @@ public class ClientDataTable {
 			}
 
 		// if we have set CDTListener and the data is not valid return
-		for (OnCDTStateListener listener:mCDTStatusUtils.mListOfStateListener) {
+		for (OnCDTStateListener listener:mCdtUtils.mListOfStateListener) {
 			if (!listener.onBeforeValidate()) {
 				if (pCallback != null) pCallback.onError("");
 				return;
@@ -240,7 +240,7 @@ public class ClientDataTable {
 		if(_mCellHowValueChanged!=null)
 			_mCellHowValueChanged.setValueChanged(false);
 
-		mCDTStatusUtils.notifyOnAfterValidate(pIsExecInDateBase);
+		mCdtUtils.notifyOnAfterValidate(pIsExecInDateBase);
 
 		if(pCallback!=null ) pCallback.onSuccess("");
 
@@ -290,7 +290,7 @@ public class ClientDataTable {
 
 	public void revert(){
 
-		mCDTStatusUtils.notifyOnBeforeRevert();
+		mCdtUtils.notifyOnBeforeRevert();
 
 		switch (_mCDTStatus){
 			case INSERT:
@@ -313,7 +313,7 @@ public class ClientDataTable {
 				break;
 		}
 
-		mCDTStatusUtils.notifyOnAfterRevert();
+		mCdtUtils.notifyOnAfterRevert();
 		clearListOfDeletedRows();
 	}
 
@@ -351,10 +351,10 @@ public class ClientDataTable {
 
 				if(isUseCDTListener)
 					if(_mCDTStatus==CDTStatus.INSERT)
-						mCDTStatusUtils.notifyOnAfterInsert(true);
+						mCdtUtils.notifyOnAfterInsert(true);
 
 					else if(_mCDTStatus==CDTStatus.UPDATE)
-						mCDTStatusUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
+						mCdtUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
 			}
 
 
@@ -363,7 +363,7 @@ public class ClientDataTable {
 				size = _mListOfDeletedRows.size();
 				for (int i = 0; i < size; i++){
 					if( isUseCDTListener)
-						mCDTStatusUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
+						mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
 
 					deleteRowDataBase(_mListOfDeletedRows.get(i));
 				}
@@ -387,10 +387,10 @@ public class ClientDataTable {
 				// Pas besoin car on l a deja dans l Append()
 				//_mListOfRows.add(new TRow(_mContext, _mCDTStatus, getColumnsCount()));
 
-				if(pIsUseCDTListener) mCDTStatusUtils.notifyOnAfterInsert(pIsExecuteAction);
+				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterInsert(pIsExecuteAction);
 				break;
 			case DELETE:
-				if(pIsUseCDTListener) mCDTStatusUtils.notifyOnAfterDelete(getCurrentRow(), pIsExecuteAction);
+				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterDelete(getCurrentRow(), pIsExecuteAction);
 				_mListOfDeletedRows.add(getCurrentRow());
 				_mListOfRows.remove(_mPosition);
 				if (_mPosition == getRowsCount()){
@@ -402,7 +402,7 @@ public class ClientDataTable {
 
 			case UPDATE:
 
-				if(pIsUseCDTListener && isValuesChanged()) mCDTStatusUtils.notifyOnAfterEdit(_mOldRow, getCurrentRow(), pIsExecuteAction);
+				if(pIsUseCDTListener && isValuesChanged()) mCdtUtils.notifyOnAfterEdit(_mOldRow, getCurrentRow(), pIsExecuteAction);
 				if(_mOldRow!=null) {
 					_mOldRow.getCells().clear();
 					_mOldRow = null;
@@ -1443,9 +1443,9 @@ public class ClientDataTable {
 
 
 	public void setOnCDTStateListener(OnCDTStateListener pListener){
-		mCDTStatusUtils.mListOfStateListener.add(pListener);
+		mCdtUtils.mListOfStateListener.add(pListener);
 	}
 	public void removeCDTStateListener(OnCDTStateListener pListener){
-		mCDTStatusUtils.mListOfStateListener.remove(pListener);
+		mCdtUtils.mListOfStateListener.remove(pListener);
 	}
 }
