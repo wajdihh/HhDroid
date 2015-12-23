@@ -199,7 +199,9 @@ public class TCell implements Cloneable {
                     lResult= _mOnCDTColumnListener.onGetValue(_mValue);
                     break;
             }
-            lResult = _mOnCDTColumnListener.onGetValue(lResult);
+
+            if(_mValueType!=ValueType.TEXT)
+                lResult = _mOnCDTColumnListener.onGetValue(lResult);
 
             // If we not define the listener
         }else{

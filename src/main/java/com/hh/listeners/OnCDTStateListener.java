@@ -9,17 +9,17 @@ public class OnCDTStateListener {
 
     public void onBeforeDelete() {
     }
-    public void onAfterDelete(TRow deletedRow,boolean isExecuteMode) {
+    public void onAfterDelete(TRow deletedRow,boolean isInExecuteMode) {
     }
 
     public void onBeforeEdit() {
     }
-    public void onAfterEdit(TRow oldRow,TRow newRow,boolean isExecuteMode) {
+    public void onAfterEdit(TRow oldRow,TRow newRow,boolean isInExecuteMode) {
     }
 
     public void onBeforeInsert() {
     }
-    public void onAfterInsert(boolean isExecuteMode) {
+    public void onAfterInsert(boolean isInExecuteMode) {
     }
 
     public void onBeforeRevert(){
@@ -31,6 +31,6 @@ public class OnCDTStateListener {
     public  boolean onBeforeValidate(){
         return true;
     }
-    public  void onAfterValidate(boolean isExecuteMode){}
+    public  void onAfterValidate(boolean isInExecuteMode){}
 
 }
