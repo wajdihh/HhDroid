@@ -229,11 +229,11 @@ public class PcHttpClient {
 
 		} catch (ClientProtocolException e)  {
 			Log.e("EXxception : ClientProtocolException :", PuException.getExceptionMessage(e));
-			httpClient.getConnectionManager().shutdown();
+			//httpClient.getConnectionManager().shutdown();
 			e.printStackTrace();
 		} catch (IOException e) {
 			Log.e("EXxception : IOException :", PuException.getExceptionMessage(e));
-			httpClient.getConnectionManager().shutdown();
+			//httpClient.getConnectionManager().shutdown();
 			e.printStackTrace();
 		}
 	}

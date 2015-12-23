@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import com.hh.clientdatatable.TCell.ValueType;
+import com.hh.database.DatabaseUtils;
 import com.hh.droid.R;
 import com.hh.listeners.MyCallback;
 import com.hh.listeners.OnCDTColumnListener;
@@ -462,6 +463,11 @@ public class ClientDataTable {
 		}
 
 		_mSqliteDataBase.insertOrThrow(_mTableName, null, lValues);
+
+		//Updated primary Key
+		TCell tCellPrimaryKey=getPrimaryKeyCell();
+		if(tCellPrimaryKey!=null)
+			tCellPrimaryKey.setValue(DatabaseUtils.getLastPrimaryKeyValue(_mSqliteDataBase, _mTableName));
 	}
 
 	private void updateInDB(boolean pInsertIfNotUpdated){
@@ -587,6 +593,23 @@ public class ClientDataTable {
 		return moveToPosition(_mPosition -1);
 	}
 
+
+	/**
+	 * for positioning the CDT to the specific row, if the id found
+	 */
+
+	public boolean findRowByID(String idColumnName,int idValue){
+
+		int i=0;
+		for (TRow row:_mListOfRows){
+			if(row.cellByName(idColumnName).asInteger()==idValue){
+				moveToPosition(i);
+				return true;
+			}
+			i++;
+		}
+		return false;
+	}
 	/**
 	 * Move to row position at pIndex
 	 *
@@ -748,6 +771,33 @@ public class ClientDataTable {
 		return lResult;
 	}
 
+	public TCell getPrimaryKeyCell() {
+
+		if(getRowsCount()==0) {
+			PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
+			return new TCell();
+		}
+
+		TCell lResult=null;
+
+		int lColumnSize = getColumnsCount();
+		boolean lIsCellFound=false;
+		for (int i = 0; i < lColumnSize && getRowsCount() != 0; i++) {
+			if (_mListOfColumns.get(i).getColumnType()== TColumn.ColumnType.PrimaryKey) {
+				lResult = getCell(_mPosition, i);
+				lResult.setValueType(_mListOfColumns.get(i).getValueType());
+				lResult.setName(_mListOfColumns.get(i).getName());
+				lResult.setOnCDTColumnListener(_mListOfColumns.get(i).getCDTColumnListener());
+				lIsCellFound=true;
+				break;
+			}
+
+		}
+		if(!lIsCellFound)
+			PuUtils.showMessage(_mContext, "NO PRIMARY KEY NAME","No column with primary key name has found");
+
+		return lResult;
+	}
 	/**
 	 * Get the SUM of the cells Column IF THE TYPE is a NUMBER,else the asFloat
 	 * will return 0 and the Sum will be 0

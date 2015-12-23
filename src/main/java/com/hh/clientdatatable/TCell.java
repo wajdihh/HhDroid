@@ -97,6 +97,10 @@ public class TCell implements Cloneable {
                     " il faut le reactiver en utilisant edit()");
     }
 
+    public void setName(String name){
+        _mName=name;
+    }
+
     public void setValue(String pValue) {
         if (_mOnCDTColumnListener != null)
             pValue = _mOnCDTColumnListener.onSetValue(pValue);

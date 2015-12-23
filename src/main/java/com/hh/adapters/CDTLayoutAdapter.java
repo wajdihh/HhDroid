@@ -1,30 +1,23 @@
 package com.hh.adapters;
 
-import java.util.ArrayList;
-
 import android.content.Context;
 import android.net.Uri;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.Checkable;
-import android.widget.CompoundButton;
+import android.widget.*;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.ImageView;
-import android.widget.TextView;
-
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
 import com.hh.clientdatatable.TCell.ValueType;
-import com.hh.clientdatatable.TRow;
 import com.hh.droid.R;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.MyCallback;
 import com.hh.ui.UiUtility;
 import com.hh.utility.PuUtils;
+
+import java.util.ArrayList;
 
 
 /**
@@ -34,7 +27,7 @@ import com.hh.utility.PuUtils;
  *
  *
  */
-public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListener,OnFocusChangeListener {
+public class CDTLayoutAdapter {
 
 
 	public static final int FLAG_AUTO_REQUERY = 0x01;
@@ -131,14 +124,14 @@ public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListene
 				if(lWidget instanceof ImageView)
 					lWidget.setBackgroundResource(R.drawable.selector_row);
 
-				lWidget.setOnClickListener(this);
+				lWidget.setOnClickListener(new MyOnClickListener());
 				if (lWidget instanceof CheckBox){
 					CheckBox lCheckBox = (CheckBox) lWidget;
-					lCheckBox.setOnCheckedChangeListener(this);
+					lCheckBox.setOnCheckedChangeListener(new MyCheckedChangeListener());
 				}
 				if (lWidget instanceof TextView){
 					final TextView lTextView = (TextView) lWidget;
-					lTextView.setOnFocusChangeListener(this);
+					lTextView.setOnFocusChangeListener(new MyFocusChangeListener());
 				}
 			}
 
@@ -180,8 +173,7 @@ public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListene
 							((ImageView) lWidget).setImageDrawable(null);
 					}
 				} else
-					throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
-							" view that can be bounds by this SimpleAdapter");
+					throw new IllegalStateException(lWidget.getClass().getName() + " is not a " + " view that can be bounds by this SimpleAdapter");
 			}
 		}
 	}
@@ -218,54 +210,6 @@ public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListene
 	 * @param widget :  View
 	 */
 	protected  void onIteratedWidget(View widget,String tag){};
-
-
-	@Override
-	public void onFocusChange(View v, boolean hasFocus) {
-		TextView lTextView=(TextView) v;
-		String lColumnName=v.getTag().toString();
-
-		if(mClientDataTable.isConnectedToDB()){
-
-			if(mClientDataTable.getCDTStatus()==CDTStatus.INSERT)
-				mClientDataTable.cellByName(lColumnName).insertIntoDB(lTextView.getText().toString());
-
-			else if(mClientDataTable.getCDTStatus()==CDTStatus.UPDATE)
-				mClientDataTable.cellByName(lColumnName).updateFromDB(lTextView.getText().toString());
-
-			else if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
-				mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
-		}else
-			mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
-	}
-
-	@Override
-	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-		String lColumnName=buttonView.getTag().toString();
-		if(mClientDataTable.isConnectedToDB()){
-
-			if(mClientDataTable.getCDTStatus()==CDTStatus.INSERT)
-				mClientDataTable.cellByName(lColumnName).insertIntoDB(isChecked);
-
-			else if(mClientDataTable.getCDTStatus()==CDTStatus.UPDATE)
-				mClientDataTable.cellByName(lColumnName).updateFromDB(isChecked);
-
-			else if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
-				mClientDataTable.cellByName(lColumnName).setValue(isChecked);
-		}else
-			mClientDataTable.cellByName(lColumnName).setValue(isChecked);
-
-	}
-
-	@Override
-	public void onClick(View v) {
-
-		String lTag="";
-		if(v.getTag()!=null)
-			lTag=v.getTag().toString();
-		onClickWidget(lTag);
-	}
 
 	public void clear(){
 		mClientDataTable.clear();
@@ -347,13 +291,51 @@ public class CDTLayoutAdapter implements OnClickListener, OnCheckedChangeListene
 	}
 	private void validateChanges(){
 
+		UiUtility.clearAllChildrensFocus((ViewGroup)mLayout);
+		PfKeyboard.hide(mContext, mLayout);
+
 		if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-			PuUtils.showMessage(mContext,"Error CDT","CDT is in default STATUS, you can't validate in default");
+			PuUtils.showMessage(mContext, "Error CDT", "CDT is in default STATUS, you can't validate in default");
 			return;
 		}
 
-		UiUtility.clearAllChildrensFocus((ViewGroup)mLayout);
-		PfKeyboard.hide(mContext, mLayout);
+	}
+
+	class MyFocusChangeListener implements View.OnFocusChangeListener{
+
+		@Override
+		public void onFocusChange(View v, boolean hasFocus) {
+
+			mClientDataTable.edit();
+			TextView lTextView=(TextView) v;
+			String lColumnName=v.getTag().toString();
+			mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
+		}
+	}
+
+
+	class MyCheckedChangeListener implements OnCheckedChangeListener{
+
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+			mClientDataTable.edit();
+			String lColumnName=buttonView.getTag().toString();
+			mClientDataTable.cellByName(lColumnName).setValue(isChecked);
+
+		}
+	}
+
+	class MyOnClickListener implements OnClickListener{
+
+		@Override
+		public void onClick(View v) {
+
+			String lTag="";
+			if(v.getTag()!=null)
+				lTag=v.getTag().toString();
+			onClickWidget(lTag);
+		}
 	}
 
 }
