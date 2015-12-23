@@ -205,7 +205,7 @@ public class TCell implements Cloneable {
 
             // If we not define the listener
         }else{
-            if(_mValueType==ValueType.DATETIME){
+            if(_mValueType==ValueType.DATETIME &&!_mValue.isEmpty()){
                 long dateLong=Long.parseLong(_mValue);
                 lResult = PuDate.getStringFromDate(dateLong);
             }else

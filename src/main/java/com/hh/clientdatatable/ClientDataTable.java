@@ -1206,20 +1206,16 @@ public class ClientDataTable {
 		if(_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
 			return true;
 
-		boolean isChanged=false;
 		for (TColumn column:_mListOfColumns){
 			for (TRow row :_mListOfRows){
 				TCell cell=row.cellByName(column.getName());
 				if(cell.isValueChanged()){
-					isChanged=true;
 					_mCellHowValueChanged=cell;
-					break;
+					return  true;
 				}
 			}
-			if(isChanged)
-				break;
 		}
-		return isChanged;
+		return false;
 	}
 	/**
 	 * Returns a new data table, with the same data and metadata as this one.
