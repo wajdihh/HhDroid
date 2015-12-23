@@ -9,10 +9,7 @@ import android.util.Log;
 import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.database.DatabaseUtils;
 import com.hh.droid.R;
-import com.hh.listeners.MyCallback;
-import com.hh.listeners.OnCDTColumnListener;
-import com.hh.listeners.OnCDTStateListener;
-import com.hh.listeners.OnNotifyDataSetChangedListener;
+import com.hh.listeners.*;
 import com.hh.utility.PuException;
 import com.hh.utility.PuUtils;
 import org.json.JSONArray;
@@ -37,7 +34,7 @@ public class ClientDataTable {
 
 	// List of Rows
 	private ArrayList<TRow> _mListOfRows;
-	private ArrayList<TRow> _mListOfRowsBeforeDelete;
+	private ArrayList<TRow> _mListOfDeletedRows;
 	private TRow _mOldRow;
 	// List Of columns
 	private ArrayList<TColumn> _mListOfColumns;
@@ -46,7 +43,6 @@ public class ClientDataTable {
 	private int _mTempIteration;
 	private int _mCursorSize;
 	private Resources _mRes;
-	private OnCDTStateListener _mOnCDTStateListener;
 	private SQLiteDatabase _mSqliteDataBase;
 	private String _mTableName;
 	private String _mCDTName="";
@@ -64,12 +60,14 @@ public class ClientDataTable {
 	private Map<String,ClientDataTable> _mNestedJSONObject;
 	private List<String> _mNestedJSONObjectParentKeys;
 
+	private CDTStatusUtils mCDTStatusUtils;
+
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
 	{
-		_mListOfRows = new ArrayList<TRow>();
-		_mListOfColumns = new ArrayList<TColumn>();
-		_mNestedJsonArrays=new HashMap<>();
+		_mListOfRows = new ArrayList<>();
+		_mListOfColumns = new ArrayList<>();
+		_mNestedJsonArrays= new HashMap<>();
 		_mNestedJsonArraysParentKeys=new ArrayList<>();
 		_mNestedJSONObject=new HashMap<>();
 		_mNestedJSONObjectParentKeys=new ArrayList<>();
@@ -77,6 +75,7 @@ public class ClientDataTable {
 		_mTempIteration=-1;
 		_mCursorSize = -1;
 		mIsCdtSorted=false;
+		mCDTStatusUtils=new CDTStatusUtils();
 	}
 
 	public ClientDataTable(Context pContext) {
@@ -150,7 +149,7 @@ public class ClientDataTable {
 
 	public void append(TRow row){
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeInsert();
+		mCDTStatusUtils.notifyOnBeforeInsert();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 			_mCDTStatus=CDTStatus.INSERT;
@@ -160,13 +159,14 @@ public class ClientDataTable {
 	}
 
 	public void delete(){
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeDelete();
+
+		mCDTStatusUtils.notifyOnBeforeDelete();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 
 			_mCDTStatus=CDTStatus.DELETE;
-			if(_mListOfRowsBeforeDelete==null)
-				_mListOfRowsBeforeDelete=new ArrayList<>();
+			if(_mListOfDeletedRows==null)
+				_mListOfDeletedRows=new ArrayList<>();
 		}
 
 		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
@@ -175,7 +175,7 @@ public class ClientDataTable {
 
 	public void edit(){
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeEdit();
+		mCDTStatusUtils.notifyOnBeforeEdit();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 
@@ -204,14 +204,14 @@ public class ClientDataTable {
 		return clone;
 	}
 
-	private void clearOldListOfbeforeDelete(){
-		if(_mListOfRowsBeforeDelete!=null)
-			_mListOfRowsBeforeDelete.clear();
+	private void clearListOfDeletedRows(){
+		if(_mListOfDeletedRows!=null)
+			_mListOfDeletedRows.clear();
 
-		_mListOfRowsBeforeDelete = null;
+		_mListOfDeletedRows = null;
 	}
 
-	private void validate(boolean pIsUserCDTListener,boolean pIsExecInDateBase,MyCallback pCallback){
+	private void validate(boolean pIsUseCDTListener,boolean pIsExecInDateBase,MyCallback pCallback){
 
 		_mIsExecInDateBase=pIsExecInDateBase;
 		if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
@@ -221,11 +221,12 @@ public class ClientDataTable {
 			}
 
 		// if we have set CDTListener and the data is not valid return
-		if(_mOnCDTStateListener!=null &&  !_mOnCDTStateListener.onBeforeValidate()){
-			if(pCallback!=null ) pCallback.onError("");
-			return;
+		for (OnCDTStateListener listener:mCDTStatusUtils.mListOfStateListener) {
+			if (!listener.onBeforeValidate()) {
+				if (pCallback != null) pCallback.onError("");
+				return;
+			}
 		}
-
 
 		if(pIsExecInDateBase && isConnectedToDB())
 			if(_mSqliteDataBase.isOpen())
@@ -233,23 +234,22 @@ public class ClientDataTable {
 			else
 				PuUtils.showMessage(_mContext, "Erreur Data base", "La base de donnees est close");
 
-		commitIntoCDT(pIsUserCDTListener);
+		commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
 		_mCDTStatus=CDTStatus.DEFAULT;
 
 		if(_mCellHowValueChanged!=null)
 			_mCellHowValueChanged.setValueChanged(false);
 
-		if(_mOnCDTStateListener!=null)
-			_mOnCDTStateListener.onAfterValidate();
+		mCDTStatusUtils.notifyOnAfterValidate(pIsExecInDateBase);
 
 		if(pCallback!=null ) pCallback.onSuccess("");
 
 		if(pIsExecInDateBase)
-			clearOldListOfbeforeDelete();
+			clearListOfDeletedRows();
 
 
-		if (_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty())
-			System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfRowsBeforeDelete.size());
+		if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
+			System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfDeletedRows.size());
 
 		if(_mOnNotifyDataSetChangedListener!=null)
 			_mOnNotifyDataSetChangedListener.notifyValueChanged();
@@ -269,14 +269,14 @@ public class ClientDataTable {
 		validate(false,true,null);
 	}
 
-	public void executeObserve(){
+	public void executeObserve() {
 		validate(true,true,null);
 	}
-	public void commit(MyCallback pCallback){
+	public void commit(MyCallback pCallback) {
 		validate(false,false,pCallback);
 	}
 
-	public void commitObserve(MyCallback pCallback){
+	public void commitObserve(MyCallback pCallback) {
 		validate(true,false,pCallback);
 	}
 
@@ -290,7 +290,7 @@ public class ClientDataTable {
 
 	public void revert(){
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeRevert();
+		mCDTStatusUtils.notifyOnBeforeRevert();
 
 		switch (_mCDTStatus){
 			case INSERT:
@@ -313,8 +313,8 @@ public class ClientDataTable {
 				break;
 		}
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onAfterRevert();
-		clearOldListOfbeforeDelete();
+		mCDTStatusUtils.notifyOnAfterRevert();
+		clearListOfDeletedRows();
 	}
 
 
@@ -336,7 +336,7 @@ public class ClientDataTable {
 		_mCDTStatus=pCDTStatus;
 		_mIsExecInDateBase=true;
 
-		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfRowsBeforeDelete==null|| _mListOfRowsBeforeDelete.isEmpty()))
+		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
 			if(getRowsCount()==0){
 				PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
 				return;
@@ -349,28 +349,26 @@ public class ClientDataTable {
 				moveToPosition(i);
 				commitIntoDataBase(true);
 
-				if(_mOnCDTStateListener!=null && isUseCDTListener)
+				if(isUseCDTListener)
 					if(_mCDTStatus==CDTStatus.INSERT)
-						_mOnCDTStateListener.onAfterInsert();
+						mCDTStatusUtils.notifyOnAfterInsert(true);
 
 					else if(_mCDTStatus==CDTStatus.UPDATE)
-						_mOnCDTStateListener.onAfterEdit(_mOldRow,getCurrentRow());
+						mCDTStatusUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
 			}
 
 
-			if (_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty()) {
-				// on doit vider le CDT actuel, et le remplir par le temporaire, car on a des traitement comme cellByName si on fait pas comme
-				// Ca il va retourner 0 comme taille
-				_mListOfRows.clear();
-				_mListOfRows.addAll(_mListOfRowsBeforeDelete);
-				clearOldListOfbeforeDelete();
+			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
 
-				size = _mListOfRows.size();
+				size = _mListOfDeletedRows.size();
 				for (int i = 0; i < size; i++){
-					moveToPosition(i);
-					deleteRowDataBase(getCurrentRow());
-					if(_mOnCDTStateListener!=null && isUseCDTListener) _mOnCDTStateListener.onAfterDelete(getCurrentRow());
+					if( isUseCDTListener)
+						mCDTStatusUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
+
+					deleteRowDataBase(_mListOfDeletedRows.get(i));
 				}
+
+				clearListOfDeletedRows();
 			}
 
 			_mCDTStatus=CDTStatus.DEFAULT;
@@ -382,18 +380,18 @@ public class ClientDataTable {
 	}
 
 
-	private void commitIntoCDT(boolean pIsUseCDTListener){
+	private void commitIntoCDT(boolean pIsUseCDTListener,boolean pIsExecuteAction){
 
 		switch (_mCDTStatus) {
 			case INSERT:
 				// Pas besoin car on l a deja dans l Append()
 				//_mListOfRows.add(new TRow(_mContext, _mCDTStatus, getColumnsCount()));
 
-				if(_mOnCDTStateListener!=null && pIsUseCDTListener) _mOnCDTStateListener.onAfterInsert();
+				if(pIsUseCDTListener) mCDTStatusUtils.notifyOnAfterInsert(pIsExecuteAction);
 				break;
 			case DELETE:
-				if(_mOnCDTStateListener!=null && pIsUseCDTListener) _mOnCDTStateListener.onAfterDelete(getCurrentRow());
-				_mListOfRowsBeforeDelete.add(getCurrentRow());
+				if(pIsUseCDTListener) mCDTStatusUtils.notifyOnAfterDelete(getCurrentRow(), pIsExecuteAction);
+				_mListOfDeletedRows.add(getCurrentRow());
 				_mListOfRows.remove(_mPosition);
 				if (_mPosition == getRowsCount()){
 					_mPosition--;
@@ -404,7 +402,7 @@ public class ClientDataTable {
 
 			case UPDATE:
 
-				if(_mOnCDTStateListener!=null && pIsUseCDTListener && isValuesChanged()) _mOnCDTStateListener.onAfterEdit(_mOldRow, getCurrentRow());
+				if(pIsUseCDTListener && isValuesChanged()) mCDTStatusUtils.notifyOnAfterEdit(_mOldRow, getCurrentRow(), pIsExecuteAction);
 				if(_mOldRow!=null) {
 					_mOldRow.getCells().clear();
 					_mOldRow = null;
@@ -466,7 +464,7 @@ public class ClientDataTable {
 
 		//Updated primary Key
 		TCell tCellPrimaryKey=getPrimaryKeyCell();
-		if(tCellPrimaryKey!=null)
+		if (tCellPrimaryKey != null)
 			tCellPrimaryKey.setValue(DatabaseUtils.getLastPrimaryKeyValue(_mSqliteDataBase, _mTableName));
 	}
 
@@ -516,8 +514,14 @@ public class ClientDataTable {
 			if(lValues.size()!=0){
 				int resultUpdate=_mSqliteDataBase.update(_mTableName, lValues, _mWhereClause.toString(),lArgs);
 				// If updated fails so row is not existe, so we must to add It
-				if(pInsertIfNotUpdated && resultUpdate==0)
+				if(pInsertIfNotUpdated && resultUpdate==0){
 					_mSqliteDataBase.insertOrThrow(_mTableName,null,lValues);
+					//Updated primary Key
+					TCell tCellPrimaryKey=getPrimaryKeyCell();
+					if (tCellPrimaryKey != null)
+						tCellPrimaryKey.setValue(DatabaseUtils.getLastPrimaryKeyValue(_mSqliteDataBase, _mTableName));
+				}
+
 			}
 
 
@@ -918,6 +922,7 @@ public class ClientDataTable {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
 	}
+
 	/**
 	 * Clear ClientDataTable Content And table
 	 */
@@ -1198,7 +1203,7 @@ public class ClientDataTable {
 
 	public boolean isValuesChanged(){
 
-		if(_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty())
+		if(_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
 			return true;
 
 		boolean isChanged=false;
@@ -1255,12 +1260,12 @@ public class ClientDataTable {
 	}
 
 	public JSONObject toJSONObject(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
-		return toJSONObject(getCurrentRow(),jsonObjectGeneratedMode);
+		return toJSONObject(getCurrentRow(), jsonObjectGeneratedMode);
 	}
 
 
 	public JSONObject toJSONObject(TRow row,JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
-		return createJson(row,jsonObjectGeneratedMode);
+		return createJson(row, jsonObjectGeneratedMode);
 	}
 
 	private JSONArray createJsonArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
@@ -1435,12 +1440,12 @@ public class ClientDataTable {
 	public void setOnNotifyDataSetChangedListener(OnNotifyDataSetChangedListener pListener){
 		_mOnNotifyDataSetChangedListener=pListener;
 	}
+
+
 	public void setOnCDTStateListener(OnCDTStateListener pListener){
-		if(_mOnCDTStateListener!=null)
-			PuUtils.showMessage(_mContext, "Duplicate OnCDTStateListener", "OnCDTStateListener est déja definit pour ce CDT");
-
-		_mOnCDTStateListener=pListener;
+		mCDTStatusUtils.mListOfStateListener.add(pListener);
 	}
-
-
+	public void removeCDTStateListener(OnCDTStateListener pListener){
+		mCDTStatusUtils.mListOfStateListener.remove(pListener);
+	}
 }
