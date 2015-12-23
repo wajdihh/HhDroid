@@ -47,6 +47,7 @@ public class PpJsonParser {
 		if(lSizeJsArray==0)
 			return;
 
+
 		pCDT.getListOfRows().clear();
 		pCDT.getListOfRows().ensureCapacity(lSizeJsArray);
 
