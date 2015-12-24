@@ -165,6 +165,9 @@ public class PuDate{
 	public String getFormattingDate(Date date,String pDateFormat) {
 		return  new SimpleDateFormat(pDateFormat, getLocal()).format(date);
 	}
+	public Date getDate(String date, String pDateFormat) throws ParseException {
+		return  new SimpleDateFormat(pDateFormat, getLocal()).parse(date);
+	}
     public static String getStringFromDate(long pDateTime){
 		return _mDateFormater.format(pDateTime);
 	}

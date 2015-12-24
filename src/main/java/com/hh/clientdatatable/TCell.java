@@ -257,7 +257,7 @@ public class TCell implements Cloneable {
         float lResult = -1;
 
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Float.parseFloat(_mValue);
 
         } catch (Exception e) {
@@ -273,7 +273,7 @@ public class TCell implements Cloneable {
         double lResult = -1;
 
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Double.parseDouble(_mValue);
 
         } catch (Exception e) {
