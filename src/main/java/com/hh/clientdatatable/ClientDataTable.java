@@ -144,7 +144,7 @@ public class ClientDataTable {
 
 
 	public void append(){
-		append(new TRow(_mContext,_mCDTStatus,getListOfColumns()));
+		append(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
 	}
 
 	public void append(TRow row){
@@ -1309,6 +1309,9 @@ public class ClientDataTable {
 					}else
 						fillJsonField(row,column,map.get(column.getJsonParent()),jsonObjectGeneratedMode);
 				}else{
+					if(column.isIgnoredAsJsonField())
+						continue;
+
 					map.put("MAIN",mainJsonObject);
 					fillJsonField(row,column,map.get("MAIN"), jsonObjectGeneratedMode);
 				}
@@ -1342,8 +1345,10 @@ public class ClientDataTable {
 			for (Map.Entry<String,ClientDataTable> entry : _mNestedJSONObject.entrySet())
 			{
 
-				if(entry.getValue()==null)
-					continue;
+				if(entry.getValue()==null){
+					throw new RuntimeException(entry.getKey()+" has a null value, check your clientDataTable instancation");
+				}
+
 				String parentKey=_mNestedJSONObjectParentKeys.get(i);
 				JSONObject subJSONObject=entry.getValue().toJSONObject();
 				JSONObject jsonParent=map.get(parentKey);

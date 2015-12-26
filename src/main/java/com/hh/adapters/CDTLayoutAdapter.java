@@ -119,6 +119,8 @@ public class CDTLayoutAdapter {
 			if (lWidget!=null){
 				if(mClientDataTable.indexOfColumn(_mListOfTags.get(i))!=-1)
 					_mHolder.mListHoldersViews.add(lWidget);
+				else
+					_mHolder.mSparseArrayHolderViewsNotInCDT.put(i, lWidget);
 
 				onCreateWidget(lWidget);
 				if(lWidget instanceof ImageView)
@@ -174,6 +176,17 @@ public class CDTLayoutAdapter {
 					}
 				} else
 					throw new IllegalStateException(lWidget.getClass().getName() + " is not a " + " view that can be bounds by this SimpleAdapter");
+			}
+		}
+
+		int lListHolderSizeNotInCDT = _mHolder.mSparseArrayHolderViewsNotInCDT.size();
+
+		for (int i = 0; i < lListHolderSizeNotInCDT; i++) {
+			int lColumnIndex = _mHolder.mSparseArrayHolderViewsNotInCDT.keyAt(i);
+			View lWidget = _mHolder.mSparseArrayHolderViewsNotInCDT.get(lColumnIndex);
+
+			if (lWidget != null) {
+				onIteratedWidget( lWidget, lWidget.getTag().toString());
 			}
 		}
 	}
