@@ -5,6 +5,8 @@ import com.hh.listeners.OnCDTColumnListener;
 
 public class TColumn {
 
+
+
     public enum ColumnType {PrimaryKey,ToIgnoreInDB,JsonParent,JsonField};
 
 
@@ -14,6 +16,7 @@ public class TColumn {
     private OnCDTColumnListener _mListener;
     private ColumnType _mColumnType;
     private String _mJsonParent;
+    private boolean mIsIgnoreAsJsonField;
 
     /**
      * @param _mName : name of column
@@ -88,5 +91,13 @@ public class TColumn {
     }
     public void setJsonParentAsMain() {
         this._mJsonParent = "MAIN";
+    }
+
+    public boolean isIgnoredAsJsonField() {
+        return mIsIgnoreAsJsonField;
+    }
+
+    public void toIgnoreInJSONParent() {
+        this.mIsIgnoreAsJsonField = true;
     }
 }

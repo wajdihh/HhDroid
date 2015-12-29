@@ -144,7 +144,7 @@ public class ClientDataTable {
 
 
 	public void append(){
-		append(new TRow(_mContext,_mCDTStatus,getListOfColumns()));
+		append(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
 	}
 
 	public void append(TRow row){
@@ -1206,20 +1206,16 @@ public class ClientDataTable {
 		if(_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
 			return true;
 
-		boolean isChanged=false;
 		for (TColumn column:_mListOfColumns){
 			for (TRow row :_mListOfRows){
 				TCell cell=row.cellByName(column.getName());
 				if(cell.isValueChanged()){
-					isChanged=true;
 					_mCellHowValueChanged=cell;
-					break;
+					return  true;
 				}
 			}
-			if(isChanged)
-				break;
 		}
-		return isChanged;
+		return false;
 	}
 	/**
 	 * Returns a new data table, with the same data and metadata as this one.
@@ -1313,6 +1309,9 @@ public class ClientDataTable {
 					}else
 						fillJsonField(row,column,map.get(column.getJsonParent()),jsonObjectGeneratedMode);
 				}else{
+					if(column.isIgnoredAsJsonField())
+						continue;
+
 					map.put("MAIN",mainJsonObject);
 					fillJsonField(row,column,map.get("MAIN"), jsonObjectGeneratedMode);
 				}
@@ -1346,8 +1345,10 @@ public class ClientDataTable {
 			for (Map.Entry<String,ClientDataTable> entry : _mNestedJSONObject.entrySet())
 			{
 
-				if(entry.getValue()==null)
-					continue;
+				if(entry.getValue()==null){
+					throw new RuntimeException(entry.getKey()+" has a null value, check your clientDataTable instancation");
+				}
+
 				String parentKey=_mNestedJSONObjectParentKeys.get(i);
 				JSONObject subJSONObject=entry.getValue().toJSONObject();
 				JSONObject jsonParent=map.get(parentKey);

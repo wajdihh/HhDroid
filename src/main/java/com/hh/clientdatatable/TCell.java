@@ -210,7 +210,7 @@ public class TCell implements Cloneable {
 
             // If we not define the listener
         }else{
-            if(_mValueType==ValueType.DATETIME){
+            if(_mValueType==ValueType.DATETIME &&!_mValue.isEmpty()){
                 long dateLong=Long.parseLong(_mValue);
                 lResult = PuDate.getStringFromDate(dateLong);
             }else
@@ -265,7 +265,7 @@ public class TCell implements Cloneable {
         if(_mValue==null)
             return lResult;
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Float.parseFloat(_mValue);
 
         } catch (Exception e) {
@@ -282,7 +282,7 @@ public class TCell implements Cloneable {
         if(_mValue==null)
             return lResult;
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Double.parseDouble(_mValue);
 
         } catch (Exception e) {
