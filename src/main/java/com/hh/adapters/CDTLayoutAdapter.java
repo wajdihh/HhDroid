@@ -119,6 +119,8 @@ public class CDTLayoutAdapter {
 			if (lWidget!=null){
 				if(mClientDataTable.indexOfColumn(_mListOfTags.get(i))!=-1)
 					_mHolder.mListHoldersViews.add(lWidget);
+				else
+					_mHolder.mListHoldersViewsNotInCDT.add(lWidget);
 
 				onCreateWidget(lWidget);
 				if(lWidget instanceof ImageView)
@@ -156,7 +158,6 @@ public class CDTLayoutAdapter {
 
 			if(lWidget!=null){
 				String tag=lWidget.getTag().toString();
-				onIteratedWidget(lWidget, tag);
 				final TCell data = mClientDataTable.cellByName(tag);
 
 				if (lWidget instanceof Checkable) {
@@ -174,6 +175,17 @@ public class CDTLayoutAdapter {
 					}
 				} else
 					throw new IllegalStateException(lWidget.getClass().getName() + " is not a " + " view that can be bounds by this SimpleAdapter");
+
+				onIteratedWidget(lWidget, tag);
+			}
+		}
+
+		int lListHolderSizeNotInCDT = _mHolder.mListHoldersViewsNotInCDT.size();
+		for (int i = 0; i < lListHolderSizeNotInCDT; i++) {
+			View lWidget= _mHolder.mListHoldersViewsNotInCDT.get(i);
+			if (lWidget != null) {
+				String tag=lWidget.getTag().toString();
+				onIteratedWidget(lWidget, tag);
 			}
 		}
 	}

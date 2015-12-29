@@ -12,6 +12,7 @@ public class ViewHolder {
 		SparseArray<View> mSparseArrayHolderViews;
 		SparseArray<View> mSparseArrayHolderViewsNotInCDT;
 		ArrayList<View> mListHoldersViews;
+		ArrayList<View> mListHoldersViewsNotInCDT;
 		static HashSet<String> mListOfTags;
 		//init block
 		static {
@@ -19,9 +20,10 @@ public class ViewHolder {
 		}
 		
 		public ViewHolder() {
-			mSparseArrayHolderViews=new SparseArray<View>();
-			mSparseArrayHolderViewsNotInCDT=new SparseArray<View>();
-			mListHoldersViews=new ArrayList<View>();
+			mSparseArrayHolderViews= new SparseArray<>();
+			mSparseArrayHolderViewsNotInCDT= new SparseArray<>();
+			mListHoldersViews= new ArrayList<>();
+			mListHoldersViewsNotInCDT= new ArrayList<>();
 		}
 		public static void clearAllTags(){
             mListOfTags.clear();

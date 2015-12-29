@@ -160,6 +160,8 @@ public class TCell implements Cloneable {
     public boolean asBoolean() {
 
         boolean lResult = false;
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null)
                 lResult = Boolean.parseBoolean(_mValue);
@@ -175,6 +177,9 @@ public class TCell implements Cloneable {
     public String asString() {
 
         String lResult = "";
+        if(_mValue==null)
+            return lResult;
+
         if (_mOnCDTColumnListener != null){
 
             switch (_mValueType){
@@ -239,6 +244,8 @@ public class TCell implements Cloneable {
     public int asInteger() {
 
         int lResult = -1;
+        if(_mValue==null)
+            return lResult;
 
         try {
             if (_mValue != null && !_mValue.isEmpty())
@@ -255,7 +262,8 @@ public class TCell implements Cloneable {
     public float asFloat() {
 
         float lResult = -1;
-
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null)
                 lResult = Float.parseFloat(_mValue);
@@ -271,7 +279,8 @@ public class TCell implements Cloneable {
     public double asDouble() {
 
         double lResult = -1;
-
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null)
                 lResult = Double.parseDouble(_mValue);
@@ -287,7 +296,8 @@ public class TCell implements Cloneable {
     public Date asDate() {
 
         Date lResult = null;
-
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null && !_mValue.isEmpty())
                 lResult = new Date(Long.parseLong(_mValue));
@@ -303,7 +313,8 @@ public class TCell implements Cloneable {
     public long asDateTime() {
 
         long lResult = -1;
-
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null && !_mValue.isEmpty())
                 lResult = Long.parseLong(_mValue);
@@ -319,6 +330,8 @@ public class TCell implements Cloneable {
     public String asDateString() {
 
         String lResult = "error";
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null)
                 lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));

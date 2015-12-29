@@ -28,8 +28,6 @@ public class RecycleViewHolder extends RecyclerView.ViewHolder {
 		mListOfTags=new HashSet<String>();
 	}
 
-
-
 	private OnRecycleClickListener _mClickListener;
 	private OnRecycleWidgetClickListener _mOnRecycleWidgetClickListener;
 	private OnRecycleCheckedChangeListener _mOnRecycleCheckedChangeListener;
@@ -37,6 +35,7 @@ public class RecycleViewHolder extends RecyclerView.ViewHolder {
 
 	SparseArray<View> mSparseArrayHolderViews;
 	SparseArray<View> mSparseArrayHolderViewsNotInCDT;
+	View mRowView;
 
 	public RecycleViewHolder(Context pContext, final View itemView,ClientDataTable pClientDataTable,final boolean pIsEnableOnClickWidget) {
 		super(itemView);
@@ -46,7 +45,7 @@ public class RecycleViewHolder extends RecyclerView.ViewHolder {
 
 
 		mListOfTags=getAllLayoutTags(itemView);
-
+		mRowView=itemView;
 		int index=0;
 		for (final String tag:mListOfTags){
 

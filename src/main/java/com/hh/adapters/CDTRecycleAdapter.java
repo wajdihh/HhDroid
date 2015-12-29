@@ -133,7 +133,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                     throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
                             " view that can be bounds by this SimpleAdapter");
 
-                onIteratedRow(lWidget, lWidget.getTag().toString());
+                onIteratedRow(holder.mRowView,lWidget, lWidget.getTag().toString());
             }
         }
         int lListHolderSizeNotInCDT = holder.mSparseArrayHolderViewsNotInCDT.size();
@@ -143,7 +143,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             View lWidget = holder.mSparseArrayHolderViewsNotInCDT.get(lColumnIndex);
 
             if (lWidget != null) {
-                onIteratedRow( lWidget, lWidget.getTag().toString());
+                onIteratedRow(holder.mRowView, lWidget, lWidget.getTag().toString());
             }
         }
 
@@ -227,7 +227,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      * @param widget   : Button , TextView etc...
      * @param position : position of row
      */
-    protected void onIteratedRow( View widget,String widgetTag) {
+    protected void onIteratedRow(View row, View widget,String widgetTag) {
     }
 
     ;

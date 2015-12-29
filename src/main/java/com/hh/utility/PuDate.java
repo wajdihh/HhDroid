@@ -1,7 +1,6 @@
 package com.hh.utility;
 
 import android.util.Log;
-import com.hh.droid.HhDroid;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -141,6 +140,8 @@ public class PuDate{
 	
 	public static long getTimeFromStringDate(String pDateString){
 		long lTime=-1;
+		if(pDateString==null || pDateString.isEmpty())
+			return -1;
 		try {
 			lTime= _mDateFormater.parse(pDateString).getTime();
 		} catch (ParseException e) {
