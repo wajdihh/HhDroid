@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 import com.hh.listeners.MyCallback;
-import com.hh.utility.PuException;
+import com.hh.execption.HhException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -228,11 +228,11 @@ public class PcHttpClient {
 			}
 
 		} catch (ClientProtocolException e)  {
-			Log.e("EXxception : ClientProtocolException :", PuException.getExceptionMessage(e));
+			Log.e("EXxception : ClientProtocolException :", HhException.getExceptionMessage(e));
 			//httpClient.getConnectionManager().shutdown();
 			e.printStackTrace();
 		} catch (IOException e) {
-			Log.e("EXxception : IOException :", PuException.getExceptionMessage(e));
+			Log.e("EXxception : IOException :", HhException.getExceptionMessage(e));
 			//httpClient.getConnectionManager().shutdown();
 			e.printStackTrace();
 		}

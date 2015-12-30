@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.io.IOException;
+import java.util.Calendar;
 
 public class DAOManager {
 
@@ -49,5 +50,9 @@ public class DAOManager {
 	 */
 	public int getLastPrimaryKeyValue(String tableName){
 		return DatabaseUtils.getLastPrimaryKeyValue(mDataBase,tableName);
+	}
+
+	public int getTempPrimaryKeyValue(){
+		return Calendar.getInstance().get(Calendar.MILLISECOND)*Calendar.getInstance().get(Calendar.SECOND);
 	}
 }

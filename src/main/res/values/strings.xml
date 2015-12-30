@@ -62,4 +62,12 @@
     <string name="btn_otherTime">Plus Tard</string>
     <string name="btn_install">Installer</string>
     <string name="lab_info">Information</string>
+
+
+    <string name="exception_emptyCDT">The ClientDataTable is EMPTY !!</string>
+    <string name="exception_DBClosed">The Database is closed !</string>
+    <string name="exception_assetPart1">Vous dévez avoir un dossier :</string>
+    <string name="exception_assetPart2">sous assets dans lequel au moins un script base de données .db</string>
+    <string name="exception_noScriptFound">Acun script base de données présent dans le dossier :</string>
+    <string name="exception_errorParsingDate">Error of parsing the DATE value :</string>
 </resources>

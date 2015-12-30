@@ -3,13 +3,13 @@
 package com.hh.clientdatatable;
 
 import android.content.Context;
-
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.droid.HhDroid;
 import com.hh.listeners.OnCDTColumnListener;
 import com.hh.utility.PuDate;
 import com.hh.utility.PuUtils;
 
+import java.text.ParseException;
 import java.util.Date;
 
 
@@ -41,11 +41,11 @@ public class TCell implements Cloneable {
         _mOnCDTColumnListener = pOnCDTColumnListener;
 
         if (pValueType == ValueType.DATETIME) {
-            long lLongDate = PuDate.getTimeFromStringDate((String) pValue);
-            if(lLongDate==-1)
+            try {
+                _mValue = String.valueOf(PuDate.parseDate((String) pValue));
+            } catch (ParseException e) {
                 _mValue=(String) pValue;
-            else
-                _mValue = String.valueOf(lLongDate);
+            }
         } else
             _mValue = String.valueOf(pValue);
     }
@@ -148,13 +148,6 @@ public class TCell implements Cloneable {
         if(_mValue==null || !_mValue.equals(pValueTimeInMillies))
             onValueChanged();
         _mValue = String.valueOf(pValueTimeInMillies);
-    }
-
-    public void setValueDateString(String pValueDate) {
-
-        if(_mValue==null || (_mValue!=null && pValueDate!=null) &&!_mValue.equals(pValueDate))
-            onValueChanged();
-        _mValue = String.valueOf(PuDate.getTimeFromStringDate(pValueDate));
     }
 
     public boolean asBoolean() {

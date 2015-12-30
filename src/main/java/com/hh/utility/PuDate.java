@@ -1,7 +1,5 @@
 package com.hh.utility;
 
-import android.util.Log;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -133,22 +131,15 @@ public class PuDate{
 	public void setDateFormater(SimpleDateFormat _mDateFormater) {
 		this._mDateFormater = _mDateFormater;
 	}
-	
+
 	/**
 	 * Static
 	 */
-	
-	public static long getTimeFromStringDate(String pDateString){
-		long lTime=-1;
+
+	public static long parseDate(String pDateString) throws ParseException {
 		if(pDateString==null || pDateString.isEmpty())
 			return -1;
-		try {
-			lTime= _mDateFormater.parse(pDateString).getTime();
-		} catch (ParseException e) {
-			Log.e("pUDate.getTimeFromStringDate", "Parse date incorrect");
-			lTime=-1;
-		}
-		return lTime;
+		return _mDateFormater.parse(pDateString).getTime();
 	}
 
     @Override

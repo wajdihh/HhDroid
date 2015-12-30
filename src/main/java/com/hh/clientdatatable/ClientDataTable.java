@@ -9,8 +9,10 @@ import android.util.Log;
 import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.database.DatabaseUtils;
 import com.hh.droid.R;
+import com.hh.execption.DatabaseException;
+import com.hh.execption.EmptyCDTException;
 import com.hh.listeners.*;
-import com.hh.utility.PuException;
+import com.hh.execption.HhException;
 import com.hh.utility.PuUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -213,46 +215,52 @@ public class ClientDataTable {
 
 	private void validate(boolean pIsUseCDTListener,boolean pIsExecInDateBase,MyCallback pCallback){
 
-		_mIsExecInDateBase=pIsExecInDateBase;
-		if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
-			if(getRowsCount()==0){
-				Log.e("CDT vide","Client data table est vide");
-				return;
+		try {
+			_mIsExecInDateBase=pIsExecInDateBase;
+			if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
+				if(getRowsCount()==0)
+					throw new EmptyCDTException(_mContext);
+
+
+			// if we have set CDTListener and the data is not valid return
+			for (OnCDTStateListener listener:mCdtUtils.mListOfStateListener) {
+				if (!listener.onBeforeValidate()) {
+					if (pCallback != null) pCallback.onError("");
+					return;
+				}
 			}
 
-		// if we have set CDTListener and the data is not valid return
-		for (OnCDTStateListener listener:mCdtUtils.mListOfStateListener) {
-			if (!listener.onBeforeValidate()) {
-				if (pCallback != null) pCallback.onError("");
-				return;
-			}
+			if(pIsExecInDateBase && isConnectedToDB())
+				if(_mSqliteDataBase.isOpen())
+					commitIntoDataBase(false);
+				else
+					throw new DatabaseException(_mContext,R.string.exception_DBClosed);
+
+			commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
+			_mCDTStatus=CDTStatus.DEFAULT;
+
+			if(_mCellHowValueChanged!=null)
+				_mCellHowValueChanged.setValueChanged(false);
+
+			mCdtUtils.notifyOnAfterValidate(pIsExecInDateBase);
+
+			if(pCallback!=null ) pCallback.onSuccess("");
+
+			if(pIsExecInDateBase)
+				clearListOfDeletedRows();
+
+
+			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
+				System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfDeletedRows.size());
+
+			if(_mOnNotifyDataSetChangedListener!=null)
+				_mOnNotifyDataSetChangedListener.notifyValueChanged();
+
+		} catch (EmptyCDTException e) {
+			e.printStackTrace();
+		} catch (DatabaseException e) {
+			e.printStackTrace();
 		}
-
-		if(pIsExecInDateBase && isConnectedToDB())
-			if(_mSqliteDataBase.isOpen())
-				commitIntoDataBase(false);
-			else
-				PuUtils.showMessage(_mContext, "Erreur Data base", "La base de donnees est close");
-
-		commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
-		_mCDTStatus=CDTStatus.DEFAULT;
-
-		if(_mCellHowValueChanged!=null)
-			_mCellHowValueChanged.setValueChanged(false);
-
-		mCdtUtils.notifyOnAfterValidate(pIsExecInDateBase);
-
-		if(pCallback!=null ) pCallback.onSuccess("");
-
-		if(pIsExecInDateBase)
-			clearListOfDeletedRows();
-
-
-		if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
-			System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfDeletedRows.size());
-
-		if(_mOnNotifyDataSetChangedListener!=null)
-			_mOnNotifyDataSetChangedListener.notifyValueChanged();
 	}
 	/**
 	 * Apply changes on Date base (if connected) and refresh the layout with the new values
@@ -336,47 +344,55 @@ public class ClientDataTable {
 		_mCDTStatus=pCDTStatus;
 		_mIsExecInDateBase=true;
 
-		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
-			if(getRowsCount()==0){
-				PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
-				return;
-			}
+		try {
 
-		if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (_mCDTStatus==CDTStatus.INSERT || _mCDTStatus==CDTStatus.UPDATE)){
-			int size = _mListOfRows.size();
-			for (int i = 0; i < size; i++){
-
-				moveToPosition(i);
-				commitIntoDataBase(true);
-
-				if(isUseCDTListener)
-					if(_mCDTStatus==CDTStatus.INSERT)
-						mCdtUtils.notifyOnAfterInsert(true);
-
-					else if(_mCDTStatus==CDTStatus.UPDATE)
-						mCdtUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
-			}
+			if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
+				if(getRowsCount()==0)
+					throw new EmptyCDTException(_mContext);
 
 
-			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
 
-				size = _mListOfDeletedRows.size();
+			if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (_mCDTStatus==CDTStatus.INSERT || _mCDTStatus==CDTStatus.UPDATE)){
+				int size = _mListOfRows.size();
 				for (int i = 0; i < size; i++){
-					if( isUseCDTListener)
-						mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
 
-					deleteRowDataBase(_mListOfDeletedRows.get(i));
+					moveToPosition(i);
+					commitIntoDataBase(true);
+
+					if(isUseCDTListener)
+						if(_mCDTStatus==CDTStatus.INSERT)
+							mCdtUtils.notifyOnAfterInsert(true);
+
+						else if(_mCDTStatus==CDTStatus.UPDATE)
+							mCdtUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
 				}
 
-				clearListOfDeletedRows();
-			}
 
-			_mCDTStatus=CDTStatus.DEFAULT;
+				if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
 
-			if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
+					size = _mListOfDeletedRows.size();
+					for (int i = 0; i < size; i++){
+						if( isUseCDTListener)
+							mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
 
-		}else
-			PuUtils.showMessage(_mContext, "Erreur Data base", "La base de donn�es est ferm�");
+						deleteRowDataBase(_mListOfDeletedRows.get(i));
+					}
+
+					clearListOfDeletedRows();
+				}
+
+				_mCDTStatus=CDTStatus.DEFAULT;
+
+				if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
+
+			}else
+				throw new DatabaseException(_mContext,R.string.exception_DBClosed);
+
+		} catch (EmptyCDTException e) {
+			e.printStackTrace();
+		} catch (DatabaseException e) {
+			e.printStackTrace();
+		}
 	}
 
 
@@ -746,7 +762,11 @@ public class ClientDataTable {
 
 		// TODO a optimiser a faire getCurrentRow.getCells(posCell)
 		if(getRowsCount()==0) {
-			PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
+			try {
+				throw new EmptyCDTException(_mContext);
+			} catch (EmptyCDTException e) {
+				e.printStackTrace();
+			}
 			return new TCell();
 		}
 
@@ -778,7 +798,11 @@ public class ClientDataTable {
 	public TCell getPrimaryKeyCell() {
 
 		if(getRowsCount()==0) {
-			PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
+			try {
+				throw new EmptyCDTException(_mContext);
+			} catch (EmptyCDTException e) {
+				e.printStackTrace();
+			}
 			return new TCell();
 		}
 
@@ -1177,17 +1201,17 @@ public class ClientDataTable {
 	 * @param pRowIndex
 	 * @param pColumnIndex
 	 * @param pCell
-	 * @throws PuException
+	 * @throws HhException
 	 * @throws IndexOutOfBoundsException
 	 */
 	public void setCell(int pRowIndex, int pColumnIndex, TCell pCell)
-			throws PuException, IndexOutOfBoundsException {
+			throws HhException, IndexOutOfBoundsException {
 
 		TRow row = _mListOfRows.get(pRowIndex);
 
 		if (!row.getCell(pColumnIndex).getValueType()
 				.equals(pCell.getValueType())) {
-			throw new PuException(_mContext,
+			throw new HhException(
 					"New cell value type does not match expected value type."
 							+ " Expected type: "
 							+ row.getCell(pColumnIndex).getValueType()
