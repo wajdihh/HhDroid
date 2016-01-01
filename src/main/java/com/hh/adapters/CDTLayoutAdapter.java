@@ -1,7 +1,10 @@
 package com.hh.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Base64;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -15,6 +18,7 @@ import com.hh.droid.R;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.MyCallback;
 import com.hh.ui.UiUtility;
+import com.hh.ui.widget.UiPicassoImageView;
 import com.hh.utility.PuUtils;
 
 import java.util.ArrayList;
@@ -164,14 +168,23 @@ public class CDTLayoutAdapter {
 					((Checkable) lWidget).setChecked(data.asBoolean());
 				} else if (lWidget instanceof TextView) {
 					((TextView) lWidget).setText(data.asString());
+				} else if (lWidget instanceof UiPicassoImageView) {
+					UiPicassoImageView picassoImageView= (UiPicassoImageView) lWidget;
+					picassoImageView.setData(data.asString());
 				} else if (lWidget instanceof ImageView) {
-					if (data.getValueType()==ValueType.INTEGER) {
-						((ImageView) lWidget).setImageResource(data.asInteger());
+					ImageView im= (ImageView) lWidget;
+
+					if (data.getValueType() == TCell.ValueType.INTEGER && !data.asString().isEmpty()) {
+						im.setImageResource(data.asInteger());
+					} else if (data.getValueType() == TCell.ValueType.BASE64) {
+						byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
+						Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+						im.setImageBitmap(decodedByte);
 					} else {
-						if(!data.asString().equals(""))
+						if (!data.asString().equals(""))
 							setViewImage((ImageView) lWidget, data.asString());
 						else
-							((ImageView) lWidget).setImageDrawable(null);
+							im.setImageDrawable(null);
 					}
 				} else
 					throw new IllegalStateException(lWidget.getClass().getName() + " is not a " + " view that can be bounds by this SimpleAdapter");

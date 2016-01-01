@@ -20,6 +20,7 @@ import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
 import com.hh.listeners.OnRecycleWidgetClickListener;
+import com.hh.ui.widget.UiPicassoImageView;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -37,24 +38,13 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     private boolean _mIsEnableOnClickWidget;
 
     private int _mLayoutRes;
-    private int _mDefaultImageRes;
 
-    private int mDefaultHeightPicassoImage;
-    private int mDefaultWidthPicassoImage;
-
-    private Picasso mPicasso;
 
     public CDTRecycleAdapter(Context pContext, int pLayoutRes, ClientDataTable pCDT){
         mContext=pContext;
         mRes=pContext.getResources();
         mClientDataTable = pCDT;
         _mLayoutRes = pLayoutRes;
-
-        // par défaut on utilise le setter d image par défaut de CDT
-        mDefaultHeightPicassoImage=80;
-        mDefaultWidthPicassoImage=80;
-        mPicasso = new Picasso.Builder(pContext).executor(Executors.newSingleThreadExecutor()).build();
-
     }
     @Override
     protected void finalize() throws Throwable {
@@ -71,22 +61,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
     public void setEnableOnClickWidget(boolean pIsEnabled) {
         _mIsEnableOnClickWidget = pIsEnabled;
-    }
-
-    /**
-     * On peut par exemple utiliser l api picasso pour les images, dans ce cas , on remet le flag à false
-     * @param pIsUseCDTImageSetter
-     */
-    public void setDefaultPicassoSize(int pDefaultHeightPicassoImage, int pDefaultWidthPicassoImage) {
-        mDefaultHeightPicassoImage = pDefaultHeightPicassoImage;
-        mDefaultWidthPicassoImage = pDefaultWidthPicassoImage;
-    }
-    /**
-     * Pour définir l image par défaut à mettre dans le binding imageView ou cas ou on a pas le fichier
-     * @param pDefaultImageRes
-     */
-    public void setDefaultImageRes(int pDefaultImageRes) {
-        _mDefaultImageRes = pDefaultImageRes;
     }
 
     @Override
@@ -108,26 +82,22 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                     ((Checkable) lWidget).setChecked(data.asBoolean());
                 } else if (lWidget instanceof TextView) {
                     ((TextView) lWidget).setText(data.asString());
+                }else if (lWidget instanceof UiPicassoImageView) {
+                    UiPicassoImageView picassoImageView= (UiPicassoImageView) lWidget;
+                    picassoImageView.setData(data.asString());
                 } else if (lWidget instanceof ImageView) {
-
-                    final ImageView imageView= (ImageView) lWidget;
-                    if (data.getValueType() == TCell.ValueType.INTEGER) {
-                        imageView.setImageResource(data.asInteger());
+                    ImageView im= (ImageView) lWidget;
+                    if (data.getValueType() == TCell.ValueType.INTEGER && !data.asString().isEmpty()) {
+                        im.setImageResource(data.asInteger());
                     } else if (data.getValueType() == TCell.ValueType.BASE64) {
                         byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
                         Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        imageView.setImageBitmap(decodedByte);
+                        im.setImageBitmap(decodedByte);
                     } else {
-                        if (!data.asString().equals("")) {
-
-                            // SI on a pas encore chargé l image par picosso
-                            if (data.asString().contains("http"))
-                                mPicasso.load(data.asString()).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
-                            else
-                                mPicasso.load(new File(data.asString())).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
-                        }
+                        if (!data.asString().equals(""))
+                            setViewImage((ImageView) lWidget, data.asString());
                         else
-                            imageView.setImageDrawable(null);
+                            im.setImageDrawable(null);
                     }
                 } else
                     throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
@@ -192,17 +162,13 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         });
     }
 
-    public void setViewImages(ImageView v, String value) {
+    public void setViewImage(ImageView v, String value) {
 
         System.out.println("I am in image");
         try {
             v.setImageResource(Integer.parseInt(value));
         } catch (NumberFormatException nfe) {
-
-            if(!new File(value).exists())
-                v.setImageResource(_mDefaultImageRes);
-            else
-                v.setImageURI(Uri.parse(value));
+            v.setImageURI(Uri.parse(value));
         }
     }
     @Override
