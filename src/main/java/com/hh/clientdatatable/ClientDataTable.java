@@ -406,9 +406,9 @@ public class ClientDataTable {
 				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterInsert(pIsExecuteAction);
 				break;
 			case DELETE:
-				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterDelete(getCurrentRow(), pIsExecuteAction);
 				_mListOfDeletedRows.add(getCurrentRow());
 				_mListOfRows.remove(_mPosition);
+				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(_mListOfDeletedRows.size()-1), pIsExecuteAction);
 				if (_mPosition == getRowsCount()){
 					_mPosition--;
 				}
@@ -869,15 +869,20 @@ public class ClientDataTable {
 
 	public void fillFromTable(String pSQLCommand){
 
-		_mCursor= _mSqliteDataBase.rawQuery(pSQLCommand, null);
-
-		try {
+		if(_mSqliteDataBase==null){
+			try {
+				throw new DatabaseException(_mContext,R.string.exception_databaseNULL);
+			} catch (DatabaseException e) {
+				e.printStackTrace();
+				System.out.println("ddd :"+HhException.getExceptionMessage(e));
+			}
+		}else{
+			_mCursor= _mSqliteDataBase.rawQuery(pSQLCommand, null);
 			_mCursor.moveToFirst();
 			fillFromCursor(_mCursor);
-		} finally {
-
+			Log.i("fillFromTable", " Count :" + _mCursor.getCount());
 		}
-		Log.i("fillFromTable", " Count :" + _mCursor.getCount());
+
 	}
 
 	/**
