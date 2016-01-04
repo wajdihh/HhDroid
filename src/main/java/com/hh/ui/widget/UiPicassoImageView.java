@@ -1,8 +1,10 @@
 package com.hh.ui.widget;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.widget.ImageView;
+import com.hh.droid.R;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 import com.squareup.picasso.Transformation;
@@ -23,6 +25,7 @@ public class UiPicassoImageView extends ImageView {
 
         mPicasso = new Picasso.Builder(context).executor(Executors.newSingleThreadExecutor()).build();
 
+        setAttrs(context, attrs);
     }
 
     public void setData(String uri){
@@ -48,13 +51,32 @@ public class UiPicassoImageView extends ImageView {
     }
 
     public void placeHolder(int imageRes){
-        mPicassoRequestCreator.placeholder(imageRes).into(this);;
+        mPicassoRequestCreator.placeholder(imageRes).into(this);
     }
 
     public void errorImage(int imageRes){
-        mPicassoRequestCreator.error(imageRes).into(this);;
+        mPicassoRequestCreator.error(imageRes).into(this);
     }
     public void setImagesResources(int placeHolderImRes,int errorImageRes){
         mPicassoRequestCreator.placeholder(placeHolderImRes).error(errorImageRes).into(this);;
+    }
+
+    private void setAttrs(Context pContext,AttributeSet pAttributes) {
+        TypedArray a = pContext.obtainStyledAttributes(pAttributes, R.styleable.UiPicassoImageViewAttrs);
+        final int N = a.getIndexCount();
+        for (int i = 0; i < N; ++i)
+        {
+            int attr = a.getIndex(i);
+            if (attr == R.styleable.UiPicassoImageViewAttrs_placeHolderImage) {
+                int resID=a.getResourceId(R.styleable.UiPicassoImageViewAttrs_placeHolderImage,R.drawable.ic_action_delete);
+                placeHolder(resID);
+
+            } else if (attr == R.styleable.UiPicassoImageViewAttrs_errorImage) {
+                int resID=a.getResourceId(R.styleable.UiPicassoImageViewAttrs_errorImage, R.drawable.ic_action_delete);
+                errorImage(resID);
+
+            }
+        }
+        a.recycle();
     }
 }

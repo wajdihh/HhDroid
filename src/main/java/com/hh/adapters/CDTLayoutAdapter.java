@@ -1,6 +1,7 @@
 package com.hh.adapters;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -13,8 +14,8 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
-import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.droid.R;
+import com.hh.execption.WrongTypeException;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.MyCallback;
 import com.hh.ui.UiUtility;
@@ -40,11 +41,10 @@ public class CDTLayoutAdapter {
 	 */
 	protected ClientDataTable mClientDataTable;
 	protected Context mContext;
+	protected Resources mRes;
 	private View mLayout;
 	private ViewHolder _mHolder;
 	private ArrayList<String> _mListOfTags;
-	private boolean _mIsEnableAutoNotifyDataSetChanged;
-	private  boolean _mAutoRequery;
 
 	/**<hr>
 	 * Use this constructor to map data from the client data table to the layout parent widgets,
@@ -61,11 +61,10 @@ public class CDTLayoutAdapter {
 
 		mClientDataTable=pCDT;
 		mContext=pContext;
+		mRes=pContext.getResources();
 		mLayout=pLayout;
 		ViewHolder.clearAllTags();
 		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
-		_mIsEnableAutoNotifyDataSetChanged=false;
-		_mAutoRequery=false;
 		mappingData();
 
 	}
@@ -78,11 +77,10 @@ public class CDTLayoutAdapter {
 	public CDTLayoutAdapter(Context pContext,View pLayout){
 
 		mContext=pContext;
+		mRes=pContext.getResources();
 		mLayout=pLayout;
 		ViewHolder.clearAllTags();
 		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
-		_mIsEnableAutoNotifyDataSetChanged=false;
-		_mAutoRequery=false;
 	}
 	/**
 	 * Return the client data table used in this adapter
@@ -92,10 +90,6 @@ public class CDTLayoutAdapter {
 		return mClientDataTable;
 	}
 
-	public void setEnableAutoNotifyDataSetChanged(boolean pIsEnabled){
-		_mIsEnableAutoNotifyDataSetChanged=pIsEnabled;
-		_mAutoRequery=true;
-	}
 
 	/**
 	 * Set the client data table to use for mapping data in layout parent
@@ -169,8 +163,16 @@ public class CDTLayoutAdapter {
 				} else if (lWidget instanceof TextView) {
 					((TextView) lWidget).setText(data.asString());
 				} else if (lWidget instanceof UiPicassoImageView) {
-					UiPicassoImageView picassoImageView= (UiPicassoImageView) lWidget;
-					picassoImageView.setData(data.asString());
+					if(data.getValueType() == TCell.ValueType.BASE64){
+						try {
+							throw new WrongTypeException(mContext, R.string.exception_canotUserBase64);
+						} catch (WrongTypeException e) {
+							e.printStackTrace();
+						}
+					}else {
+						UiPicassoImageView picassoImageView = (UiPicassoImageView) lWidget;
+						picassoImageView.setData(data.asString());
+					}
 				} else if (lWidget instanceof ImageView) {
 					ImageView im= (ImageView) lWidget;
 
@@ -246,11 +248,10 @@ public class CDTLayoutAdapter {
 	 * use this method to refresh Data
 	 */
 	public void notifyDataSetChanged(){
-		if(_mAutoRequery)
+		if(mClientDataTable.isConnectedToDB())
 			mClientDataTable.requery();
 
-		if(_mIsEnableAutoNotifyDataSetChanged)
-			bindData();
+		bindData();
 
 		UiUtility.clearAllChildrensFocus((ViewGroup) mLayout);
 	}

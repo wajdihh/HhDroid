@@ -73,4 +73,5 @@
     <string name="exception_databaseNULL">This clientDataTable has not configured database, try to use getDatabase in
         the constructor of the CDT
     </string>
+    <string name="exception_canotUserBase64">Cannot use the ValueType.BASE64 for UiPicassoImageView component !</string>
 </resources>

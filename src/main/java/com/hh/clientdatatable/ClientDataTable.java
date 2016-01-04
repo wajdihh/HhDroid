@@ -955,7 +955,8 @@ public class ClientDataTable {
 	/**
 	 * Clear ClientDataTable Content And table
 	 */
-	public void clearAndExecute() {
+
+	public void clearCDTDatabase() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
 
@@ -966,23 +967,25 @@ public class ClientDataTable {
 		}
 	}
 
+	/**
+	 * Clear ClientDataTable Content And table
+	 */
+
+	public void clearAndExecute() {
+		_mCursorSize = -1;
+		while (iterate()){
+			delete();
+			execute();
+		}
+	}
+
 	public void clearAndExecuteObserve() {
 
-		mCdtUtils.notifyOnBeforeDelete();
-
 		_mCursorSize = -1;
-
-		_mIsExecInDateBase=true;
-		if(isConnectedToDB()){
-			_mSqliteDataBase.delete(_mTableName,null,null);
-			_mIsExecInDateBase=false;
+		while (iterate()){
+			delete();
+			executeObserve();
 		}
-
-		for (TRow row:_mListOfRows)
-			mCdtUtils.notifyOnAfterDelete(row, true);
-
-		_mListOfRows.clear();
-		System.out.println("tro sizeer is "+_mListOfRows.size());
 	}
 	/**
 	 * Returns whether the Client Data table is pointing to the last row.

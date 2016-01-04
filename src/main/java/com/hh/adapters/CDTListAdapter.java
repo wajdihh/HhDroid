@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.util.Base64;
-import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -18,18 +17,14 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
-import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.droid.R;
+import com.hh.execption.WrongTypeException;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
 import com.hh.ui.UiUtility;
 import com.hh.ui.widget.UiPicassoImageView;
-import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.Executors;
 
 public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChangedListener {
 
@@ -208,8 +203,16 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
 
                         ((TextView) lWidget).setText(data.asString());
                     }else if (lWidget instanceof UiPicassoImageView) {
-                        UiPicassoImageView picassoImageView= (UiPicassoImageView) lWidget;
-                        picassoImageView.setData(data.asString());
+                        if(data.getValueType() == TCell.ValueType.BASE64){
+                            try {
+                                throw new WrongTypeException(mContext, R.string.exception_canotUserBase64);
+                            } catch (WrongTypeException e) {
+                                e.printStackTrace();
+                            }
+                        }else {
+                            UiPicassoImageView picassoImageView = (UiPicassoImageView) lWidget;
+                            picassoImageView.setData(data.asString());
+                        }
                     } else if (lWidget instanceof ImageView) {
                         ImageView im= (ImageView) lWidget;
                         if (data.getValueType() == TCell.ValueType.INTEGER && !data.asString().isEmpty()) {
