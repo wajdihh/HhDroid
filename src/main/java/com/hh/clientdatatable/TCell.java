@@ -3,6 +3,7 @@
 package com.hh.clientdatatable;
 
 import android.content.Context;
+import android.util.Log;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.droid.HhDroid;
 import com.hh.listeners.OnCDTColumnListener;
@@ -234,18 +235,17 @@ public class TCell implements Cloneable {
     public String getOldValue(){
         return _mOldValue;
     }
-    public int asInteger() {
 
+    public int asInteger() {
         int lResult = -1;
         if(_mValue==null)
             return lResult;
-
         try {
             if (_mValue != null && !_mValue.isEmpty())
                 lResult = Integer.parseInt(_mValue);
-
         } catch (Exception e) {
             e.printStackTrace();
+            Log.e("As ","CANNOT Parse the CELL :"+_mName+" WITH VALUE :"+_mValue);
         }
         if (_mOnCDTColumnListener != null)
             lResult= _mOnCDTColumnListener.onGetValue(lResult);

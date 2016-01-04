@@ -9,20 +9,9 @@ public class HhException extends Exception{
 
 	private static final long serialVersionUID = 1L;
 
-	private int code;
-	private String message;
-
-
-
-	@Override
-	public String getMessage() {
-		return message;
-	}
-
 	public HhException(){};
 	public HhException(String pMessage){
 		super(pMessage);
-		this.message=pMessage;
 	}
 	public HhException(Context pContext, int pMessageRes){
 		super(pContext.getResources().getString(pMessageRes));
@@ -39,8 +28,4 @@ public class HhException extends Exception{
 		return e.toString();
 	}
 
-	@Override
-	public void printStackTrace() {
-		super.printStackTrace();
-	}
 }

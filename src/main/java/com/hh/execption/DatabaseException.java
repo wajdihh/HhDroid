@@ -8,7 +8,15 @@ import android.content.Context;
  */
 public class DatabaseException extends  HhException {
 
+    public DatabaseException(String message) {
+        super(message);
+    }
     public DatabaseException(Context pContext,int message) {
         super(pContext,message);
+    }
+
+    @Override
+    public String getMessage() {
+        return super.getMessage();
     }
 }

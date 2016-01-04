@@ -2,8 +2,11 @@ package com.hh.adapters;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.util.Base64;
 import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -20,8 +23,13 @@ import com.hh.droid.R;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
 import com.hh.ui.UiUtility;
+import com.hh.ui.widget.UiPicassoImageView;
+import com.squareup.picasso.Picasso;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
 
 public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChangedListener {
 
@@ -58,8 +66,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
         _mAutoRequery = false;
         _mIsEnableOnClickWidget = true;
         _mFirstBuild = true;
-
-        Log.d("List of Tags ViewHolder : %s", Arrays.toString(_mListOfTags.toArray()));
     }
 
     public void setEnableOnClickWidget(boolean pIsEnabled) {
@@ -201,16 +207,25 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     } else if (lWidget instanceof TextView) {
 
                         ((TextView) lWidget).setText(data.asString());
+                    }else if (lWidget instanceof UiPicassoImageView) {
+                        UiPicassoImageView picassoImageView= (UiPicassoImageView) lWidget;
+                        picassoImageView.setData(data.asString());
                     } else if (lWidget instanceof ImageView) {
-                        if (data.getValueType() == ValueType.INTEGER && !data.isEmpty()) {
-                            ((ImageView) lWidget).setImageResource(data.asInteger());
+                        ImageView im= (ImageView) lWidget;
+                        if (data.getValueType() == TCell.ValueType.INTEGER && !data.asString().isEmpty()) {
+                            im.setImageResource(data.asInteger());
+                        } else if (data.getValueType() == TCell.ValueType.BASE64) {
+                            byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
+                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                            im.setImageBitmap(decodedByte);
                         } else {
                             if (!data.asString().equals(""))
                                 setViewImage((ImageView) lWidget, data.asString());
                             else
-                                ((ImageView) lWidget).setImageDrawable(null);
+                                im.setImageDrawable(null);
                         }
-                    } else
+                    }
+                    else
                         throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
                                 " view that can be bounds by this SimpleAdapter");
 
