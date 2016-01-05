@@ -158,6 +158,20 @@ public class ClientDataTable {
 		append(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
 	}
 
+	public void insert(){
+		mCdtUtils.notifyOnBeforeInsert();
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot insert because CDT is empty!!");
+
+		if(_mPosition>=_mListOfRows.size())
+			throw new AssertionError("Cannot insert because CDT Position is outbound the list rows size");
+
+		if (_mCDTStatus == CDTStatus.DEFAULT){
+			_mCDTStatus=CDTStatus.INSERT;
+		}
+	}
+
 	public void append(TRow row){
 
 		mCdtUtils.notifyOnBeforeInsert();
@@ -569,12 +583,12 @@ public class ClientDataTable {
 
 				lArgs[i]=lCell.asValue();
 				if(lCell.asValue().equals(""))
-					PuUtils.showMessage(_mContext, "Erreur delete", "Valeur vide pour la clé de suppression :"+_mWhereClauseColumns[i]);
+					Log.e("ERROR Delete from database","Cannot delete the element, because the constraint value of "+_mWhereClauseColumns[i]+" is empty ! or element is not exist in database");
 			}
 
 			_mSqliteDataBase.delete(_mTableName, _mWhereClause.toString(), lArgs);
 		}else
-			PuUtils.showMessage(_mContext, "Erreur delete", "Clause where non definit");
+			throw new AssertionError(_mRes.getString(R.string.assertError_clauseWereNotFoundWhenDeletingPart1)+_mTableName+" "+_mRes.getString(R.string.assertError_clauseWereNotFoundWhenDeletingPart2));
 	}
 	/**
 	 * Test if the C data table is empty
@@ -799,7 +813,7 @@ public class ClientDataTable {
 
 		}
 		if(!lIsCellFound)
-			PuUtils.showMessage(_mContext, "Wrong cell Name","There no cellName called :"+pCellName);
+			throw new AssertionError("Wrong cell Name :! There no cellName called :"+pCellName);
 
 		return lResult;
 	}

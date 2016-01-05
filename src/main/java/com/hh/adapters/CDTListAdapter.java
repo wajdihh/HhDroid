@@ -44,6 +44,10 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     private boolean _mAutoRequery;
     private boolean _mIsEnableOnClickWidget;
     private boolean _mFirstBuild;
+    private int mBase64OptionSize=2;
+    public void setBase64OptionSize(int optionSize){
+        mBase64OptionSize=optionSize;
+    }
 
     public CDTListAdapter(Context pContext, int pLayoutRow, ClientDataTable pCDT) {
 
@@ -219,6 +223,8 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                             im.setImageResource(data.asInteger());
                         } else if (data.getValueType() == TCell.ValueType.BASE64) {
                             byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
+                            BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inSampleSize = mBase64OptionSize;
                             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                             im.setImageBitmap(decodedByte);
                         } else {

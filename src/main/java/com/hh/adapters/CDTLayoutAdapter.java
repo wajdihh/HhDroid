@@ -45,6 +45,10 @@ public class CDTLayoutAdapter {
 	private View mLayout;
 	private ViewHolder _mHolder;
 	private ArrayList<String> _mListOfTags;
+	private int mBase64OptionSize=2;
+	public void setBase64OptionSize(int optionSize){
+		mBase64OptionSize=optionSize;
+	}
 
 	/**<hr>
 	 * Use this constructor to map data from the client data table to the layout parent widgets,
@@ -180,6 +184,8 @@ public class CDTLayoutAdapter {
 						im.setImageResource(data.asInteger());
 					} else if (data.getValueType() == TCell.ValueType.BASE64) {
 						byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
+						BitmapFactory.Options options = new BitmapFactory.Options();
+						options.inSampleSize = mBase64OptionSize;
 						Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
 						im.setImageBitmap(decodedByte);
 					} else {
@@ -260,57 +266,59 @@ public class CDTLayoutAdapter {
 	/**
 	 * You must call this method, when w'll use the adapter in Edit Mode
 	 */
-	public void preEdit(){
+	public void startEdit(){
 		mClientDataTable.edit();
 	}
 
 	/**
 	 * You must call this method, when w'll use the adapter in Insert Mode
 	 */
-	public void preInsert(){
+	public void startInsert(){
+		mClientDataTable.insert();
+	}
+	public void startAppend(){
 		mClientDataTable.append();
 	}
 
-
-	public void preExecute( ){
+	public void executeChanges( ){
 		validateChanges();
 		mClientDataTable.execute();
 	}
 
-	public void preExecuteObserve( ){
+	public void executeChangesObserve( ){
 		validateChanges();
 		mClientDataTable.executeObserve();
 	}
 
-	public void preCommit(){
+	public void commitChanges(){
 
 		validateChanges();
 		mClientDataTable.commit();
 	}
 
-	public void preCommitObserve(){
+	public void commitChangesObserve(){
 
 		validateChanges();
 		mClientDataTable.commitObserve();
 	}
 
-	public void preExecute(MyCallback pMyCallback){
+	public void executeChanges(MyCallback pMyCallback){
 		validateChanges();
 		mClientDataTable.execute(pMyCallback);
 	}
 
-	public void preExecuteObserve(MyCallback pMyCallback ){
+	public void executeChangesObserve(MyCallback pMyCallback ){
 		validateChanges();
 		mClientDataTable.executeObserve(pMyCallback);
 	}
 
-	public void preCommit(MyCallback pMyCallback){
+	public void commitChanges(MyCallback pMyCallback){
 
 		validateChanges();
 		mClientDataTable.commit(pMyCallback);
 	}
 
-	public void preCommitObserve(MyCallback pMyCallback){
+	public void commitChangesObserve(MyCallback pMyCallback){
 
 		validateChanges();
 		mClientDataTable.commitObserve(pMyCallback);

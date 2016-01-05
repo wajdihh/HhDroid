@@ -74,4 +74,8 @@
         the constructor of the CDT
     </string>
     <string name="exception_canotUserBase64">Cannot use the ValueType.BASE64 for UiPicassoImageView component !</string>
+    <string name="assertError_clauseWereNotFoundWhenDeletingPart1">Cannot delete row from database Table :</string>
+    <string name="assertError_clauseWereNotFoundWhenDeletingPart2">because whereClause constraint not defined in the
+        instantiation of the clientDataTable
+    </string>
 </resources>

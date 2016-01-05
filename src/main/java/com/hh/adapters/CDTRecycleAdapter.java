@@ -34,9 +34,11 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     protected Resources mRes;
     protected ClientDataTable mClientDataTable;
     private boolean _mIsEnableOnClickWidget;
-
     private int _mLayoutRes;
-
+    private int mBase64OptionSize=2;
+    public void setBase64OptionSize(int optionSize){
+        mBase64OptionSize=optionSize;
+    }
 
     public CDTRecycleAdapter(Context pContext, int pLayoutRes, ClientDataTable pCDT){
         mContext=pContext;
@@ -97,7 +99,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                         im.setImageResource(data.asInteger());
                     } else if (data.getValueType() == TCell.ValueType.BASE64) {
                         byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inSampleSize = mBase64OptionSize;
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
                         im.setImageBitmap(decodedByte);
                     } else {
                         if (!data.asString().equals(""))
