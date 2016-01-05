@@ -12,4 +12,8 @@ public class EmptyCDTException extends  HhException {
     public EmptyCDTException(Context pContext) {
         super(pContext.getString(R.string.exception_emptyCDT));
     }
+
+    public EmptyCDTException(Context pContext,String cdtName) {
+        super("("+cdtName+") "+pContext.getString(R.string.exception_emptyCDT));
+    }
 }

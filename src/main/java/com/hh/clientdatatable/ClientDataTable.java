@@ -141,6 +141,15 @@ public class ClientDataTable {
 		return _mCursor;
 	}
 	public TRow getCurrentRow(){
+
+		if(_mListOfRows.isEmpty()) {
+			try {
+				throw new EmptyCDTException(_mContext);
+			} catch (EmptyCDTException e) {
+				e.printStackTrace();
+			}
+			return new TRow();
+		}
 		return _mListOfRows.get(_mPosition);
 	}
 
@@ -956,7 +965,7 @@ public class ClientDataTable {
 	 * Clear ClientDataTable Content And table
 	 */
 
-	public void clearCDTDatabase() {
+	public void clearAttachedDatabaseTable() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
 
@@ -1400,12 +1409,19 @@ public class ClientDataTable {
 				}
 
 				String parentKey=_mNestedJSONObjectParentKeys.get(i);
-				JSONObject subJSONObject=entry.getValue().toJSONObject();
-				JSONObject jsonParent=map.get(parentKey);
+				if(entry.getValue().isEmpty()){
+					try {
+						throw new EmptyCDTException(_mContext,""+entry.getKey());
+					} catch (EmptyCDTException e) {
+						e.printStackTrace();
+					}
+				}else {
+					JSONObject subJSONObject = entry.getValue().toJSONObject();
+					JSONObject jsonParent = map.get(parentKey);
 
-				jsonParent.put(entry.getKey(),subJSONObject);
-
-				i++;
+					jsonParent.put(entry.getKey(), subJSONObject);
+					i++;
+				}
 			}
 		}
 
