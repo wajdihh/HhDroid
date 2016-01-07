@@ -35,7 +35,7 @@ public class UiPicassoImageView extends ImageView {
         else
             mPicassoRequestCreator= mPicasso.load(new File(uri));
 
-        mPicassoRequestCreator.into(this);
+        mPicassoRequestCreator.fit().centerCrop().into(this);;
     }
 
     public RequestCreator getPicassoRequestCreator(){

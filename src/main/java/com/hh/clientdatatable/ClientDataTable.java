@@ -185,6 +185,9 @@ public class ClientDataTable {
 
 	public void delete(){
 
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot Delete because CDT is empty!!");
+
 		mCdtUtils.notifyOnBeforeDelete();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
@@ -199,6 +202,9 @@ public class ClientDataTable {
 
 
 	public void edit(){
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
 		mCdtUtils.notifyOnBeforeEdit();
 

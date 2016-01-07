@@ -19,7 +19,7 @@ public class PuLogger {
 
     public static void appendLogFile(Context pContext,String pathFile,String tag,Throwable myEx)
     {
-        File logFile = new File(pathFile+"/log.file");
+        File logFile = new File(pathFile);
         if (!logFile.exists())
         {
             try

@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.hh.droid.R;
@@ -171,6 +170,16 @@ public class PuImage {
         return rotate;
     }
 
+    public static Bitmap rotateImage(Bitmap source, int angleOrientation) {
+        Bitmap retVal;
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angleOrientation);
+        retVal = Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+
+        return retVal;
+    }
+
     public static void scanFileInGallery(final Context pContext,File f, final boolean isDelete){
 
         MediaScannerConnection.scanFile(pContext,
@@ -196,7 +205,7 @@ public class PuImage {
         stream.close();
     }
 
-    public static String getFileName(Context pContext,Uri uri) {
+    public static String getImageNameFromURI(Context pContext,Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
             Cursor cursor = pContext.getContentResolver().query(uri, null, null, null, null);
