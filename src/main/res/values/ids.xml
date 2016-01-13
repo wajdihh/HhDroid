@@ -2,6 +2,7 @@
 <resources>
     <item type="id" name="TAG_HOLDER"/>
     <item type="id" name="TAG_POSITION"/>
+    <item type="id" name="TAG_IMAGE_PICASSO"/>
     <item type="id" name="myToolBare"/>
 
 </resources>
