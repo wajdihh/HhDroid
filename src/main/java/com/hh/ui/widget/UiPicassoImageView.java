@@ -2,6 +2,7 @@ package com.hh.ui.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 import com.hh.droid.R;
@@ -35,7 +36,7 @@ public class UiPicassoImageView extends ImageView {
         else
             mPicassoRequestCreator= mPicasso.load(new File(uri));
 
-        mPicassoRequestCreator.fit().centerCrop().into(this);;
+        mPicassoRequestCreator.fit().centerCrop().noFade().into(this);;
     }
 
     public RequestCreator getPicassoRequestCreator(){
@@ -43,7 +44,7 @@ public class UiPicassoImageView extends ImageView {
     }
 
     public void transform(Transformation transformation){
-         mPicassoRequestCreator.transform(transformation).into(this);
+        mPicassoRequestCreator.transform(transformation).into(this);
     }
 
     public void resize(int w,int h){
@@ -57,6 +58,14 @@ public class UiPicassoImageView extends ImageView {
     public void errorImage(int imageRes){
         mPicassoRequestCreator.error(imageRes).into(this);
     }
+
+    public void placeHolder(Drawable image){
+        mPicassoRequestCreator.placeholder(image).into(this);
+    }
+
+    public void errorImage(Drawable image){
+        mPicassoRequestCreator.error(image).into(this);
+    }
     public void setImagesResources(int placeHolderImRes,int errorImageRes){
         mPicassoRequestCreator.placeholder(placeHolderImRes).error(errorImageRes).into(this);;
     }
@@ -68,12 +77,14 @@ public class UiPicassoImageView extends ImageView {
         {
             int attr = a.getIndex(i);
             if (attr == R.styleable.UiPicassoImageViewAttrs_placeHolderImage) {
-                int resID=a.getResourceId(R.styleable.UiPicassoImageViewAttrs_placeHolderImage,R.drawable.ic_action_delete);
-                placeHolder(resID);
+                Drawable drawable = a.getDrawable(R.styleable.UiPicassoImageViewAttrs_placeHolderImage);
+                if (drawable != null)
+                    placeHolder(drawable);
 
             } else if (attr == R.styleable.UiPicassoImageViewAttrs_errorImage) {
-                int resID=a.getResourceId(R.styleable.UiPicassoImageViewAttrs_errorImage, R.drawable.ic_action_delete);
-                errorImage(resID);
+                Drawable drawable = a.getDrawable(R.styleable.UiPicassoImageViewAttrs_errorImage);
+                if (drawable != null)
+                    errorImage(drawable);
 
             }
         }

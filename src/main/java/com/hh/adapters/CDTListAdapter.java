@@ -153,8 +153,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     convertView.setBackgroundResource(R.drawable.selector_row);
 
                     if (_mIsEnableOnClickWidget) {
-                        if (lWidget instanceof ImageView)
-                            lWidget.setBackgroundResource(R.drawable.selector_row);
 
                         if (!(lWidget instanceof TextView))
                             lWidget.setOnClickListener(new onClickWidgetListener(convertView));

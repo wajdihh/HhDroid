@@ -125,8 +125,6 @@ public class CDTLayoutAdapter {
 					_mHolder.mListHoldersViewsNotInCDT.add(lWidget);
 
 				onCreateWidget(lWidget);
-				if(lWidget instanceof ImageView)
-					lWidget.setBackgroundResource(R.drawable.selector_row);
 
 				lWidget.setOnClickListener(new MyOnClickListener());
 				if (lWidget instanceof CheckBox){

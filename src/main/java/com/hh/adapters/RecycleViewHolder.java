@@ -8,11 +8,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.hh.clientdatatable.ClientDataTable;
-import com.hh.droid.R;
 import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
@@ -84,9 +81,6 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 					lWidget.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View view) {
-							if (view instanceof ImageView)
-								view.setBackgroundResource(R.drawable.selector_row);
-
 							if (!(view instanceof TextView))
 								if(_mOnRecycleWidgetClickListener!=null) _mOnRecycleWidgetClickListener.onClick(itemView,view, tag,getPosition());
 
@@ -100,8 +94,6 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 		}
 
 		if(!pIsEnableOnClickWidget){
-
-			itemView.setBackgroundResource(R.drawable.selector_row);
 			itemView.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View view) {
