@@ -45,6 +45,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         mRes=pContext.getResources();
         mClientDataTable = pCDT;
         _mLayoutRes = pLayoutRes;
+
+        // To pass in onCreateViewHolder only one time (performance)
+        setHasStableIds(true);
     }
     @Override
     protected void finalize() throws Throwable {

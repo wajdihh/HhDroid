@@ -20,11 +20,11 @@ import com.hh.listeners.OnRecycleWidgetClickListener;
 
 import java.util.HashSet;
 
-public class RecycleViewHolder extends RecyclerView.ViewHolder {
+public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 
-	static HashSet<String> mListOfTags;
+	 HashSet<String> mListOfTags;
 	//init block
-	static {
+	 {
 		mListOfTags=new HashSet<String>();
 	}
 

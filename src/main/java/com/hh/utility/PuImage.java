@@ -3,10 +3,7 @@ package com.hh.utility;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
+import android.graphics.*;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
@@ -19,10 +16,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import com.hh.droid.R;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 
 /**
@@ -136,6 +130,31 @@ public class PuImage {
 
         return cursor.getInt(orientationColumnIndex);
     }
+
+    public static File rotateImageFile(File file){
+
+        Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(getImageOrientation(file.getAbsolutePath()));
+        bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
+        FileOutputStream fOut;
+        try {
+            fOut = new FileOutputStream(file.getAbsolutePath());
+            bmp.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
+            fOut.flush();
+            fOut.close();
+
+        } catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return file;
+    }
     /**
      * get the origine orientation of the image
      * @param imagePath
@@ -153,15 +172,19 @@ public class PuImage {
 
             switch (orientation) {
                 case ExifInterface.ORIENTATION_ROTATE_270:
-                    rotate = -90;
+                    rotate = 270;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_180:
                     rotate = 180;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_90:
                     rotate = 90;
+                    break;
                 case ExifInterface.ORIENTATION_TRANSVERSE:
                     rotate = -90;
+                    break;
+                case ExifInterface.ORIENTATION_NORMAL:
+                    rotate = 0;
                     break;
             }
         } catch (IOException e) {
