@@ -18,6 +18,7 @@ import com.hh.droid.R;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by benhadjahameda on 13/03/2015.
@@ -216,6 +217,26 @@ public class PuImage {
                         }
                     }
                 });
+    }
+
+    public static void saveBitmapToSdCard(Bitmap bitmap,String destPath,String destName) {
+
+        File myDir = new File(destPath);
+        myDir.mkdirs();
+        Random generator = new Random();
+        int n = 10000;
+        n = generator.nextInt(n);
+        File file = new File (myDir, destName);
+        if (file.exists ()) file.delete ();
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            out.flush();
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void saveBitmapToJPG(Bitmap bitmap, File photo) throws IOException {
