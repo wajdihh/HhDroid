@@ -302,9 +302,6 @@ public class PcHttpClient {
 		}
 	}
 
-	public JSONObject getJsonObject() {
-		return _mJsonObject;
-	}
 
 	public void setJsonObjectToPost(JSONObject _mJsonObject) {
 		this._mJsonObject = _mJsonObject;
