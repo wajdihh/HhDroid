@@ -45,6 +45,10 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         mRes=pContext.getResources();
         mClientDataTable = pCDT;
         _mLayoutRes = pLayoutRes;
+
+        setHasStableIds(true);
+
+
     }
     @Override
     protected void finalize() throws Throwable {
@@ -174,7 +178,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
     public void setViewImage(ImageView v, String value) {
 
-        System.out.println("I am in image");
         try {
             v.setImageResource(Integer.parseInt(value));
         } catch (NumberFormatException nfe) {
@@ -185,6 +188,12 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     public int getItemCount() {
         return  mClientDataTable.getRowsCount();
     }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
 
     public void clear() {
         mClientDataTable.clear();

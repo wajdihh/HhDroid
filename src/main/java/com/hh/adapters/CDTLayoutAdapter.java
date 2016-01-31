@@ -69,6 +69,7 @@ public class CDTLayoutAdapter {
 		mLayout=pLayout;
 		ViewHolder.clearAllTags();
 		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
+		mappingData();
 
 	}
 
@@ -84,8 +85,6 @@ public class CDTLayoutAdapter {
 		mLayout=pLayout;
 		ViewHolder.clearAllTags();
 		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
-
-
 	}
 	/**
 	 * Return the client data table used in this adapter
@@ -198,7 +197,8 @@ public class CDTLayoutAdapter {
 						else
 							im.setImageDrawable(null);
 					}
-				}
+				} else
+					throw new IllegalStateException(lWidget.getClass().getName() + " is not a " + " view that can be bounds by this SimpleAdapter");
 
 				onIteratedWidget(lWidget, tag);
 			}
@@ -271,12 +271,6 @@ public class CDTLayoutAdapter {
 	 */
 	public void startEdit(){
 		mClientDataTable.edit();
-		mappingData();
-	}
-
-	public void startEditObserve(){
-		mClientDataTable.editObserve();
-		mappingData();
 	}
 
 	/**
@@ -284,31 +278,9 @@ public class CDTLayoutAdapter {
 	 */
 	public void startInsert(){
 		mClientDataTable.insert();
-		mappingData();
-	}
-
-	public void startInsertObserve(){
-		mClientDataTable.insertObserve();
-		mappingData();
 	}
 	public void startAppend(){
 		mClientDataTable.append();
-		mappingData();
-	}
-	public void startAppendObserve(){
-		mClientDataTable.appendObserve();
-		mappingData();
-	}
-	public void startLoad(){
-			mappingData();
-	}
-	public void startDelete(){
-		mClientDataTable.delete();
-		mappingData();
-	}
-	public void startDeleteObserve(){
-		mClientDataTable.deleteObserve();
-		mappingData();
 	}
 
 	public void executeChanges( ){
@@ -371,6 +343,7 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 
+			mClientDataTable.edit();
 			TextView lTextView=(TextView) v;
 			String lColumnName=v.getTag().toString();
 			mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
@@ -383,6 +356,7 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
+			mClientDataTable.edit();
 			String lColumnName=buttonView.getTag().toString();
 			mClientDataTable.cellByName(lColumnName).setValue(isChecked);
 
