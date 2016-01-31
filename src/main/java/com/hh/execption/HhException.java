@@ -28,4 +28,12 @@ public class HhException extends Exception{
 		return e.toString();
 	}
 
+	public static void raiseErrorException(String message){
+		try {
+			throw new Exception(message);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 }

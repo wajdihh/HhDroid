@@ -65,14 +65,10 @@
 
 
     <string name="exception_emptyCDT">The ClientDataTable is EMPTY !!</string>
-    <string name="exception_DBClosed">The Database is closed !</string>
     <string name="exception_assetPart1">Vous dévez avoir un dossier :</string>
     <string name="exception_assetPart2">sous assets dans lequel au moins un script base de données .db</string>
     <string name="exception_noScriptFound">Acun script base de données présent dans le dossier :</string>
     <string name="exception_errorParsingDate">Error of parsing the DATE value :</string>
-    <string name="exception_databaseNULL">This clientDataTable has not configured database, try to use getDatabase in
-        the constructor of the CDT
-    </string>
     <string name="exception_canotUserBase64">Cannot use the ValueType.BASE64 for UiPicassoImageView component !</string>
     <string name="assertError_clauseWereNotFoundWhenDeletingPart1">Cannot delete row from database Table :</string>
     <string name="assertError_clauseWereNotFoundWhenDeletingPart2">because whereClause constraint not defined in the

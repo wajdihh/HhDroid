@@ -9,10 +9,11 @@ import android.util.Log;
 import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.database.DatabaseUtils;
 import com.hh.droid.R;
-import com.hh.execption.DatabaseException;
-import com.hh.execption.EmptyCDTException;
-import com.hh.listeners.*;
 import com.hh.execption.HhException;
+import com.hh.listeners.MyCallback;
+import com.hh.listeners.OnCDTColumnListener;
+import com.hh.listeners.OnCDTStatusObserver;
+import com.hh.listeners.OnNotifyDataSetChangedListener;
 import com.hh.utility.PuUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -142,14 +143,9 @@ public class ClientDataTable {
 	}
 	public TRow getCurrentRow(){
 
-		if(_mListOfRows.isEmpty()) {
-			try {
-				throw new EmptyCDTException(_mContext);
-			} catch (EmptyCDTException e) {
-				e.printStackTrace();
-			}
-			return new TRow();
-		}
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("The ClientDataTable is EMPTY !!");
+
 		return _mListOfRows.get(_mPosition);
 	}
 
@@ -157,9 +153,10 @@ public class ClientDataTable {
 	public void append(){
 		append(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
 	}
-
+	public void appendObserve(){
+		appendObserve(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
+	}
 	public void insert(){
-		mCdtUtils.notifyOnBeforeInsert();
 
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot insert because CDT is empty!!");
@@ -172,18 +169,56 @@ public class ClientDataTable {
 		}
 	}
 
-	public void append(TRow row){
-
+	public void insertObserve(){
 		mCdtUtils.notifyOnBeforeInsert();
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot insert because CDT is empty!!");
+
+		if(_mPosition>=_mListOfRows.size())
+			throw new AssertionError("Cannot insert because CDT Position is outbound the list rows size");
+
+		if (_mCDTStatus == CDTStatus.DEFAULT){
+			_mCDTStatus=CDTStatus.INSERT;
+		}
+	}
+	public void append(TRow row){
+		append(row, false);
+	}
+
+	public void appendObserve(TRow row){
+		append(row,true);
+	}
+
+	private void append(TRow row,boolean pIsObserve){
+
+		if(pIsObserve)
+			mCdtUtils.notifyOnBeforeInsert();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 			_mCDTStatus=CDTStatus.INSERT;
 			addRow(row);
 			_mPosition=_mListOfRows.size()-1;
-		}
+		}else
+			throw new AssertionError("Cannot append a new line because CDT is in mode :"+_mCDTStatus.name()+" You must commit your change");
 	}
 
 	public void delete(){
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot Delete because CDT is empty!!");
+
+		if(_mCDTStatus==CDTStatus.DEFAULT){
+
+			_mCDTStatus=CDTStatus.DELETE;
+			if(_mListOfDeletedRows==null)
+				_mListOfDeletedRows=new ArrayList<>();
+		}
+
+		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
+	}
+
+	public void deleteObserve(){
 
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot Delete because CDT is empty!!");
@@ -200,8 +235,23 @@ public class ClientDataTable {
 		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 	}
 
-
 	public void edit(){
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot EDIT because CDT is empty!!");
+
+		if(_mCDTStatus==CDTStatus.DEFAULT){
+
+			_mCDTStatus=CDTStatus.UPDATE;
+
+			getCurrentRow().memorizeValues();
+
+			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
+		}else
+			throw new AssertionError("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change");
+	}
+
+	public void editObserve(){
 
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot EDIT because CDT is empty!!");
@@ -215,9 +265,9 @@ public class ClientDataTable {
 			getCurrentRow().memorizeValues();
 
 			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
-		}
+		}else
+			throw new IllegalStateException("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change");
 	}
-
 	/**
 	 * permet de faire un clone dela liste des celles ( prb des references)
 	 * @param list
@@ -244,52 +294,46 @@ public class ClientDataTable {
 
 	private void validate(boolean pIsUseCDTListener,boolean pIsExecInDateBase,MyCallback pCallback){
 
-		try {
-			_mIsExecInDateBase=pIsExecInDateBase;
-			if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
-				if(getRowsCount()==0)
-					throw new EmptyCDTException(_mContext);
+
+		_mIsExecInDateBase=pIsExecInDateBase;
+		if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
+			if(getRowsCount()==0)
+				throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
 
-			// if we have set CDTListener and the data is not valid return
-			for (OnCDTStateListener listener:mCdtUtils.mListOfStateListener) {
-				if (!listener.onBeforeValidate()) {
-					if (pCallback != null) pCallback.onError("");
-					return;
-				}
+		// if we have set CDTListener and the data is not valid return
+		for (OnCDTStatusObserver listener:mCdtUtils.mListOfStateListener) {
+			if (!listener.onBeforeValidate()) {
+				if (pCallback != null) pCallback.onError("");
+				return;
 			}
-
-			if(pIsExecInDateBase && isConnectedToDB())
-				if(_mSqliteDataBase.isOpen())
-					commitIntoDataBase(false);
-				else
-					throw new DatabaseException(_mContext,R.string.exception_DBClosed);
-
-			commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
-			_mCDTStatus=CDTStatus.DEFAULT;
-
-			if(_mCellHowValueChanged!=null)
-				_mCellHowValueChanged.setValueChanged(false);
-
-			mCdtUtils.notifyOnAfterValidate(pIsExecInDateBase);
-
-			if(pCallback!=null ) pCallback.onSuccess("");
-
-			if(pIsExecInDateBase)
-				clearListOfDeletedRows();
-
-
-			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
-				System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfDeletedRows.size());
-
-			if(_mOnNotifyDataSetChangedListener!=null)
-				_mOnNotifyDataSetChangedListener.notifyValueChanged();
-
-		} catch (EmptyCDTException e) {
-			e.printStackTrace();
-		} catch (DatabaseException e) {
-			e.printStackTrace();
 		}
+
+		if(pIsExecInDateBase && isConnectedToDB())
+			if(_mSqliteDataBase.isOpen())
+				commitIntoDataBase(false);
+			else
+				throw new AssertionError("The Database is closed !");
+
+		commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
+		_mCDTStatus=CDTStatus.DEFAULT;
+
+		if(_mCellHowValueChanged!=null)
+			_mCellHowValueChanged.setValueChanged(false);
+
+		mCdtUtils.notifyOnAfterValidate(pIsExecInDateBase);
+
+		if(pCallback!=null ) pCallback.onSuccess("");
+
+		if(pIsExecInDateBase)
+			clearListOfDeletedRows();
+
+
+		if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
+			System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfDeletedRows.size());
+
+		if(_mOnNotifyDataSetChangedListener!=null)
+			_mOnNotifyDataSetChangedListener.notifyValueChanged();
 	}
 	/**
 	 * Apply changes on Date base (if connected) and refresh the layout with the new values
@@ -373,55 +417,49 @@ public class ClientDataTable {
 		_mCDTStatus=pCDTStatus;
 		_mIsExecInDateBase=true;
 
-		try {
 
-			if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
-				if(getRowsCount()==0)
-					throw new EmptyCDTException(_mContext);
-
+		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
+			if(getRowsCount()==0)
+				throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
 
-			if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (_mCDTStatus==CDTStatus.INSERT || _mCDTStatus==CDTStatus.UPDATE)){
-				int size = _mListOfRows.size();
+
+		if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (_mCDTStatus==CDTStatus.INSERT || _mCDTStatus==CDTStatus.UPDATE)){
+			int size = _mListOfRows.size();
+			for (int i = 0; i < size; i++){
+
+				moveToPosition(i);
+				commitIntoDataBase(true);
+
+				if(isUseCDTListener)
+					if(_mCDTStatus==CDTStatus.INSERT)
+						mCdtUtils.notifyOnAfterInsert(true);
+
+					else if(_mCDTStatus==CDTStatus.UPDATE)
+						mCdtUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
+			}
+
+
+			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
+
+				size = _mListOfDeletedRows.size();
 				for (int i = 0; i < size; i++){
+					if( isUseCDTListener)
+						mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
 
-					moveToPosition(i);
-					commitIntoDataBase(true);
-
-					if(isUseCDTListener)
-						if(_mCDTStatus==CDTStatus.INSERT)
-							mCdtUtils.notifyOnAfterInsert(true);
-
-						else if(_mCDTStatus==CDTStatus.UPDATE)
-							mCdtUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
+					deleteRowDataBase(_mListOfDeletedRows.get(i));
 				}
 
+				clearListOfDeletedRows();
+			}
 
-				if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
+			_mCDTStatus=CDTStatus.DEFAULT;
 
-					size = _mListOfDeletedRows.size();
-					for (int i = 0; i < size; i++){
-						if( isUseCDTListener)
-							mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
+			if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
 
-						deleteRowDataBase(_mListOfDeletedRows.get(i));
-					}
+		}else
+			throw new AssertionError("The Database is closed !");
 
-					clearListOfDeletedRows();
-				}
-
-				_mCDTStatus=CDTStatus.DEFAULT;
-
-				if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
-
-			}else
-				throw new DatabaseException(_mContext,R.string.exception_DBClosed);
-
-		} catch (EmptyCDTException e) {
-			e.printStackTrace();
-		} catch (DatabaseException e) {
-			e.printStackTrace();
-		}
 	}
 
 
@@ -470,7 +508,7 @@ public class ClientDataTable {
 				deleteFromDB();
 				break;
 			case DEFAULT:
-				PuUtils.showMessage(_mContext, "No commit", "Acun changement n'est applique car le mode est DEFAULT");
+				Log.e("commitIntoDataBase","No commit, because the CDT is in Default mode");
 				break;
 			default:
 				break;
@@ -789,15 +827,8 @@ public class ClientDataTable {
 	 */
 	public TCell cellByName(String pCellName) {
 
-		// TODO a optimiser a faire getCurrentRow.getCells(posCell)
-		if(getRowsCount()==0) {
-			try {
-				throw new EmptyCDTException(_mContext);
-			} catch (EmptyCDTException e) {
-				e.printStackTrace();
-			}
-			return new TCell();
-		}
+		if(getRowsCount()==0)
+			throw new AssertionError("The ClientDataTable is EMPTY ");
 
 		TCell lResult;
 		if(isConnectedToDB())
@@ -826,17 +857,10 @@ public class ClientDataTable {
 
 	public TCell getPrimaryKeyCell() {
 
-		if(getRowsCount()==0) {
-			try {
-				throw new EmptyCDTException(_mContext);
-			} catch (EmptyCDTException e) {
-				e.printStackTrace();
-			}
-			return new TCell();
-		}
+		if(getRowsCount()==0)
+			throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
 		TCell lResult=null;
-
 		int lColumnSize = getColumnsCount();
 		boolean lIsCellFound=false;
 		for (int i = 0; i < lColumnSize && getRowsCount() != 0; i++) {
@@ -898,19 +922,14 @@ public class ClientDataTable {
 
 	public void fillFromTable(String pSQLCommand){
 
-		if(_mSqliteDataBase==null){
-			try {
-				throw new DatabaseException(_mContext,R.string.exception_databaseNULL);
-			} catch (DatabaseException e) {
-				e.printStackTrace();
-				System.out.println("ddd :"+HhException.getExceptionMessage(e));
-			}
-		}else{
-			_mCursor= _mSqliteDataBase.rawQuery(pSQLCommand, null);
-			_mCursor.moveToFirst();
-			fillFromCursor(_mCursor);
-			Log.i("fillFromTable", " Count :" + _mCursor.getCount());
-		}
+		if(_mSqliteDataBase==null)
+			throw new AssertionError("This clientDataTable has not configured database, try to use getDatabase in the constructor of the CDT");
+
+		_mCursor= _mSqliteDataBase.rawQuery(pSQLCommand, null);
+		_mCursor.moveToFirst();
+		fillFromCursor(_mCursor);
+		Log.i("fillFromTable", " Count :" + _mCursor.getCount());
+
 
 	}
 
@@ -1429,13 +1448,9 @@ public class ClientDataTable {
 				}
 
 				String parentKey=_mNestedJSONObjectParentKeys.get(i);
-				if(entry.getValue().isEmpty()){
-					try {
-						throw new EmptyCDTException(_mContext,""+entry.getKey());
-					} catch (EmptyCDTException e) {
-						e.printStackTrace();
-					}
-				}else {
+				if(entry.getValue().isEmpty())
+					HhException.raiseErrorException("Cannot EDIT because CDT is empty!! >> "+entry.getKey());
+				else {
 					JSONObject subJSONObject = entry.getValue().toJSONObject();
 					JSONObject jsonParent = map.get(parentKey);
 
@@ -1498,7 +1513,7 @@ public class ClientDataTable {
 
 				// Display rows
 				for (int i = 0; i < lSize; i++)
-					Log.v(TAG, "ROW N�" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
+					Log.v(TAG, "ROW NO" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
 
 			}else{
 				for (int i = 0; i < pColumnsToDisplay.length; i++)
@@ -1529,10 +1544,10 @@ public class ClientDataTable {
 	}
 
 
-	public void setOnCDTStateListener(OnCDTStateListener pListener){
+	public void setOnCDTStatusObserver(OnCDTStatusObserver pListener){
 		mCdtUtils.mListOfStateListener.add(pListener);
 	}
-	public void removeCDTStateListener(OnCDTStateListener pListener){
+	public void removeCDTStatusObserver(OnCDTStatusObserver pListener){
 		mCdtUtils.mListOfStateListener.remove(pListener);
 	}
 }

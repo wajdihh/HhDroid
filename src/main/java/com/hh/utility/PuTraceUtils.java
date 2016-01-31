@@ -9,14 +9,14 @@ public final class PuTraceUtils {
     private static long startTime;
 
 
-    public static void startCounter(){
+    public static void startCounter(String tag){
         startTime = System.currentTimeMillis();
-        System.out.println("## {I'am starting }");
+        System.out.println("#"+tag+"# {I'am starting }");
     }
 
-    public static void stopCounter(){
+    public static void stopCounter(String tag){
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
-        System.out.println("## {Time is } :"+elapsedTime);
+        System.out.println("#"+tag+"# {Time is } :"+elapsedTime);
     }
 }

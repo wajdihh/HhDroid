@@ -42,7 +42,7 @@ public class CDTLayoutAdapter {
 	protected ClientDataTable mClientDataTable;
 	protected Context mContext;
 	protected Resources mRes;
-	private View mLayout;
+	private ViewGroup mLayout;
 	private ViewHolder _mHolder;
 	private ArrayList<String> _mListOfTags;
 	private int mBase64OptionSize=2;
@@ -61,7 +61,7 @@ public class CDTLayoutAdapter {
 	 * @param pLayout : the layout parent , it's can be a linearLayout , relativeLatout etc...
 	 * @param pCDT : the client data table
 	 */
-	public CDTLayoutAdapter(Context pContext,View pLayout,ClientDataTable pCDT){
+	public CDTLayoutAdapter(Context pContext,ViewGroup pLayout,ClientDataTable pCDT){
 
 		mClientDataTable=pCDT;
 		mContext=pContext;
@@ -69,7 +69,6 @@ public class CDTLayoutAdapter {
 		mLayout=pLayout;
 		ViewHolder.clearAllTags();
 		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
-		mappingData();
 
 	}
 
@@ -78,13 +77,15 @@ public class CDTLayoutAdapter {
 	 * @param pContext
 	 * @param pLayout: the layout parent , it's can be a linearLayout , relativeLatout etc...
 	 */
-	public CDTLayoutAdapter(Context pContext,View pLayout){
+	public CDTLayoutAdapter(Context pContext,ViewGroup pLayout){
 
 		mContext=pContext;
 		mRes=pContext.getResources();
 		mLayout=pLayout;
 		ViewHolder.clearAllTags();
 		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
+
+
 	}
 	/**
 	 * Return the client data table used in this adapter
@@ -94,7 +95,9 @@ public class CDTLayoutAdapter {
 		return mClientDataTable;
 	}
 
-
+	public ViewGroup getParentLayout(){
+		return mLayout;
+	}
 	/**
 	 * Set the client data table to use for mapping data in layout parent
 	 * @param mClientDataTable
@@ -124,7 +127,6 @@ public class CDTLayoutAdapter {
 				else
 					_mHolder.mListHoldersViewsNotInCDT.add(lWidget);
 
-				onCreateWidget(lWidget);
 				if(lWidget instanceof ImageView)
 					lWidget.setBackgroundResource(R.drawable.selector_row);
 
@@ -137,6 +139,8 @@ public class CDTLayoutAdapter {
 					final TextView lTextView = (TextView) lWidget;
 					lTextView.setOnFocusChangeListener(new MyFocusChangeListener());
 				}
+
+				onCreateWidget(lWidget);
 			}
 
 		}
@@ -194,8 +198,7 @@ public class CDTLayoutAdapter {
 						else
 							im.setImageDrawable(null);
 					}
-				} else
-					throw new IllegalStateException(lWidget.getClass().getName() + " is not a " + " view that can be bounds by this SimpleAdapter");
+				}
 
 				onIteratedWidget(lWidget, tag);
 			}
@@ -268,6 +271,12 @@ public class CDTLayoutAdapter {
 	 */
 	public void startEdit(){
 		mClientDataTable.edit();
+		mappingData();
+	}
+
+	public void startEditObserve(){
+		mClientDataTable.editObserve();
+		mappingData();
 	}
 
 	/**
@@ -275,9 +284,31 @@ public class CDTLayoutAdapter {
 	 */
 	public void startInsert(){
 		mClientDataTable.insert();
+		mappingData();
+	}
+
+	public void startInsertObserve(){
+		mClientDataTable.insertObserve();
+		mappingData();
 	}
 	public void startAppend(){
 		mClientDataTable.append();
+		mappingData();
+	}
+	public void startAppendObserve(){
+		mClientDataTable.appendObserve();
+		mappingData();
+	}
+	public void startLoad(){
+			mappingData();
+	}
+	public void startDelete(){
+		mClientDataTable.delete();
+		mappingData();
+	}
+	public void startDeleteObserve(){
+		mClientDataTable.deleteObserve();
+		mappingData();
 	}
 
 	public void executeChanges( ){
@@ -340,7 +371,6 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 
-			mClientDataTable.edit();
 			TextView lTextView=(TextView) v;
 			String lColumnName=v.getTag().toString();
 			mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
@@ -353,7 +383,6 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-			mClientDataTable.edit();
 			String lColumnName=buttonView.getTag().toString();
 			mClientDataTable.cellByName(lColumnName).setValue(isChecked);
 
