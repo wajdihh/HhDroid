@@ -3,12 +3,15 @@
 package com.hh.clientdatatable;
 
 import android.content.Context;
-
+import android.util.Log;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.droid.HhDroid;
 import com.hh.listeners.OnCDTColumnListener;
 import com.hh.utility.PuDate;
 import com.hh.utility.PuUtils;
+
+import java.text.ParseException;
+import java.util.Date;
 
 
 public class TCell implements Cloneable {
@@ -17,7 +20,7 @@ public class TCell implements Cloneable {
         return _mName;
     }
 
-    public enum ValueType {BOOLEAN, INTEGER, DOUBLE, TEXT, DATETIME}
+    public enum ValueType {BOOLEAN, INTEGER, DOUBLE, TEXT, DATETIME,BASE64}
 
     public enum CellType {NONE,CURRENCY}
 
@@ -39,11 +42,11 @@ public class TCell implements Cloneable {
         _mOnCDTColumnListener = pOnCDTColumnListener;
 
         if (pValueType == ValueType.DATETIME) {
-            long lLongDate = PuDate.getTimeFromStringDate((String) pValue);
-            if(lLongDate==-1)
+            try {
+                _mValue = String.valueOf(PuDate.parseDate((String) pValue));
+            } catch (ParseException e) {
                 _mValue=(String) pValue;
-            else
-                _mValue = String.valueOf(lLongDate);
+            }
         } else
             _mValue = String.valueOf(pValue);
     }
@@ -95,12 +98,17 @@ public class TCell implements Cloneable {
                     " il faut le reactiver en utilisant edit()");
     }
 
+    public void setName(String name){
+        _mName=name;
+    }
+
     public void setValue(String pValue) {
         if (_mOnCDTColumnListener != null)
             pValue = _mOnCDTColumnListener.onSetValue(pValue);
 
         if(_mValue==null || ((_mValue!=null && pValue!=null) &&!_mValue.equals(pValue.toString())))
             onValueChanged();
+
         _mValue = pValue;
     }
 
@@ -143,16 +151,11 @@ public class TCell implements Cloneable {
         _mValue = String.valueOf(pValueTimeInMillies);
     }
 
-    public void setValueDateString(String pValueDate) {
-
-        if(_mValue==null || (_mValue!=null && pValueDate!=null) &&!_mValue.equals(pValueDate))
-            onValueChanged();
-        _mValue = String.valueOf(PuDate.getTimeFromStringDate(pValueDate));
-    }
-
     public boolean asBoolean() {
 
         boolean lResult = false;
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null)
                 lResult = Boolean.parseBoolean(_mValue);
@@ -168,21 +171,46 @@ public class TCell implements Cloneable {
     public String asString() {
 
         String lResult = "";
-        try {
-            if (_mValue != null){
-                if(_mValueType==ValueType.DATETIME)
-                    lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
-                else
-                    lResult = _mValue;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(_mValue==null)
+            return lResult;
+
+        if (_mOnCDTColumnListener != null){
+
+            if(!_mValue.isEmpty()) {
+                switch (_mValueType) {
+                    case INTEGER:
+                        lResult = _mOnCDTColumnListener.onGetValueInt(Integer.parseInt(_mValue));
+                        break;
+                    case BOOLEAN:
+                        lResult = _mOnCDTColumnListener.onGetValueBool(Boolean.parseBoolean(_mValue));
+                        break;
+                    case DOUBLE:
+                        lResult = _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
+                        break;
+                    case DATETIME:
+                        lResult = _mOnCDTColumnListener.onGetValueDate(Long.parseLong(_mValue));
+                        break;
+                    case TEXT:
+                        lResult = _mOnCDTColumnListener.onGetValue(_mValue);
+                        break;
+                }
+            }else
+                lResult = _mOnCDTColumnListener.onGetValue(_mValue);
+
+            if(_mValueType!=ValueType.TEXT)
+                lResult = _mOnCDTColumnListener.onGetValue(lResult);
+
+            // If we not define the listener
+        }else{
+            if(_mValueType==ValueType.DATETIME &&!_mValue.isEmpty()){
+                long dateLong=Long.parseLong(_mValue);
+                lResult = PuDate.getStringFromDate(dateLong);
+            }else
+                lResult=_mValue;
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
 
         if(_mCellType==CellType.CURRENCY)
-            return lResult+" "+ HhDroid.getInstance().mCurrencySymbol;
+            return lResult+" "+ HhDroid.getInstance(_mContext).mCurrencySymbol;
 
         return lResult;
     }
@@ -205,16 +233,17 @@ public class TCell implements Cloneable {
     public String getOldValue(){
         return _mOldValue;
     }
+
     public int asInteger() {
-
         int lResult = -1;
-
+        if(_mValue==null)
+            return lResult;
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Integer.parseInt(_mValue);
-
         } catch (Exception e) {
             e.printStackTrace();
+            Log.e("As ","CANNOT Parse the CELL :"+_mName+" WITH VALUE :"+_mValue);
         }
         if (_mOnCDTColumnListener != null)
             lResult= _mOnCDTColumnListener.onGetValue(lResult);
@@ -224,9 +253,10 @@ public class TCell implements Cloneable {
     public float asFloat() {
 
         float lResult = -1;
-
+        if(_mValue==null)
+            return lResult;
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Float.parseFloat(_mValue);
 
         } catch (Exception e) {
@@ -240,10 +270,28 @@ public class TCell implements Cloneable {
     public double asDouble() {
 
         double lResult = -1;
-
+        if(_mValue==null)
+            return lResult;
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Double.parseDouble(_mValue);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (_mOnCDTColumnListener != null)
+            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        return lResult;
+    }
+
+    public Date asDate() {
+
+        Date lResult = new Date();
+        if(_mValue==null)
+            return lResult;
+        try {
+            if (_mValue != null && !_mValue.isEmpty())
+                lResult = new Date(Long.parseLong(_mValue));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -256,9 +304,10 @@ public class TCell implements Cloneable {
     public long asDateTime() {
 
         long lResult = -1;
-
+        if(_mValue==null)
+            return lResult;
         try {
-            if (_mValue != null)
+            if (_mValue != null && !_mValue.isEmpty())
                 lResult = Long.parseLong(_mValue);
 
         } catch (Exception e) {
@@ -272,6 +321,8 @@ public class TCell implements Cloneable {
     public String asDateString() {
 
         String lResult = "error";
+        if(_mValue==null)
+            return lResult;
         try {
             if (_mValue != null)
                 lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
@@ -306,6 +357,7 @@ public class TCell implements Cloneable {
 
     private void onValueChanged() {
         _mIsValueChanged=true;
+        Log.i("onValueChanged","Cell Name ("+_mName+") : Value ("+_mValue+")");
     }
 
 

@@ -1,21 +1,16 @@
 package com.hh.database;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Scanner;
-
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
 import com.hh.droid.R;
-import com.hh.utility.PuException;
+import com.hh.execption.HhException;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * Class allow to create or upgrade Sqlite data base from .db script in assets folder 
@@ -65,7 +60,7 @@ public class DBSqliteOpenHelper extends SQLiteOpenHelper{
 
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (PuException e1) {
+		} catch (HhException e1) {
 			e1.printStackTrace();
 			_mContext.deleteDatabase(_mRes.getString(R.string.DataBaseName));
 		}
@@ -104,7 +99,7 @@ public class DBSqliteOpenHelper extends SQLiteOpenHelper{
 
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (PuException e1) {
+		} catch (HhException e1) {
 			e1.printStackTrace();
 		}
 	}
@@ -119,7 +114,7 @@ public class DBSqliteOpenHelper extends SQLiteOpenHelper{
 		}
 	}
 
-	private ArrayList<String> getDBScriptFile(String pFolderName) throws PuException, IOException{
+	private ArrayList<String> getDBScriptFile(String pFolderName) throws HhException, IOException{
 
 		ArrayList<String> lListScriptFiles=null;
 		AssetManager lAssManager=_mRes.getAssets();
@@ -128,15 +123,15 @@ public class DBSqliteOpenHelper extends SQLiteOpenHelper{
 		int lTabFileSize=lTabFiles.length;
 
 		if(lTabFileSize==0){
-			throw new PuException(_mContext, "Erreur", "Vous dévez avoir un dossier :"+pFolderName+" sous assets dans lequel au moins un script base de données .db");
+			throw new HhException(_mContext.getString(R.string.exception_assetPart1)+" "+pFolderName+" "+_mContext.getString(R.string.exception_assetPart2));
 		}
-		lListScriptFiles=new ArrayList<String>();
+		lListScriptFiles= new ArrayList<>();
 		for (int i = 0; i < lTabFileSize; i++) 
 			if(lTabFiles[i].contains(".db"))
 				lListScriptFiles.add(lTabFiles[i]);
 		
 		if(lListScriptFiles.isEmpty())
-			throw new PuException(_mContext, "Acun Script base de données", "Acun script base de données présent dans le dossier : "+pFolderName);
+			throw new HhException(_mContext.getString(R.string.exception_noScriptFound)+" "+pFolderName);
 
 		return lListScriptFiles;
 	}

@@ -132,10 +132,13 @@ public class PuNetworkUtils {
             address=addresses.get(0).getAddressLine(0);
 
         String city = addresses.get(0).getLocality();
-        String state = addresses.get(0).getAdminArea();
         String zip = addresses.get(0).getPostalCode();
         String country = addresses.get(0).getCountryName();
 
+        address=(address==null)?"":address;
+        city=(city==null)?"":city;
+        zip=(zip==null)?"":zip;
+        country=(country==null)?"":country;
 
         return  address+" "+city+" "+zip+" "+country;
     }

@@ -33,5 +33,6 @@
             android:singleLine="true"
             android:selectAllOnFocus="true"
             android:maxLength="4"
+            android:imeOptions="actionDone"
             android:hint="@string/lab_year"/>
 </LinearLayout>

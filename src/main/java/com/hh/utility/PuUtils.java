@@ -29,20 +29,19 @@ import android.content.pm.Signature;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Patterns;
 import android.widget.Toast;
 
 import com.hh.droid.R;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -88,6 +87,11 @@ public class PuUtils {
 
 
 	}
+
+	public static boolean isValidEmail(String email) {
+		Pattern pattern = Patterns.EMAIL_ADDRESS;
+		return pattern.matcher(email).matches();
+	}
 	/**
 	 * to query columns names of a Table from database
 	 * @author wajdihh
@@ -102,31 +106,22 @@ public class PuUtils {
 			lListOfColumns.add(lCursor.getString(1));
 		return lListOfColumns;
 	}
-	public static PuDate getCurrentDate(Context pContext){	
 
-		Calendar lCalendar = Calendar.getInstance();
-		int lDay = lCalendar.get(Calendar.DATE);
-		int lMonth = lCalendar.get(Calendar.MONTH)+1;
-		int lYear = lCalendar.get(Calendar.YEAR);
-
-		return new PuDate(lMonth, lDay, lYear);
+	public static void printKeyHash(Activity pActivity){
+		// Add code to print out the key hash
+		try {
+			PackageInfo info = pActivity.getPackageManager().getPackageInfo(pActivity.getPackageName(),PackageManager.GET_SIGNATURES);
+			for (Signature signature : info.signatures) {
+				MessageDigest md = MessageDigest.getInstance("SHA");
+				md.update(signature.toByteArray());
+				Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+			}
+		} catch (PackageManager.NameNotFoundException e) {
+			Log.d("KeyHash:", e.toString());
+		} catch (NoSuchAlgorithmException e) {
+			Log.d("KeyHash:", e.toString());
+		}
 	}
-
-    public static void printKeyHash(Activity pActivity){
-        // Add code to print out the key hash
-        try {
-            PackageInfo info = pActivity.getPackageManager().getPackageInfo(pActivity.getPackageName(),PackageManager.GET_SIGNATURES);
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.d("KeyHash:", e.toString());
-        } catch (NoSuchAlgorithmException e) {
-            Log.d("KeyHash:", e.toString());
-        }
-    }
 
 
 	/**
@@ -207,7 +202,7 @@ public class PuUtils {
 			@Override
 			public void run() {
 
-				progress.hide();
+				progress.dismiss();
 			}
 		}, delay);
 	}
@@ -306,6 +301,114 @@ public class PuUtils {
 			}
 		}
 		return null;
+	}
+
+	private static String convertToHex(byte[] data) {
+		StringBuilder buf = new StringBuilder();
+		for (byte b : data) {
+			int halfbyte = (b >>> 4) & 0x0F;
+			int two_halfs = 0;
+			do {
+				buf.append((0 <= halfbyte) && (halfbyte <= 9) ? (char) ('0' + halfbyte) : (char) ('a' + (halfbyte - 10)));
+				halfbyte = b & 0x0F;
+			} while (two_halfs++ < 1);
+		}
+		return buf.toString();
+	}
+
+	public static String SHA1(String text) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		md.update(text.getBytes("iso-8859-1"), 0, text.length());
+		byte[] sha1hash = md.digest();
+		return convertToHex(sha1hash);
+	}
+
+	public static String getDeviceName() {
+		String manufacturer = Build.MANUFACTURER;
+		String model = Build.MODEL;
+		if (model.startsWith(manufacturer)) {
+			return capitalize(model);
+		} else {
+			return capitalize(manufacturer) + " " + model;
+		}
+	}
+
+
+	private static String capitalize(String s) {
+		if (s == null || s.length() == 0) {
+			return "";
+		}
+		char first = s.charAt(0);
+		if (Character.isUpperCase(first)) {
+			return s;
+		} else {
+			return Character.toUpperCase(first) + s.substring(1);
+		}
+	}
+
+	public  static void shareOnFacebook(Context pContext,String urlToShare){
+
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType("text/plain");
+		// intent.putExtra(Intent.EXTRA_SUBJECT, "Foo bar"); // NB: has no effect!
+		intent.putExtra(Intent.EXTRA_TEXT, urlToShare);
+
+		// See if official Facebook app is found
+		boolean facebookAppFound = false;
+		List<ResolveInfo> matches = pContext.getPackageManager().queryIntentActivities(intent, 0);
+		for (ResolveInfo info : matches) {
+			if (info.activityInfo.packageName.toLowerCase().startsWith("com.facebook.katana")) {
+				intent.setPackage(info.activityInfo.packageName);
+				facebookAppFound = true;
+				break;
+			}
+		}
+
+		// As fallback, launch sharer.php in a browser
+		if (!facebookAppFound) {
+			String sharerUrl = "https://www.facebook.com/sharer/sharer.php?u=" + urlToShare;
+			intent = new Intent(Intent.ACTION_VIEW, Uri.parse(sharerUrl));
+		}
+
+		pContext.startActivity(intent);
+	}
+	public  static void shareOnTwitter(Context pContext,String urlToShare){
+
+		Intent tweetIntent = new Intent(Intent.ACTION_SEND);
+		tweetIntent.putExtra(Intent.EXTRA_TEXT, urlToShare);
+		tweetIntent.setType("text/plain");
+
+		PackageManager packManager = pContext.getPackageManager();
+		List<ResolveInfo> resolvedInfoList = packManager.queryIntentActivities(tweetIntent,  PackageManager.MATCH_DEFAULT_ONLY);
+
+		boolean resolved = false;
+		for(ResolveInfo resolveInfo: resolvedInfoList){
+			if(resolveInfo.activityInfo.packageName.startsWith("com.twitter.android")){
+				tweetIntent.setClassName(
+						resolveInfo.activityInfo.packageName,
+						resolveInfo.activityInfo.name);
+				resolved = true;
+				break;
+			}
+		}
+		if(resolved){
+			pContext.startActivity(tweetIntent);
+		}else{
+			Intent i = new Intent();
+			i.putExtra(Intent.EXTRA_TEXT, urlToShare);
+			i.setAction(Intent.ACTION_VIEW);
+			i.setData(Uri.parse("https://twitter.com/intent/tweet?text=message&via=profileName"));
+			pContext.startActivity(i);
+		}
+	}
+
+	public static int getVersionCode(Context pContext) throws PackageManager.NameNotFoundException {
+		PackageInfo pInfo = pContext.getPackageManager().getPackageInfo(pContext.getPackageName(), 0);
+		return pInfo.versionCode;
+	}
+	public static String getVersionName(Context pContext) throws PackageManager.NameNotFoundException {
+		PackageInfo pInfo = pContext.getPackageManager().getPackageInfo(pContext.getPackageName(), 0);
+		return pInfo.versionName;
 	}
 
 }

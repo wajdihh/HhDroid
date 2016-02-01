@@ -24,6 +24,9 @@ public class PpJsonParser {
 	 * @param pJsonObject
 	 * @return key names list
 	 */
+
+
+	private static JSONObject jsonChild;
 	public static ArrayList<String> getKeysNames(JSONObject pJsonObject){
 
 		ArrayList<String> lArrays=new ArrayList<String>();
@@ -38,11 +41,12 @@ public class PpJsonParser {
 		return lArrays;
 	}
 
-	 static void parseJsonArrayIntoCDT(JSONArray pJsArray,ClientDataTable pCDT,boolean saveInDataBase) throws JSONException{
+	static void parseJsonArrayIntoCDT(JSONArray pJsArray,ClientDataTable pCDT,boolean saveInDataBase) throws JSONException{
 
 		int lSizeJsArray = pJsArray.length();
-		 if(lSizeJsArray==0)
-			 return;
+		if(lSizeJsArray==0)
+			return;
+
 
 		pCDT.getListOfRows().clear();
 		pCDT.getListOfRows().ensureCapacity(lSizeJsArray);
@@ -109,6 +113,15 @@ public class PpJsonParser {
 		parseJsonArrayIntoCDT(pJsArray,pCDT,false);
 	}
 
+	public static void syncJSONObjectInCdt(JSONObject pJsonObj,ClientDataTable pCDT) throws JSONException{
+
+		parseJsonArrayIntoCDT(new JSONArray().put(pJsonObj),pCDT,false);
+	}
+	public static void syncJSONObjectInCdtWithExec(JSONObject pJsonObj,ClientDataTable pCDT) throws JSONException{
+
+		parseJsonArrayIntoCDT(new JSONArray().put(pJsonObj),pCDT,true);
+	}
+
 	public static void syncJsonArrayInCdtWithExec(JSONArray pJsArray,ClientDataTable pCDT) throws JSONException{
 		parseJsonArrayIntoCDT(pJsArray,pCDT,true);
 	}
@@ -126,7 +139,7 @@ public class PpJsonParser {
 		if(lSizeJsArray!=0){
 			ArrayList<String> lMappingColumnsName=new ArrayList<String>();
 
-			JSONObject lFirstJsObject=pJsArray.getJSONObject(0);	
+			JSONObject lFirstJsObject=pJsArray.getJSONObject(0);
 			ArrayList<String> lJsArrayColumnsNames = getKeysNames(lFirstJsObject);
 
 			ArrayList<String> lDataBaseTableColumns=PuUtils.getTableColumnsNames(pDataBase, pTableName);
@@ -141,12 +154,12 @@ public class PpJsonParser {
 				}
 			}
 
-			for (int k = 0; k < lSizeJsArray; k++) {
+			for (int k = 0; k < lSizeJsArray && lMappingColumnsName.size()!=0; k++) {
 
 				JSONObject lJsObject=pJsArray.getJSONObject(k);
 
 				ContentValues values=new ContentValues();
-				for (String lColumnName:lMappingColumnsName) 
+				for (String lColumnName:lMappingColumnsName)
 					values.put(lColumnName, lJsObject.getString(lColumnName));
 
 				pDataBase.insert(pTableName, null, values);
@@ -156,4 +169,5 @@ public class PpJsonParser {
 		}else
 			Log.i("fillDataBaseTableFromJsonArray","JsonArray est vide");
 	}
+
 }

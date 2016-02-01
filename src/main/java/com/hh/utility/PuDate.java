@@ -1,8 +1,5 @@
 package com.hh.utility;
 
-import android.util.Log;
-import com.hh.droid.HhDroid;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -50,9 +47,11 @@ public class PuDate{
      * Format : MM/dd/yyyy HH:mm
      */
     public static final String FORMAT_DATETIME_HOUR_EN = "MM/dd/yyyy HH:mm";
-	
+
+    public static final String FORMAT_TIME = "HH:mm";
+
 	private String _mDateStringFormat;
-	private SimpleDateFormat _mDateFormater;
+	private static SimpleDateFormat _mDateFormater;
 
 	{
 		_mDateStringFormat="yyyy-MM-dd";
@@ -66,12 +65,13 @@ public class PuDate{
 	public int second;
     public Date date;
 
-	public PuDate(){
-		_mDateFormater=new SimpleDateFormat(_mDateStringFormat,getLocal());
+	public PuDate(String dateFormat){
+		_mDateStringFormat=dateFormat;
+		_mDateFormater=new SimpleDateFormat(dateFormat,getLocal());
 	}
 
-	public PuDate(int month, int day, int year) {
-        this();
+	public PuDate(int month, int day, int year,String dateFormat) {
+        this(dateFormat);
 		this.month = month;
 		this.day = day;
 		this.year = year;
@@ -82,8 +82,8 @@ public class PuDate{
         date = cal.getTime();
 	}
 
-	public PuDate(int month, int day, int year, int hour, int minute,int second) {
-		this();
+	public PuDate(int month, int day, int year, int hour, int minute,int second,String dateFormat) {
+		this(dateFormat);
 		this.month = month;
 		this.day = day;
 		this.year = year;
@@ -99,8 +99,8 @@ public class PuDate{
         cal.set(Calendar.SECOND, second);
         date = cal.getTime();
 	}
-    public PuDate(Date pDate){
-        this();
+    public PuDate(Date pDate,String dateFormat){
+        this(dateFormat);
         date=pDate;
         Calendar cal = Calendar.getInstance();
         cal.setTime(pDate);
@@ -131,20 +131,15 @@ public class PuDate{
 	public void setDateFormater(SimpleDateFormat _mDateFormater) {
 		this._mDateFormater = _mDateFormater;
 	}
-	
+
 	/**
 	 * Static
 	 */
-	
-	public static long getTimeFromStringDate(String pDateString){
-		long lTime=-1;
-		try {
-			lTime= HhDroid.getInstance().mDateFormat.parse(pDateString).getTime();
-		} catch (ParseException e) {
-			Log.e("pUDate.getTimeFromStringDate", "Parse date incorrect");
-			lTime=-1;
-		}
-		return lTime;
+
+	public static long parseDate(String pDateString) throws ParseException {
+		if(pDateString==null || pDateString.isEmpty())
+			return -1;
+		return _mDateFormater.parse(pDateString).getTime();
 	}
 
     @Override
@@ -159,7 +154,13 @@ public class PuDate{
         setDateStringFormat(pDateFormat);
         return _mDateFormater.format(date);
     }
+	public String getFormattingDate(Date date,String pDateFormat) {
+		return  new SimpleDateFormat(pDateFormat, getLocal()).format(date);
+	}
+	public Date getDate(String date, String pDateFormat) throws ParseException {
+		return  new SimpleDateFormat(pDateFormat, getLocal()).parse(date);
+	}
     public static String getStringFromDate(long pDateTime){
-		return HhDroid.getInstance().mDateFormat.format(pDateTime);
+		return _mDateFormater.format(pDateTime);
 	}
 }

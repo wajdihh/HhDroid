@@ -8,11 +8,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.hh.clientdatatable.ClientDataTable;
-import com.hh.droid.R;
 import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
@@ -20,15 +17,13 @@ import com.hh.listeners.OnRecycleWidgetClickListener;
 
 import java.util.HashSet;
 
-public class RecycleViewHolder extends RecyclerView.ViewHolder {
+public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 
-	static HashSet<String> mListOfTags;
+	 HashSet<String> mListOfTags;
 	//init block
-	static {
+	 {
 		mListOfTags=new HashSet<String>();
 	}
-
-
 
 	private OnRecycleClickListener _mClickListener;
 	private OnRecycleWidgetClickListener _mOnRecycleWidgetClickListener;
@@ -37,6 +32,7 @@ public class RecycleViewHolder extends RecyclerView.ViewHolder {
 
 	SparseArray<View> mSparseArrayHolderViews;
 	SparseArray<View> mSparseArrayHolderViewsNotInCDT;
+	View mRowView;
 
 	public RecycleViewHolder(Context pContext, final View itemView,ClientDataTable pClientDataTable,final boolean pIsEnableOnClickWidget) {
 		super(itemView);
@@ -46,7 +42,7 @@ public class RecycleViewHolder extends RecyclerView.ViewHolder {
 
 
 		mListOfTags=getAllLayoutTags(itemView);
-
+		mRowView=itemView;
 		int index=0;
 		for (final String tag:mListOfTags){
 
@@ -85,9 +81,6 @@ public class RecycleViewHolder extends RecyclerView.ViewHolder {
 					lWidget.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View view) {
-							if (view instanceof ImageView)
-								view.setBackgroundResource(R.drawable.selector_row);
-
 							if (!(view instanceof TextView))
 								if(_mOnRecycleWidgetClickListener!=null) _mOnRecycleWidgetClickListener.onClick(itemView,view, tag,getPosition());
 
@@ -101,8 +94,6 @@ public class RecycleViewHolder extends RecyclerView.ViewHolder {
 		}
 
 		if(!pIsEnableOnClickWidget){
-
-			itemView.setBackgroundResource(R.drawable.selector_row);
 			itemView.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View view) {

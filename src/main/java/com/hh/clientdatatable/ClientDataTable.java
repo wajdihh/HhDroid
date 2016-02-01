@@ -6,15 +6,18 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-
 import com.hh.clientdatatable.TCell.ValueType;
+import com.hh.database.DatabaseUtils;
 import com.hh.droid.R;
+import com.hh.execption.HhException;
 import com.hh.listeners.MyCallback;
 import com.hh.listeners.OnCDTColumnListener;
-import com.hh.listeners.OnCDTStateListener;
+import com.hh.listeners.OnCDTStatusObserver;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
-import com.hh.utility.PuException;
 import com.hh.utility.PuUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.*;
 
@@ -30,10 +33,11 @@ public class ClientDataTable {
 
 	public enum SortType{/** Assendent*/ ASC,	/** Dessendent */	DESC}
 	public enum CDTStatus {DEFAULT,UPDATE, INSERT,DELETE};
+	public enum JSONObjectGeneratedMode {DEFAULT,NoEmptyField,FormatedDate};
 
 	// List of Rows
 	private ArrayList<TRow> _mListOfRows;
-	private ArrayList<TRow> _mListOfRowsBeforeDelete;
+	private ArrayList<TRow> _mListOfDeletedRows;
 	private TRow _mOldRow;
 	// List Of columns
 	private ArrayList<TColumn> _mListOfColumns;
@@ -42,7 +46,6 @@ public class ClientDataTable {
 	private int _mTempIteration;
 	private int _mCursorSize;
 	private Resources _mRes;
-	private OnCDTStateListener _mOnCDTStateListener;
 	private SQLiteDatabase _mSqliteDataBase;
 	private String _mTableName;
 	private String _mCDTName="";
@@ -54,15 +57,28 @@ public class ClientDataTable {
 	private TCell _mCellHowValueChanged;
 	private boolean _mIsExecInDateBase;
 	private boolean mIsCdtSorted;
+	private Map<String,ClientDataTable> _mNestedJsonArrays;
+	private List<String> _mNestedJsonArraysParentKeys;
+
+	private Map<String,ClientDataTable> _mNestedJSONObject;
+	private List<String> _mNestedJSONObjectParentKeys;
+
+	private CDTStatusUtils mCdtUtils;
+
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
 	{
-		_mListOfRows = new ArrayList<TRow>();
-		_mListOfColumns = new ArrayList<TColumn>();
+		_mListOfRows = new ArrayList<>();
+		_mListOfColumns = new ArrayList<>();
+		_mNestedJsonArrays= new HashMap<>();
+		_mNestedJsonArraysParentKeys=new ArrayList<>();
+		_mNestedJSONObject=new HashMap<>();
+		_mNestedJSONObjectParentKeys=new ArrayList<>();
 		_mPosition = -1;
 		_mTempIteration=-1;
 		_mCursorSize = -1;
 		mIsCdtSorted=false;
+		mCdtUtils=new CDTStatusUtils();
 	}
 
 	public ClientDataTable(Context pContext) {
@@ -126,42 +142,103 @@ public class ClientDataTable {
 		return _mCursor;
 	}
 	public TRow getCurrentRow(){
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("The ClientDataTable is EMPTY !!");
+
 		return _mListOfRows.get(_mPosition);
 	}
 
 
 	public void append(){
-		append(new TRow(_mContext,_mCDTStatus,getListOfColumns()));
+		append(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
+	}
+	public void appendObserve(){
+		appendObserve(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
+	}
+	public void insert(){
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot insert because CDT is empty!!");
+
+		if(_mPosition>=_mListOfRows.size())
+			throw new AssertionError("Cannot insert because CDT Position is outbound the list rows size");
+
+		if (_mCDTStatus == CDTStatus.DEFAULT){
+			_mCDTStatus=CDTStatus.INSERT;
+		}
 	}
 
-	public void append(TRow row){
+	public void insertObserve(){
+		mCdtUtils.notifyOnBeforeInsert();
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeInsert();
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot insert because CDT is empty!!");
+
+		if(_mPosition>=_mListOfRows.size())
+			throw new AssertionError("Cannot insert because CDT Position is outbound the list rows size");
+
+		if (_mCDTStatus == CDTStatus.DEFAULT){
+			_mCDTStatus=CDTStatus.INSERT;
+		}
+	}
+	public void append(TRow row){
+		append(row, false);
+	}
+
+	public void appendObserve(TRow row){
+		append(row,true);
+	}
+
+	private void append(TRow row,boolean pIsObserve){
+
+		if(pIsObserve)
+			mCdtUtils.notifyOnBeforeInsert();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 			_mCDTStatus=CDTStatus.INSERT;
 			addRow(row);
 			_mPosition=_mListOfRows.size()-1;
-		}
+		}else
+			throw new AssertionError("Cannot append a new line because CDT is in mode :"+_mCDTStatus.name()+" You must commit your change");
 	}
 
 	public void delete(){
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeDelete();
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot Delete because CDT is empty!!");
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 
 			_mCDTStatus=CDTStatus.DELETE;
-			if(_mListOfRowsBeforeDelete==null)
-				_mListOfRowsBeforeDelete=new ArrayList<>();
+			if(_mListOfDeletedRows==null)
+				_mListOfDeletedRows=new ArrayList<>();
 		}
 
 		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 	}
 
+	public void deleteObserve(){
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot Delete because CDT is empty!!");
+
+		mCdtUtils.notifyOnBeforeDelete();
+
+		if(_mCDTStatus==CDTStatus.DEFAULT){
+
+			_mCDTStatus=CDTStatus.DELETE;
+			if(_mListOfDeletedRows==null)
+				_mListOfDeletedRows=new ArrayList<>();
+		}
+
+		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
+	}
 
 	public void edit(){
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeEdit();
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 
@@ -170,9 +247,27 @@ public class ClientDataTable {
 			getCurrentRow().memorizeValues();
 
 			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
-		}
+		}else
+			throw new AssertionError("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change");
 	}
 
+	public void editObserve(){
+
+		if(_mListOfRows.isEmpty())
+			throw new AssertionError("Cannot EDIT because CDT is empty!!");
+
+		mCdtUtils.notifyOnBeforeEdit();
+
+		if(_mCDTStatus==CDTStatus.DEFAULT){
+
+			_mCDTStatus=CDTStatus.UPDATE;
+
+			getCurrentRow().memorizeValues();
+
+			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
+		}else
+			throw new IllegalStateException("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change");
+	}
 	/**
 	 * permet de faire un clone dela liste des celles ( prb des references)
 	 * @param list
@@ -190,52 +285,52 @@ public class ClientDataTable {
 		return clone;
 	}
 
-	private void clearOldListOfbeforeDelete(){
-		if(_mListOfRowsBeforeDelete!=null)
-			_mListOfRowsBeforeDelete.clear();
+	private void clearListOfDeletedRows(){
+		if(_mListOfDeletedRows!=null)
+			_mListOfDeletedRows.clear();
 
-		_mListOfRowsBeforeDelete = null;
+		_mListOfDeletedRows = null;
 	}
 
-	private void validate(boolean pIsUserCDTListener,boolean pIsExecInDateBase,MyCallback pCallback){
+	private void validate(boolean pIsUseCDTListener,boolean pIsExecInDateBase,MyCallback pCallback){
+
 
 		_mIsExecInDateBase=pIsExecInDateBase;
 		if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
-			if(getRowsCount()==0){
-				PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
-				return;
-			}
+			if(getRowsCount()==0)
+				throw new AssertionError("Cannot EDIT because CDT is empty!!");
+
 
 		// if we have set CDTListener and the data is not valid return
-		if(_mOnCDTStateListener!=null &&  !_mOnCDTStateListener.onBeforeValidate()){
-			if(pCallback!=null ) pCallback.onError("");
-			return;
+		for (OnCDTStatusObserver listener:mCdtUtils.mListOfStateListener) {
+			if (!listener.onBeforeValidate()) {
+				if (pCallback != null) pCallback.onError("");
+				return;
+			}
 		}
-
 
 		if(pIsExecInDateBase && isConnectedToDB())
 			if(_mSqliteDataBase.isOpen())
 				commitIntoDataBase(false);
 			else
-				PuUtils.showMessage(_mContext, "Erreur Data base", "La base de donnees est close");
+				throw new AssertionError("The Database is closed !");
 
-		commitIntoCDT(pIsUserCDTListener);
+		commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
 		_mCDTStatus=CDTStatus.DEFAULT;
 
 		if(_mCellHowValueChanged!=null)
 			_mCellHowValueChanged.setValueChanged(false);
 
-		if(_mOnCDTStateListener!=null)
-			_mOnCDTStateListener.onAfterValidate();
+		mCdtUtils.notifyOnAfterValidate(pIsExecInDateBase);
 
 		if(pCallback!=null ) pCallback.onSuccess("");
 
 		if(pIsExecInDateBase)
-			clearOldListOfbeforeDelete();
+			clearListOfDeletedRows();
 
 
-		if (_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty())
-			System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfRowsBeforeDelete.size());
+		if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
+			System.out.println("#######################       LIST OLD TAILLE EST :" + _mListOfDeletedRows.size());
 
 		if(_mOnNotifyDataSetChangedListener!=null)
 			_mOnNotifyDataSetChangedListener.notifyValueChanged();
@@ -255,19 +350,19 @@ public class ClientDataTable {
 		validate(false,true,null);
 	}
 
-	public void executeObserve(){
+	public void executeObserve() {
 		validate(true,true,null);
 	}
-	public void commit(MyCallback pCallback){
+	public void commit(MyCallback pCallback) {
 		validate(false,false,pCallback);
 	}
 
-	public void commitObserve(MyCallback pCallback){
+	public void commitObserve(MyCallback pCallback) {
 		validate(true,false,pCallback);
 	}
 
 	public void execute(MyCallback pCallback){
-		validate(false,true,pCallback);
+		validate(false, true, pCallback);
 	}
 
 	public void executeObserve(MyCallback pCallback){
@@ -276,7 +371,7 @@ public class ClientDataTable {
 
 	public void revert(){
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onBeforeRevert();
+		mCdtUtils.notifyOnBeforeRevert();
 
 		switch (_mCDTStatus){
 			case INSERT:
@@ -299,8 +394,8 @@ public class ClientDataTable {
 				break;
 		}
 
-		if(_mOnCDTStateListener!=null) _mOnCDTStateListener.onAfterRevert();
-		clearOldListOfbeforeDelete();
+		mCdtUtils.notifyOnAfterRevert();
+		clearListOfDeletedRows();
 	}
 
 
@@ -322,11 +417,12 @@ public class ClientDataTable {
 		_mCDTStatus=pCDTStatus;
 		_mIsExecInDateBase=true;
 
-		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfRowsBeforeDelete==null|| _mListOfRowsBeforeDelete.isEmpty()))
-			if(getRowsCount()==0){
-				PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
-				return;
-			}
+
+		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
+			if(getRowsCount()==0)
+				throw new AssertionError("Cannot EDIT because CDT is empty!!");
+
+
 
 		if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (_mCDTStatus==CDTStatus.INSERT || _mCDTStatus==CDTStatus.UPDATE)){
 			int size = _mListOfRows.size();
@@ -335,28 +431,26 @@ public class ClientDataTable {
 				moveToPosition(i);
 				commitIntoDataBase(true);
 
-				if(_mOnCDTStateListener!=null && isUseCDTListener)
+				if(isUseCDTListener)
 					if(_mCDTStatus==CDTStatus.INSERT)
-						_mOnCDTStateListener.onAfterInsert();
+						mCdtUtils.notifyOnAfterInsert(true);
 
 					else if(_mCDTStatus==CDTStatus.UPDATE)
-						_mOnCDTStateListener.onAfterEdit(_mOldRow,getCurrentRow());
+						mCdtUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
 			}
 
 
-			if (_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty()) {
-				// on doit vider le CDT actuel, et le remplir par le temporaire, car on a des traitement comme cellByName si on fait pas comme
-				// Ca il va retourner 0 comme taille
-				_mListOfRows.clear();
-				_mListOfRows.addAll(_mListOfRowsBeforeDelete);
-				clearOldListOfbeforeDelete();
+			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
 
-				size = _mListOfRows.size();
+				size = _mListOfDeletedRows.size();
 				for (int i = 0; i < size; i++){
-					moveToPosition(i);
-					deleteRowDataBase(getCurrentRow());
-					if(_mOnCDTStateListener!=null && isUseCDTListener) _mOnCDTStateListener.onAfterDelete(getCurrentRow());
+					if( isUseCDTListener)
+						mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
+
+					deleteRowDataBase(_mListOfDeletedRows.get(i));
 				}
+
+				clearListOfDeletedRows();
 			}
 
 			_mCDTStatus=CDTStatus.DEFAULT;
@@ -364,23 +458,24 @@ public class ClientDataTable {
 			if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
 
 		}else
-			PuUtils.showMessage(_mContext, "Erreur Data base", "La base de donn�es est ferm�");
+			throw new AssertionError("The Database is closed !");
+
 	}
 
 
-	private void commitIntoCDT(boolean pIsUseCDTListener){
+	private void commitIntoCDT(boolean pIsUseCDTListener,boolean pIsExecuteAction){
 
 		switch (_mCDTStatus) {
 			case INSERT:
 				// Pas besoin car on l a deja dans l Append()
 				//_mListOfRows.add(new TRow(_mContext, _mCDTStatus, getColumnsCount()));
 
-				if(_mOnCDTStateListener!=null && pIsUseCDTListener) _mOnCDTStateListener.onAfterInsert();
+				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterInsert(pIsExecuteAction);
 				break;
 			case DELETE:
-				if(_mOnCDTStateListener!=null && pIsUseCDTListener) _mOnCDTStateListener.onAfterDelete(getCurrentRow());
-				_mListOfRowsBeforeDelete.add(getCurrentRow());
+				_mListOfDeletedRows.add(getCurrentRow());
 				_mListOfRows.remove(_mPosition);
+				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(_mListOfDeletedRows.size()-1), pIsExecuteAction);
 				if (_mPosition == getRowsCount()){
 					_mPosition--;
 				}
@@ -390,7 +485,7 @@ public class ClientDataTable {
 
 			case UPDATE:
 
-				if(_mOnCDTStateListener!=null && pIsUseCDTListener && isValuesChanged()) _mOnCDTStateListener.onAfterEdit(_mOldRow, getCurrentRow());
+				if(pIsUseCDTListener && isValuesChanged()) mCdtUtils.notifyOnAfterEdit(_mOldRow, getCurrentRow(), pIsExecuteAction);
 				if(_mOldRow!=null) {
 					_mOldRow.getCells().clear();
 					_mOldRow = null;
@@ -413,7 +508,7 @@ public class ClientDataTable {
 				deleteFromDB();
 				break;
 			case DEFAULT:
-				PuUtils.showMessage(_mContext, "No commit", "Acun changement n'est applique car le mode est DEFAULT");
+				Log.e("commitIntoDataBase","No commit, because the CDT is in Default mode");
 				break;
 			default:
 				break;
@@ -434,7 +529,10 @@ public class ClientDataTable {
 			TCell lCell=cellByName(lColumnName);
 			String lColumnValue=lCell.asValue();
 
-			if(column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB || column.getColumnType()== TColumn.ColumnType.PrimaryKey || lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
+			if(column.getColumnType()== TColumn.ColumnType.JsonField ||column.getColumnType()== TColumn.ColumnType.JsonParent
+					||column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB
+					|| column.getColumnType()== TColumn.ColumnType.PrimaryKey
+					|| lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
 				continue;
 
 
@@ -446,6 +544,11 @@ public class ClientDataTable {
 		}
 
 		_mSqliteDataBase.insertOrThrow(_mTableName, null, lValues);
+
+		//Updated primary Key
+		TCell tCellPrimaryKey=getPrimaryKeyCell();
+		if (tCellPrimaryKey != null)
+			tCellPrimaryKey.setValue(DatabaseUtils.getLastPrimaryKeyValue(_mSqliteDataBase, _mTableName));
 	}
 
 	private void updateInDB(boolean pInsertIfNotUpdated){
@@ -464,7 +567,10 @@ public class ClientDataTable {
 				TCell lCell=cellByName(lColumnName);
 				String lColumnValue=lCell.asValue();
 
-				if(column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB || column.getColumnType()== TColumn.ColumnType.PrimaryKey || lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
+				if(column.getColumnType()== TColumn.ColumnType.JsonField ||column.getColumnType()== TColumn.ColumnType.JsonParent
+						||column.getColumnType()== TColumn.ColumnType.ToIgnoreInDB
+						|| column.getColumnType()== TColumn.ColumnType.PrimaryKey
+						|| lColumnValue.equals(_mRes.getString(R.string.cst_notInCursor)))
 					continue;
 
 				lValues.put(lColumnName, lColumnValue);
@@ -491,8 +597,14 @@ public class ClientDataTable {
 			if(lValues.size()!=0){
 				int resultUpdate=_mSqliteDataBase.update(_mTableName, lValues, _mWhereClause.toString(),lArgs);
 				// If updated fails so row is not existe, so we must to add It
-				if(pInsertIfNotUpdated && resultUpdate==0)
+				if(pInsertIfNotUpdated && resultUpdate==0){
 					_mSqliteDataBase.insertOrThrow(_mTableName,null,lValues);
+					//Updated primary Key
+					TCell tCellPrimaryKey=getPrimaryKeyCell();
+					if (tCellPrimaryKey != null)
+						tCellPrimaryKey.setValue(DatabaseUtils.getLastPrimaryKeyValue(_mSqliteDataBase, _mTableName));
+				}
+
 			}
 
 
@@ -513,14 +625,14 @@ public class ClientDataTable {
 			for (int i = 0; i < _mWhereClauseColumns.length; i++) {
 				TCell lCell=pTRow.cellByName(_mWhereClauseColumns[i]);
 
-				lArgs[i]=lCell.asString();
-				if(lCell.asString().equals(""))
-					PuUtils.showMessage(_mContext, "Erreur delete", "Valeur vide pour la clé de suppression :"+_mWhereClauseColumns[i]);
+				lArgs[i]=lCell.asValue();
+				if(lCell.asValue().equals(""))
+					Log.e("ERROR Delete from database","Cannot delete the element, because the constraint value of "+_mWhereClauseColumns[i]+" is empty ! or element is not exist in database");
 			}
 
 			_mSqliteDataBase.delete(_mTableName, _mWhereClause.toString(), lArgs);
 		}else
-			PuUtils.showMessage(_mContext, "Erreur delete", "Clause where non definit");
+			throw new AssertionError(_mRes.getString(R.string.assertError_clauseWereNotFoundWhenDeletingPart1)+_mTableName+" "+_mRes.getString(R.string.assertError_clauseWereNotFoundWhenDeletingPart2));
 	}
 	/**
 	 * Test if the C data table is empty
@@ -568,6 +680,23 @@ public class ClientDataTable {
 		return moveToPosition(_mPosition -1);
 	}
 
+
+	/**
+	 * for positioning the CDT to the specific row, if the id found
+	 */
+
+	public boolean findRowByID(String idColumnName,int idValue){
+
+		int i=0;
+		for (TRow row:_mListOfRows){
+			if(row.cellByName(idColumnName).asInteger()==idValue){
+				moveToPosition(i);
+				return true;
+			}
+			i++;
+		}
+		return false;
+	}
 	/**
 	 * Move to row position at pIndex
 	 *
@@ -698,11 +827,8 @@ public class ClientDataTable {
 	 */
 	public TCell cellByName(String pCellName) {
 
-		// TODO a optimiser a faire getCurrentRow.getCells(posCell)
-		if(getRowsCount()==0) {
-			PuUtils.showMessage(_mContext, "CDT vide", "Client data table est vide");
-			return new TCell();
-		}
+		if(getRowsCount()==0)
+			throw new AssertionError("The ClientDataTable is EMPTY ");
 
 		TCell lResult;
 		if(isConnectedToDB())
@@ -724,11 +850,35 @@ public class ClientDataTable {
 
 		}
 		if(!lIsCellFound)
-			PuUtils.showMessage(_mContext, "Wrong cell Name","There no cellName called :"+pCellName);
+			throw new AssertionError("Wrong cell Name :! There no cellName called :"+pCellName);
 
 		return lResult;
 	}
 
+	public TCell getPrimaryKeyCell() {
+
+		if(getRowsCount()==0)
+			throw new AssertionError("Cannot EDIT because CDT is empty!!");
+
+		TCell lResult=null;
+		int lColumnSize = getColumnsCount();
+		boolean lIsCellFound=false;
+		for (int i = 0; i < lColumnSize && getRowsCount() != 0; i++) {
+			if (_mListOfColumns.get(i).getColumnType()== TColumn.ColumnType.PrimaryKey) {
+				lResult = getCell(_mPosition, i);
+				lResult.setValueType(_mListOfColumns.get(i).getValueType());
+				lResult.setName(_mListOfColumns.get(i).getName());
+				lResult.setOnCDTColumnListener(_mListOfColumns.get(i).getCDTColumnListener());
+				lIsCellFound=true;
+				break;
+			}
+
+		}
+		if(!lIsCellFound)
+			PuUtils.showMessage(_mContext, "NO PRIMARY KEY NAME","No column with primary key name has found");
+
+		return lResult;
+	}
 	/**
 	 * Get the SUM of the cells Column IF THE TYPE is a NUMBER,else the asFloat
 	 * will return 0 and the Sum will be 0
@@ -772,15 +922,15 @@ public class ClientDataTable {
 
 	public void fillFromTable(String pSQLCommand){
 
+		if(_mSqliteDataBase==null)
+			throw new AssertionError("This clientDataTable has not configured database, try to use getDatabase in the constructor of the CDT");
+
 		_mCursor= _mSqliteDataBase.rawQuery(pSQLCommand, null);
-
-		try {
-			_mCursor.moveToFirst();
-			fillFromCursor(_mCursor);
-		} finally {
-
-		}
+		_mCursor.moveToFirst();
+		fillFromCursor(_mCursor);
 		Log.i("fillFromTable", " Count :" + _mCursor.getCount());
+
+
 	}
 
 	/**
@@ -849,10 +999,12 @@ public class ClientDataTable {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
 	}
+
 	/**
 	 * Clear ClientDataTable Content And table
 	 */
-	public void clearAndExecute() {
+
+	public void clearAttachedDatabaseTable() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
 
@@ -863,6 +1015,26 @@ public class ClientDataTable {
 		}
 	}
 
+	/**
+	 * Clear ClientDataTable Content And table
+	 */
+
+	public void clearAndExecute() {
+		_mCursorSize = -1;
+		while (iterate()){
+			delete();
+			execute();
+		}
+	}
+
+	public void clearAndExecuteObserve() {
+
+		_mCursorSize = -1;
+		while (iterate()){
+			delete();
+			executeObserve();
+		}
+	}
 	/**
 	 * Returns whether the Client Data table is pointing to the last row.
 	 *
@@ -933,33 +1105,50 @@ public class ClientDataTable {
 	 * @param pName
 	 * @param pType
 	 */
-	public void addColumn(String pName, ValueType pType) {
-
-		_mListOfColumns.add(new TColumn(pName, pType));
+	public TColumn addColumn(String pName, ValueType pType) {
+		TColumn column=new TColumn(pName, pType);
+		_mListOfColumns.add(column);
+		return column;
 	}
 
-	public void addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType) {
-
-		_mListOfColumns.add(new TColumn(pName, pType,pColumnType));
+	public TColumn addColumn(String pName,TColumn.ColumnType pColumnType) {
+		TColumn column=new TColumn(pName, ValueType.TEXT,pColumnType);
+		_mListOfColumns.add(column);
+		return column;
 	}
 
-	public void addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType) {
 
-		_mListOfColumns.add(new TColumn(pName, pType,pColumnType,pListener));
+		TColumn column=new TColumn(pName, pType,pColumnType);
+		_mListOfColumns.add(column);
+		return column;
+	}
+
+	public TColumn addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType,OnCDTColumnListener pListener) {
+
+		TColumn column=new TColumn(pName, pType,pColumnType,pListener);
+		_mListOfColumns.add(column);
+		return column;
 	}
 
 
-	public void addColumn(String pName, ValueType pType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,OnCDTColumnListener pListener) {
 
-		_mListOfColumns.add(new TColumn(pName, pType, TCell.CellType.NONE,pListener));
+		TColumn column=new TColumn(pName, pType, TCell.CellType.NONE,pListener);
+		_mListOfColumns.add(column);
+		return column;
 	}
-	public void addColumn(String pName, ValueType pType,TCell.CellType pCellType) {
+	public TColumn addColumn(String pName, ValueType pType,TCell.CellType pCellType) {
 
-		_mListOfColumns.add(new TColumn(pName, pType,pCellType,null));
+		TColumn column=new TColumn(pName, pType,pCellType,null);
+		_mListOfColumns.add(column);
+		return column;
 	}
-	public void addColumn(String pName, ValueType pType,TCell.CellType pCellType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,TCell.CellType pCellType,OnCDTColumnListener pListener) {
 
-		_mListOfColumns.add(new TColumn(pName, pType,pCellType,pListener));
+		TColumn column=new TColumn(pName, pType,pCellType,pListener);
+		_mListOfColumns.add(column);
+		return column;
 	}
 	/**
 	 * allows to add a Row
@@ -1039,6 +1228,20 @@ public class ClientDataTable {
 		return list;
 	}
 	/**
+	 * Return if value existe
+	 * @param pFieldName
+	 * @param value
+	 * @return
+	 */
+	public boolean isValueExist(String fieldName,String value){
+
+		for (TRow row:_mListOfRows){
+			if(row.cellByName(fieldName).asString().equals(value))
+				return true;
+		}
+		return false;
+	}
+	/**
 	 * Retrun List of cells of column X
 	 *
 	 * @param pColumnIndex
@@ -1072,17 +1275,17 @@ public class ClientDataTable {
 	 * @param pRowIndex
 	 * @param pColumnIndex
 	 * @param pCell
-	 * @throws PuException
+	 * @throws HhException
 	 * @throws IndexOutOfBoundsException
 	 */
 	public void setCell(int pRowIndex, int pColumnIndex, TCell pCell)
-			throws PuException, IndexOutOfBoundsException {
+			throws HhException, IndexOutOfBoundsException {
 
 		TRow row = _mListOfRows.get(pRowIndex);
 
 		if (!row.getCell(pColumnIndex).getValueType()
 				.equals(pCell.getValueType())) {
-			throw new PuException(_mContext,
+			throw new HhException(
 					"New cell value type does not match expected value type."
 							+ " Expected type: "
 							+ row.getCell(pColumnIndex).getValueType()
@@ -1098,23 +1301,19 @@ public class ClientDataTable {
 
 	public boolean isValuesChanged(){
 
-		if(_mListOfRowsBeforeDelete!=null && !_mListOfRowsBeforeDelete.isEmpty())
+		if(_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty())
 			return true;
 
-		boolean isChanged=false;
 		for (TColumn column:_mListOfColumns){
 			for (TRow row :_mListOfRows){
 				TCell cell=row.cellByName(column.getName());
 				if(cell.isValueChanged()){
-					isChanged=true;
 					_mCellHowValueChanged=cell;
-					break;
+					return  true;
 				}
 			}
-			if(isChanged)
-				break;
 		}
-		return isChanged;
+		return false;
 	}
 	/**
 	 * Returns a new data table, with the same data and metadata as this one.
@@ -1138,11 +1337,165 @@ public class ClientDataTable {
 		return lResult;
 	}
 
+
+
+	public void addJSONArray(String key,String parentKey,ClientDataTable arrays){
+
+		_mNestedJsonArrays.put(key, arrays);
+		_mNestedJsonArraysParentKeys.add(parentKey);
+	}
+
+	public void addNestedJSONObject(String key,String parentKey,ClientDataTable jsonObjectCDT){
+		_mNestedJSONObject.put(key, jsonObjectCDT);
+		_mNestedJSONObjectParentKeys.add(parentKey);
+	}
+	public JSONArray toJSONArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+		return createJsonArray(jsonObjectGeneratedMode);
+	}
+
+	public JSONObject toJSONObject(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+		return toJSONObject(getCurrentRow(), jsonObjectGeneratedMode);
+	}
+
+
+	public JSONObject toJSONObject(TRow row,JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+		return createJson(row, jsonObjectGeneratedMode);
+	}
+
+	private JSONArray createJsonArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+
+		JSONArray arrays=new JSONArray();
+		for (TRow row:_mListOfRows){
+			arrays.put(toJSONObject(row, jsonObjectGeneratedMode));
+		}
+
+		return arrays;
+	}
+
+	private JSONObject createJson(TRow row,JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+
+		JSONObject mainJsonObject=new JSONObject();
+		//JSONObject currentParent = null;
+		Map<String,JSONObject> map=new HashMap<>();
+		for (TColumn column:_mListOfColumns){
+
+			if(column.getColumnType()== TColumn.ColumnType.JsonParent) {
+
+				if(column.getJsonParent()==null ||column.getJsonParent().isEmpty()){
+					mainJsonObject.put(column.getName(),new JSONObject());
+					map.put(column.getName(),mainJsonObject.optJSONObject(column.getName()));
+				}else{
+					// if the parent has a parent
+					if(column.getJsonParent()!=null && !column.getJsonParent().isEmpty()){
+
+						if(column.getJsonParent().equals("MAIN")){
+							mainJsonObject.put(column.getName(),new JSONObject());
+							map.put(column.getName(),mainJsonObject.optJSONObject(column.getName()));
+						}else{
+							JSONObject parent=map.get(column.getJsonParent());
+							parent.put(column.getName(),new JSONObject());
+							map.put(column.getName(),parent.optJSONObject(column.getName()));
+						}
+					}
+				}
+			}else{
+				if(column.getJsonParent()!=null){
+					// If the json parent is "MAIN"
+					if(column.getJsonParent().equals("MAIN")){
+						map.put(column.getName(),mainJsonObject);
+						fillJsonField(row,column,map.get(column.getJsonParent()),jsonObjectGeneratedMode);
+					}else
+						fillJsonField(row,column,map.get(column.getJsonParent()),jsonObjectGeneratedMode);
+				}else{
+					if(column.isIgnoredAsJsonField())
+						continue;
+
+					map.put("MAIN",mainJsonObject);
+					fillJsonField(row,column,map.get("MAIN"), jsonObjectGeneratedMode);
+				}
+
+			}
+		}
+
+		// Json Arrays
+		if(!_mNestedJsonArrays.isEmpty()){
+
+			int i=0;
+			for (Map.Entry<String,ClientDataTable> entry : _mNestedJsonArrays.entrySet())
+			{
+
+				if(entry.getValue()==null)
+					continue;
+				String parentKey=_mNestedJsonArraysParentKeys.get(i);
+				JSONArray subArrays=entry.getValue().toJSONArray();
+				JSONObject jsonParent=map.get(parentKey);
+
+				jsonParent.put(entry.getKey(),subArrays);
+
+				i++;
+			}
+		}
+
+		// JSon Object
+		if(!_mNestedJSONObject.isEmpty()){
+
+			int i=0;
+			for (Map.Entry<String,ClientDataTable> entry : _mNestedJSONObject.entrySet())
+			{
+
+				if(entry.getValue()==null){
+					throw new RuntimeException(entry.getKey()+" has a null value, check your clientDataTable instancation");
+				}
+
+				String parentKey=_mNestedJSONObjectParentKeys.get(i);
+				if(entry.getValue().isEmpty())
+					HhException.raiseErrorException("Cannot EDIT because CDT is empty!! >> "+entry.getKey());
+				else {
+					JSONObject subJSONObject = entry.getValue().toJSONObject();
+					JSONObject jsonParent = map.get(parentKey);
+
+					jsonParent.put(entry.getKey(), subJSONObject);
+					i++;
+				}
+			}
+		}
+
+		return mainJsonObject;
+	}
+
+	private void fillJsonField(TRow row,TColumn column,JSONObject jsonObject,JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
+
+		TCell cell = row.cellByName(column.getName());
+		boolean hasNoEmptyFieldMode=false;
+		boolean hasFormatedDate=false;
+
+		for (JSONObjectGeneratedMode mode:jsonObjectGeneratedMode){
+			if(mode==JSONObjectGeneratedMode.NoEmptyField)
+				hasNoEmptyFieldMode=true;
+
+			if(mode==JSONObjectGeneratedMode.FormatedDate)
+				hasFormatedDate=true;
+		}
+
+		if(hasNoEmptyFieldMode && cell.isEmpty())
+			return;
+
+		if(cell.getValueType()==ValueType.BOOLEAN)
+			jsonObject.put(column.getName(),cell.asBoolean());
+		else if(cell.getValueType()==ValueType.INTEGER)
+			jsonObject.put(column.getName(),cell.asInteger());
+		else if(cell.getValueType()==ValueType.DOUBLE)
+			jsonObject.put(column.getName(),cell.asDouble());
+		else if(cell.getValueType()==ValueType.DATETIME)
+			jsonObject.put(column.getName(),hasFormatedDate?cell.asDateString():cell.asDateTime());
+		else
+			jsonObject.put(column.getName(), cell.asValue());
+	}
 	/**
 	 *
 	 * {@linkplain displayContent}
 	 * to display client data table content in LogCat
-	 * @param pColumnsToDisplay : List of columns to display 
+	 * @param pColumnsToDisplay : List of columns to display
 	 * <strong>if we put * we will display all columns content</strong>
 	 */
 	public void displayContent(String ...pColumnsToDisplay) {
@@ -1160,7 +1513,7 @@ public class ClientDataTable {
 
 				// Display rows
 				for (int i = 0; i < lSize; i++)
-					Log.v(TAG, "ROW N�" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
+					Log.v(TAG, "ROW NO" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
 
 			}else{
 				for (int i = 0; i < pColumnsToDisplay.length; i++)
@@ -1181,7 +1534,7 @@ public class ClientDataTable {
 					Log.v(TAG, "ROW No" + (i + 1) + ":  " + lRowContent);
 				}
 			}
-			//TODO chaines dans les resources			
+			//TODO chaines dans les resources
 		}else{
 			PuUtils.showMessage(_mContext, "Erreur DisplayContent", "il faut que la liste != null ou elle contien au moins 1 element");
 		}
@@ -1189,12 +1542,12 @@ public class ClientDataTable {
 	public void setOnNotifyDataSetChangedListener(OnNotifyDataSetChangedListener pListener){
 		_mOnNotifyDataSetChangedListener=pListener;
 	}
-	public void setOnCDTStateListener(OnCDTStateListener pListener){
-		if(_mOnCDTStateListener!=null)
-			PuUtils.showMessage(_mContext, "Duplicate OnCDTStateListener", "OnCDTStateListener est déja definit pour ce CDT");
 
-		_mOnCDTStateListener=pListener;
+
+	public void setOnCDTStatusObserver(OnCDTStatusObserver pListener){
+		mCdtUtils.mListOfStateListener.add(pListener);
 	}
-
-
+	public void removeCDTStatusObserver(OnCDTStatusObserver pListener){
+		mCdtUtils.mListOfStateListener.remove(pListener);
+	}
 }

@@ -2,9 +2,11 @@ package com.hh.adapters;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
-import android.util.Log;
+import android.util.Base64;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -15,13 +17,14 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
-import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.droid.R;
+import com.hh.execption.WrongTypeException;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
 import com.hh.ui.UiUtility;
+import com.hh.ui.widget.UiPicassoImageView;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChangedListener {
 
@@ -41,6 +44,10 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     private boolean _mAutoRequery;
     private boolean _mIsEnableOnClickWidget;
     private boolean _mFirstBuild;
+    private int mBase64OptionSize=2;
+    public void setBase64OptionSize(int optionSize){
+        mBase64OptionSize=optionSize;
+    }
 
     public CDTListAdapter(Context pContext, int pLayoutRow, ClientDataTable pCDT) {
 
@@ -58,8 +65,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
         _mAutoRequery = false;
         _mIsEnableOnClickWidget = true;
         _mFirstBuild = true;
-
-        Log.d("List of Tags ViewHolder : %s", Arrays.toString(_mListOfTags.toArray()));
     }
 
     public void setEnableOnClickWidget(boolean pIsEnabled) {
@@ -148,8 +153,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     convertView.setBackgroundResource(R.drawable.selector_row);
 
                     if (_mIsEnableOnClickWidget) {
-                        if (lWidget instanceof ImageView)
-                            lWidget.setBackgroundResource(R.drawable.selector_row);
 
                         if (!(lWidget instanceof TextView))
                             lWidget.setOnClickListener(new onClickWidgetListener(convertView));
@@ -201,16 +204,35 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     } else if (lWidget instanceof TextView) {
 
                         ((TextView) lWidget).setText(data.asString());
+                    }else if (lWidget instanceof UiPicassoImageView) {
+                        if(data.getValueType() == TCell.ValueType.BASE64){
+                            try {
+                                throw new WrongTypeException(mContext, R.string.exception_canotUserBase64);
+                            } catch (WrongTypeException e) {
+                                e.printStackTrace();
+                            }
+                        }else {
+                            UiPicassoImageView picassoImageView = (UiPicassoImageView) lWidget;
+                            picassoImageView.setData(data.asString());
+                        }
                     } else if (lWidget instanceof ImageView) {
-                        if (data.getValueType() == ValueType.INTEGER) {
-                            ((ImageView) lWidget).setImageResource(data.asInteger());
+                        ImageView im= (ImageView) lWidget;
+                        if (data.getValueType() == TCell.ValueType.INTEGER && !data.asString().isEmpty()) {
+                            im.setImageResource(data.asInteger());
+                        } else if (data.getValueType() == TCell.ValueType.BASE64) {
+                            byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
+                            BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inSampleSize = mBase64OptionSize;
+                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                            im.setImageBitmap(decodedByte);
                         } else {
                             if (!data.asString().equals(""))
                                 setViewImage((ImageView) lWidget, data.asString());
                             else
-                                ((ImageView) lWidget).setImageDrawable(null);
+                                im.setImageDrawable(null);
                         }
-                    } else
+                    }
+                    else
                         throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
                                 " view that can be bounds by this SimpleAdapter");
 

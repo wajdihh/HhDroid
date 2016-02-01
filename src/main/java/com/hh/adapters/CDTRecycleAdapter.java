@@ -2,8 +2,11 @@ package com.hh.adapters;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,16 +15,14 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.hh.clientdatatable.ClientDataTable;
-import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
+import com.hh.droid.R;
+import com.hh.execption.WrongTypeException;
 import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
 import com.hh.listeners.OnRecycleWidgetClickListener;
-import com.squareup.picasso.Picasso;
-
-import java.io.File;
-import java.util.concurrent.Executors;
+import com.hh.ui.widget.UiPicassoImageView;
 
 /**
  * Created by Wajdi Hh on 13/08/2015.
@@ -33,14 +34,11 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     protected Resources mRes;
     protected ClientDataTable mClientDataTable;
     private boolean _mIsEnableOnClickWidget;
-
     private int _mLayoutRes;
-    private int _mDefaultImageRes;
-
-    private int mDefaultHeightPicassoImage;
-    private int mDefaultWidthPicassoImage;
-
-    private Picasso mPicasso;
+    private int mBase64OptionSize=2;
+    public void setBase64OptionSize(int optionSize){
+        mBase64OptionSize=optionSize;
+    }
 
     public CDTRecycleAdapter(Context pContext, int pLayoutRes, ClientDataTable pCDT){
         mContext=pContext;
@@ -48,10 +46,8 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         mClientDataTable = pCDT;
         _mLayoutRes = pLayoutRes;
 
-        // par défaut on utilise le setter d image par défaut de CDT
-        mDefaultHeightPicassoImage=80;
-        mDefaultWidthPicassoImage=80;
-        mPicasso = new Picasso.Builder(pContext).executor(Executors.newSingleThreadExecutor()).build();
+        setHasStableIds(true);
+
 
     }
     @Override
@@ -69,22 +65,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
     public void setEnableOnClickWidget(boolean pIsEnabled) {
         _mIsEnableOnClickWidget = pIsEnabled;
-    }
-
-    /**
-     * On peut par exemple utiliser l api picasso pour les images, dans ce cas , on remet le flag à false
-     * @param pIsUseCDTImageSetter
-     */
-    public void setDefaultPicassoSize(int pDefaultHeightPicassoImage, int pDefaultWidthPicassoImage) {
-        mDefaultHeightPicassoImage = pDefaultHeightPicassoImage;
-        mDefaultWidthPicassoImage = pDefaultWidthPicassoImage;
-    }
-    /**
-     * Pour définir l image par défaut à mettre dans le binding imageView ou cas ou on a pas le fichier
-     * @param pDefaultImageRes
-     */
-    public void setDefaultImageRes(int pDefaultImageRes) {
-        _mDefaultImageRes = pDefaultImageRes;
     }
 
     @Override
@@ -106,30 +86,38 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                     ((Checkable) lWidget).setChecked(data.asBoolean());
                 } else if (lWidget instanceof TextView) {
                     ((TextView) lWidget).setText(data.asString());
-                } else if (lWidget instanceof ImageView) {
-
-                    final ImageView imageView= (ImageView) lWidget;
-                    if (data.getValueType() == TCell.ValueType.INTEGER) {
-                        imageView.setImageResource(data.asInteger());
-                    } else {
-                        if (!data.asString().equals("")) {
-
-                            // SI on a pas encore chargé l image par picosso
-                            if (data.asString().contains("http"))
-                                //  Picasso.with(mContext).load(data.asString()).into(picassoTarget(imageView));
-                                mPicasso.load(data.asString()).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
-                            else
-                                //   Picasso.with(mContext).load(new File(data.asString())).into(picassoTarget(imageView));
-                                mPicasso.load(new File(data.asString())).resize(mDefaultWidthPicassoImage, mDefaultHeightPicassoImage).centerCrop().into(imageView);
+                }else if (lWidget instanceof UiPicassoImageView) {
+                    if(data.getValueType() == TCell.ValueType.BASE64){
+                        try {
+                            throw new WrongTypeException(mContext, R.string.exception_canotUserBase64);
+                        } catch (WrongTypeException e) {
+                            e.printStackTrace();
                         }
+                    }else {
+                        UiPicassoImageView picassoImageView = (UiPicassoImageView) lWidget;
+                        picassoImageView.setData(data.asString());
+                    }
+                } else if (lWidget instanceof ImageView) {
+                    ImageView im= (ImageView) lWidget;
+                    if (data.getValueType() == TCell.ValueType.INTEGER && !data.asString().isEmpty()) {
+                        im.setImageResource(data.asInteger());
+                    } else if (data.getValueType() == TCell.ValueType.BASE64) {
+                        byte[] decodedString = Base64.decode(data.asString(), Base64.NO_WRAP);
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inSampleSize = mBase64OptionSize;
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
+                        im.setImageBitmap(decodedByte);
+                    } else {
+                        if (!data.asString().equals(""))
+                            setViewImage((ImageView) lWidget, data.asString());
                         else
-                            imageView.setImageDrawable(null);
+                            im.setImageDrawable(null);
                     }
                 } else
                     throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
                             " view that can be bounds by this SimpleAdapter");
 
-                onIteratedRow(lWidget, lWidget.getTag().toString());
+                onIteratedRow(holder.mRowView,lWidget, lWidget.getTag().toString());
             }
         }
         int lListHolderSizeNotInCDT = holder.mSparseArrayHolderViewsNotInCDT.size();
@@ -139,7 +127,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             View lWidget = holder.mSparseArrayHolderViewsNotInCDT.get(lColumnIndex);
 
             if (lWidget != null) {
-                onIteratedRow( lWidget, lWidget.getTag().toString());
+                onIteratedRow(holder.mRowView, lWidget, lWidget.getTag().toString());
             }
         }
 
@@ -170,25 +158,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
                 String columnName=buttonView.getTag().toString();
                 mClientDataTable.moveToPosition(position);
-//
-//                if (mClientDataTable.isConnectedToDB()) {
-//
-//                    if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT){
-//                        mClientDataTable.append();
-//                        mClientDataTable.cellByName(columnName).insertIntoDB(isChecked);
-//                        mClientDataTable.commit();
-//                    }
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE){
-//                        mClientDataTable.edit();
-//                        mClientDataTable.cellByName(columnName).updateFromDB(isChecked);
-//                        mClientDataTable.commit();
-//                    }
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
-//                        mClientDataTable.cellByName(columnName).setValue(isChecked);
-//                } else
-                    mClientDataTable.cellByName(columnName).setValue(isChecked);
+                mClientDataTable.cellByName(columnName).setValue(isChecked);
             }
         });
 
@@ -200,43 +170,30 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
                 TextView lTextView = (TextView) v;
                 String columnName = v.getTag().toString();
-//                if (mClientDataTable.isConnectedToDB()) {
-//
-//                    if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT)
-//                        mClientDataTable.cellByName(columnName).insertIntoDB(lTextView.getText().toString());
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE)
-//                        mClientDataTable.cellByName(columnName).updateFromDB(lTextView.getText().toString());
-//
-//                    else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
-//                        mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
-//                } else
-//                    mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
-//
-//                mClientDataTable.commit();
 
                 mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
             }
         });
     }
 
-    public void setViewImages(ImageView v, String value) {
+    public void setViewImage(ImageView v, String value) {
 
-        System.out.println("I am in image");
         try {
             v.setImageResource(Integer.parseInt(value));
         } catch (NumberFormatException nfe) {
-
-            if(!new File(value).exists())
-                v.setImageResource(_mDefaultImageRes);
-            else
-                v.setImageURI(Uri.parse(value));
+            v.setImageURI(Uri.parse(value));
         }
     }
     @Override
     public int getItemCount() {
         return  mClientDataTable.getRowsCount();
     }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
 
     public void clear() {
         mClientDataTable.clear();
@@ -255,7 +212,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      * @param widget   : Button , TextView etc...
      * @param position : position of row
      */
-    protected void onIteratedRow( View widget,String widgetTag) {
+    protected void onIteratedRow(View row, View widget,String widgetTag) {
     }
 
     ;

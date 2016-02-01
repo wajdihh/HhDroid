@@ -13,6 +13,9 @@ import com.hh.droid.R;
 import com.hh.features.PfKeyboard;
 import com.hh.ui.UiUtility;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Created by benhadjahameda on 04/02/2015.
  */
@@ -130,9 +133,19 @@ public class UiEditTextDate extends LinearLayout {
         int lValue=Integer.parseInt(lContent);
         if(lValue<0 || lValue>31){
             _mEdDay.setError(_myContext.getString(R.string.error_day));
+            _mEdDay.requestFocus();
             return -1;
         }
         return lValue;
+    }
+
+    public void setDate(Date date){
+
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        _mEdDay.setText("" + c.get(Calendar.DAY_OF_MONTH));
+        _mEdMonth.setText(""+(c.get(Calendar.MONTH)+1));
+        _mEdYear.setText(""+c.get(Calendar.YEAR));
     }
     public int getMonth(){
         String lContent=_mEdMonth.getText().toString();
@@ -142,6 +155,7 @@ public class UiEditTextDate extends LinearLayout {
         int lValue=Integer.parseInt(lContent);
         if(lValue<0 || lValue>12){
             _mEdMonth.setError(_myContext.getString(R.string.error_month));
+            _mEdMonth.requestFocus();
             return -1;
         }
         return lValue;
@@ -154,6 +168,7 @@ public class UiEditTextDate extends LinearLayout {
         int lValue=Integer.parseInt(lContent);
         if(lValue<1950 || lValue>2050){
             _mEdYear.setError(_myContext.getString(R.string.error_year));
+            _mEdYear.requestFocus();
             return -1;
         }
         return lValue;

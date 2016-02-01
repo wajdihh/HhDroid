@@ -2,10 +2,10 @@ package com.hh.database;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.io.IOException;
+import java.util.Calendar;
 
 public class DAOManager {
 
@@ -49,8 +49,10 @@ public class DAOManager {
 	 * @return
 	 */
 	public int getLastPrimaryKeyValue(String tableName){
-		Cursor c=mDataBase.rawQuery("select seq from sqlite_sequence where name='"+tableName+"'",null);
-		c.moveToFirst();
-		return c.getInt(c.getColumnIndex("seq"));
+		return DatabaseUtils.getLastPrimaryKeyValue(mDataBase,tableName);
+	}
+
+	public int getTempPrimaryKeyValue(){
+		return Calendar.getInstance().get(Calendar.MILLISECOND)*Calendar.getInstance().get(Calendar.SECOND);
 	}
 }

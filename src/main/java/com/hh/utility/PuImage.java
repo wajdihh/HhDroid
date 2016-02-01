@@ -2,21 +2,23 @@ package com.hh.utility;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
+import android.database.Cursor;
+import android.graphics.*;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.hh.droid.R;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by benhadjahameda on 13/03/2015.
@@ -115,6 +117,45 @@ public class PuImage {
         return new MyRectangle(width,height);
     }
 
+    public static int getImageOrientationOnGallery(Context pContext,Uri imageUri){
+        String[] columns = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.ORIENTATION};
+        Cursor cursor = pContext.getContentResolver().query(imageUri, columns, null, null, null);
+
+        if (cursor == null)
+            return 0;
+
+
+        cursor.moveToFirst();
+
+        int orientationColumnIndex = cursor.getColumnIndex(columns[1]);
+
+        return cursor.getInt(orientationColumnIndex);
+    }
+
+    public static File rotateImageFile(File file){
+
+        Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(getImageOrientation(file.getAbsolutePath()));
+        bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
+        FileOutputStream fOut;
+        try {
+            fOut = new FileOutputStream(file.getAbsolutePath());
+            bmp.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
+            fOut.flush();
+            fOut.close();
+
+        } catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return file;
+    }
     /**
      * get the origine orientation of the image
      * @param imagePath
@@ -140,6 +181,12 @@ public class PuImage {
                 case ExifInterface.ORIENTATION_ROTATE_90:
                     rotate = 90;
                     break;
+                case ExifInterface.ORIENTATION_TRANSVERSE:
+                    rotate = -90;
+                    break;
+                case ExifInterface.ORIENTATION_NORMAL:
+                    rotate = 0;
+                    break;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -147,6 +194,82 @@ public class PuImage {
         return rotate;
     }
 
+    public static Bitmap rotateImage(Bitmap source, int angleOrientation) {
+        Bitmap retVal;
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angleOrientation);
+        retVal = Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+
+        return retVal;
+    }
+
+    public static void scanFileInGallery(final Context pContext,File f, final boolean isDelete){
+
+        MediaScannerConnection.scanFile(pContext,
+                new String[]{f.getAbsolutePath()}, null,
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    public void onScanCompleted(String path, Uri uri) {
+                        if (isDelete) {
+                            if (uri != null) {
+                                pContext.getContentResolver().delete(uri, null, null);
+                            }
+                        }
+                    }
+                });
+    }
+
+    public static void saveBitmapToSdCard(Bitmap bitmap,String destPath,String destName) {
+
+        File myDir = new File(destPath);
+        myDir.mkdirs();
+        Random generator = new Random();
+        int n = 10000;
+        n = generator.nextInt(n);
+        File file = new File (myDir, destName);
+        if (file.exists ()) file.delete ();
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            out.flush();
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void saveBitmapToJPG(Bitmap bitmap, File photo) throws IOException {
+        Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(newBitmap);
+        canvas.drawColor(Color.WHITE);
+        canvas.drawBitmap(bitmap, 0, 0, null);
+        OutputStream stream = new FileOutputStream(photo);
+        newBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+        stream.close();
+    }
+
+    public static String getImageNameFromURI(Context pContext,Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = pContext.getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
+    }
     public static class MyRectangle {
 
         private int height;
