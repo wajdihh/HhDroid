@@ -270,7 +270,7 @@ public class CDTLayoutAdapter {
 	 * You must call this method, when w'll use the adapter in Edit Mode
 	 */
 	public void startEdit(){
-		mClientDataTable.edit();
+		mClientDataTable.editObserve();
 	}
 
 	/**
@@ -328,7 +328,7 @@ public class CDTLayoutAdapter {
 	}
 	private void validateChanges(){
 
-		UiUtility.clearAllChildrensFocus((ViewGroup)mLayout);
+		UiUtility.clearAllChildrensFocus((ViewGroup) mLayout);
 		PfKeyboard.hide(mContext, mLayout);
 
 		if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
@@ -343,7 +343,8 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 
-			mClientDataTable.edit();
+			if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
+				mClientDataTable.edit();
 			TextView lTextView=(TextView) v;
 			String lColumnName=v.getTag().toString();
 			mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
@@ -356,7 +357,8 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-			mClientDataTable.edit();
+			if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
+				mClientDataTable.edit();
 			String lColumnName=buttonView.getTag().toString();
 			mClientDataTable.cellByName(lColumnName).setValue(isChecked);
 

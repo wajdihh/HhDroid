@@ -1,7 +1,7 @@
 package com.hh.clientdatatable;
 
 import com.hh.clientdatatable.TCell.ValueType;
-import com.hh.listeners.OnCDTColumnListener;
+import com.hh.listeners.OnCDTColumnObserver;
 
 public class TColumn {
 
@@ -13,7 +13,7 @@ public class TColumn {
     private String _mName;
     private ValueType _mType;
     private TCell.CellType _mCellType;
-    private OnCDTColumnListener _mListener;
+    private OnCDTColumnObserver _mListener;
     private ColumnType _mColumnType;
     private String _mJsonParent;
     private boolean mIsIgnoreAsJsonField;
@@ -35,14 +35,14 @@ public class TColumn {
         _mColumnType=pColumnType;
     }
 
-    public TColumn(String pName, ValueType pType, TCell.CellType pCellType, OnCDTColumnListener pListener) {
+    public TColumn(String pName, ValueType pType, TCell.CellType pCellType, OnCDTColumnObserver pListener) {
 
         _mName = pName;
         _mType = pType;
         _mListener = pListener;
         _mCellType = pCellType;
     }
-    public TColumn(String pName, ValueType pType,ColumnType pColumnType, OnCDTColumnListener pListener) {
+    public TColumn(String pName, ValueType pType,ColumnType pColumnType, OnCDTColumnObserver pListener) {
 
         _mName = pName;
         _mType = pType;
@@ -50,7 +50,7 @@ public class TColumn {
         _mColumnType=pColumnType;
     }
 
-    public OnCDTColumnListener getCDTColumnListener() {
+    public OnCDTColumnObserver getCDTColumnListener() {
         return _mListener;
     }
 
