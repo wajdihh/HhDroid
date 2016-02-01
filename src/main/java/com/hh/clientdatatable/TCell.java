@@ -176,28 +176,26 @@ public class TCell implements Cloneable {
 
         if (_mOnCDTColumnListener != null){
 
-            switch (_mValueType){
-                case INTEGER:
-                    lResult= _mOnCDTColumnListener.onGetValueInt(Integer.parseInt(_mValue));
-                    break;
-                case BOOLEAN:
-                    lResult= _mOnCDTColumnListener.onGetValueBool(Boolean.parseBoolean(_mValue));
-                    break;
-                case DOUBLE:
-                    lResult= _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
-                    break;
-                case DATETIME:
-                    if(!_mValue.isEmpty()){
-                        long dateLong=Long.parseLong(_mValue);
-                        lResult= _mOnCDTColumnListener.onGetValueDate(dateLong);
-                    }else
+            if(!_mValue.isEmpty()) {
+                switch (_mValueType) {
+                    case INTEGER:
+                        lResult = _mOnCDTColumnListener.onGetValueInt(Integer.parseInt(_mValue));
+                        break;
+                    case BOOLEAN:
+                        lResult = _mOnCDTColumnListener.onGetValueBool(Boolean.parseBoolean(_mValue));
+                        break;
+                    case DOUBLE:
+                        lResult = _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
+                        break;
+                    case DATETIME:
+                        lResult = _mOnCDTColumnListener.onGetValueDate(Long.parseLong(_mValue));
+                        break;
+                    case TEXT:
                         lResult = _mOnCDTColumnListener.onGetValue(_mValue);
-
-                    break;
-                case TEXT:
-                    lResult= _mOnCDTColumnListener.onGetValue(_mValue);
-                    break;
-            }
+                        break;
+                }
+            }else
+                lResult = _mOnCDTColumnListener.onGetValue(_mValue);
 
             if(_mValueType!=ValueType.TEXT)
                 lResult = _mOnCDTColumnListener.onGetValue(lResult);
@@ -288,7 +286,7 @@ public class TCell implements Cloneable {
 
     public Date asDate() {
 
-        Date lResult = null;
+        Date lResult = new Date();
         if(_mValue==null)
             return lResult;
         try {
@@ -359,6 +357,7 @@ public class TCell implements Cloneable {
 
     private void onValueChanged() {
         _mIsValueChanged=true;
+        Log.i("onValueChanged","Cell Name ("+_mName+") : Value ("+_mValue+")");
     }
 
 

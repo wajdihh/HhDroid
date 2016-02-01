@@ -5,7 +5,7 @@ import com.hh.clientdatatable.TRow;
 /**
  * Created by PWBA06861 on 26/08/2015.
  */
-public class OnCDTStateListener {
+public class OnCDTStatusObserver {
 
     public void onBeforeDelete() {
     }

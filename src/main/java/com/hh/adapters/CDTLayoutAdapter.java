@@ -42,7 +42,7 @@ public class CDTLayoutAdapter {
 	protected ClientDataTable mClientDataTable;
 	protected Context mContext;
 	protected Resources mRes;
-	private View mLayout;
+	private ViewGroup mLayout;
 	private ViewHolder _mHolder;
 	private ArrayList<String> _mListOfTags;
 	private int mBase64OptionSize=2;
@@ -61,7 +61,7 @@ public class CDTLayoutAdapter {
 	 * @param pLayout : the layout parent , it's can be a linearLayout , relativeLatout etc...
 	 * @param pCDT : the client data table
 	 */
-	public CDTLayoutAdapter(Context pContext,View pLayout,ClientDataTable pCDT){
+	public CDTLayoutAdapter(Context pContext,ViewGroup pLayout,ClientDataTable pCDT){
 
 		mClientDataTable=pCDT;
 		mContext=pContext;
@@ -78,7 +78,7 @@ public class CDTLayoutAdapter {
 	 * @param pContext
 	 * @param pLayout: the layout parent , it's can be a linearLayout , relativeLatout etc...
 	 */
-	public CDTLayoutAdapter(Context pContext,View pLayout){
+	public CDTLayoutAdapter(Context pContext,ViewGroup pLayout){
 
 		mContext=pContext;
 		mRes=pContext.getResources();
@@ -94,7 +94,9 @@ public class CDTLayoutAdapter {
 		return mClientDataTable;
 	}
 
-
+	public ViewGroup getParentLayout(){
+		return mLayout;
+	}
 	/**
 	 * Set the client data table to use for mapping data in layout parent
 	 * @param mClientDataTable
@@ -124,7 +126,8 @@ public class CDTLayoutAdapter {
 				else
 					_mHolder.mListHoldersViewsNotInCDT.add(lWidget);
 
-				onCreateWidget(lWidget);
+				if(lWidget instanceof ImageView)
+					lWidget.setBackgroundResource(R.drawable.selector_row);
 
 				lWidget.setOnClickListener(new MyOnClickListener());
 				if (lWidget instanceof CheckBox){
@@ -135,6 +138,8 @@ public class CDTLayoutAdapter {
 					final TextView lTextView = (TextView) lWidget;
 					lTextView.setOnFocusChangeListener(new MyFocusChangeListener());
 				}
+
+				onCreateWidget(lWidget);
 			}
 
 		}

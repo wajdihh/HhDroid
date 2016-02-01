@@ -7,6 +7,7 @@ import java.util.Date;
  */
 public class OnCDTColumnListener {
 
+
     public String onGetValue(String pValue){return pValue;}
     public String onGetValueInt(int pValue){return ""+pValue;}
     public String onGetValueDouble(double pValue){return ""+pValue;}
