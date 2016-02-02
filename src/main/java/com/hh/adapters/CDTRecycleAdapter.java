@@ -59,9 +59,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     @Override
     public RecycleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(_mLayoutRes, null);
-
-
-        onCreatedRow(v);
         return new RecycleViewHolder(mContext,v,mClientDataTable,_mIsEnableOnClickWidget);
     }
 
@@ -217,16 +214,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      */
     protected void onIteratedRow(View row, View widget,String widgetTag) {
     }
-
-    /**
-     * Override this method when you need to findViewByID for example, we call this method
-     * every time we create the row, so for exp : list with 15 items, we will passe here, 12 times
-     * @param row
-     */
-    protected void onCreatedRow(View row) {
-    }
-
-    ;
 
     /**
      * override this method to capture the click on selected row
