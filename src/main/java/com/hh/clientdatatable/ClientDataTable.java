@@ -659,13 +659,20 @@ public class ClientDataTable {
 	 * NE JAMAIS METTRE UN BREAK DAANS Iterate, si c'est le cas, ajouter initForIterate()
 	 */
 	public boolean iterate() {
+		// Init
 		if(_mTempIteration==-1){
 			_mTempIteration=_mPosition;
 			_mPosition=-1;
 		}
 
-		if(_mPosition + 1>=getRowsCount())
+		// recover old position value
+		if(_mPosition + 1>=getRowsCount()){
+			if(_mTempIteration!=-1){
+				_mPosition=_mTempIteration;
+				_mTempIteration=-1;
+			}
 			return false;
+		}
 
 		return moveToPosition(_mPosition + 1);
 	}
@@ -714,24 +721,8 @@ public class ClientDataTable {
 	public boolean moveToPosition(int pIndex) {
 
 		int count = getRowsCount();
-		if (pIndex >= count) {
-			_mPosition = count;
-
-			if(_mTempIteration!=-1){
-				_mPosition=_mTempIteration;
-				_mTempIteration=-1;
-			}
-
-			throw new IndexOutOfBoundsException("ClientDataTable size :"+count+" <= selected index :"+pIndex);
-		}
-		if (pIndex < 0) {
-			_mPosition = -1;
-			return false;
-		}
-
-		if (pIndex == _mPosition) {
-			return true;
-		}
+		if (pIndex >= count || pIndex <0 )
+			throw new IndexOutOfBoundsException("ClientDataTable size =" + count + " and selected index =" + pIndex);
 
 		_mPosition = pIndex;
 		return true;
