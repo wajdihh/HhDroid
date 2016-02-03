@@ -5,7 +5,7 @@ package com.hh.clientdatatable;
 import android.content.Context;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell.ValueType;
-import com.hh.listeners.OnCDTColumnListener;
+import com.hh.listeners.OnCDTColumnObserver;
 
 import java.util.ArrayList;
 
@@ -48,7 +48,7 @@ public class TRow {
 		_mListOfcells.add(cell);
 	}
 	
-	public void addCell(Context pContext, Object value,ValueType pType,TCell.CellType pCellType,String pCellName,CDTStatus pCDTStatus,OnCDTColumnListener pColumnListener) {
+	public void addCell(Context pContext, Object value,ValueType pType,TCell.CellType pCellType,String pCellName,CDTStatus pCDTStatus,OnCDTColumnObserver pColumnListener) {
 		_mListOfcells.add(new TCell(pContext,value, pType,pCellType,pCellName,pCDTStatus,pColumnListener));
 	}
 
