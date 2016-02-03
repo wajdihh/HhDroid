@@ -659,9 +659,19 @@ public class ClientDataTable {
 	 * NE JAMAIS METTRE UN BREAK DAANS Iterate, si c'est le cas, ajouter initForIterate()
 	 */
 	public boolean iterate() {
+		// Init
 		if(_mTempIteration==-1){
 			_mTempIteration=_mPosition;
 			_mPosition=-1;
+		}
+
+		// recover old position value
+		if(_mPosition + 1>=getRowsCount()){
+			if(_mTempIteration!=-1){
+				_mPosition=_mTempIteration;
+				_mTempIteration=-1;
+			}
+			return false;
 		}
 
 		return moveToPosition(_mPosition + 1);
@@ -670,6 +680,9 @@ public class ClientDataTable {
 	 * Move to next row
 	 */
 	public boolean moveToNext() {
+		if(_mPosition + 1>=getRowsCount())
+			return false;
+
 		return moveToPosition(_mPosition + 1);
 	}
 
@@ -677,6 +690,8 @@ public class ClientDataTable {
 	 * Move to the previous row.
 	 */
 	public boolean moveToPrevious() {
+		if(_mPosition -1<=0)
+			return false;
 		return moveToPosition(_mPosition -1);
 	}
 
