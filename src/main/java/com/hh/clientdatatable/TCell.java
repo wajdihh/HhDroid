@@ -10,6 +10,7 @@ import com.hh.listeners.OnCDTColumnListener;
 import com.hh.utility.PuDate;
 import com.hh.utility.PuUtils;
 
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -186,6 +187,9 @@ public class TCell implements Cloneable {
                         break;
                     case DOUBLE:
                         lResult = _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
+                        DecimalFormat format = new DecimalFormat();
+                        format.setDecimalSeparatorAlwaysShown(false);
+                        lResult =format.format(Double.parseDouble(lResult));
                         break;
                     case DATETIME:
                         lResult = _mOnCDTColumnListener.onGetValueDate(Long.parseLong(_mValue));
@@ -202,9 +206,16 @@ public class TCell implements Cloneable {
 
             // If we not define the listener
         }else{
-            if(_mValueType==ValueType.DATETIME &&!_mValue.isEmpty()){
-                long dateLong=Long.parseLong(_mValue);
-                lResult = PuDate.getStringFromDate(dateLong);
+            if(!_mValue.isEmpty()){
+                if(_mValueType==ValueType.DATETIME){
+                    long dateLong=Long.parseLong(_mValue);
+                    lResult = PuDate.getStringFromDate(dateLong);
+                }else if(_mValueType==ValueType.DOUBLE){
+                    DecimalFormat format = new DecimalFormat();
+                    format.setDecimalSeparatorAlwaysShown(false);
+                    lResult =format.format(Double.parseDouble(_mValue));
+                }else
+                    lResult=_mValue;
             }else
                 lResult=_mValue;
         }
