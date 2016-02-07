@@ -53,7 +53,7 @@ dependencies {
     compile "com.android.support:support-v13:20.0.+"
     compile 'org.apache.commons:commons-compress:1.6'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.commit451:PhotoView:+'
+    compile 'com.commit451:PhotoView:1.2.4'
     compile "org.apache.httpcomponents:httpmime:4.2.3"
 
 }

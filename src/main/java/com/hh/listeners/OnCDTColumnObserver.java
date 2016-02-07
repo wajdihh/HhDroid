@@ -3,9 +3,9 @@ package com.hh.listeners;
 import java.util.Date;
 
 /**
- * Created by benhadjahameda on 13/01/2015.
+ * Created by Wajdi Hh on 13/01/2015.
  */
-public class OnCDTColumnListener {
+public class OnCDTColumnObserver {
 
 
     public String onGetValue(String pValue){return pValue;}

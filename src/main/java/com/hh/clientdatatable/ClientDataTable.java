@@ -11,7 +11,7 @@ import com.hh.database.DatabaseUtils;
 import com.hh.droid.R;
 import com.hh.execption.HhException;
 import com.hh.listeners.MyCallback;
-import com.hh.listeners.OnCDTColumnListener;
+import com.hh.listeners.OnCDTColumnObserver;
 import com.hh.listeners.OnCDTStatusObserver;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
 import com.hh.utility.PuUtils;
@@ -63,7 +63,7 @@ public class ClientDataTable {
 	private Map<String,ClientDataTable> _mNestedJSONObject;
 	private List<String> _mNestedJSONObjectParentKeys;
 
-	private CDTStatusUtils mCdtUtils;
+	private CDTObserverStack mCdtObserverStack;
 
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
 
@@ -78,7 +78,7 @@ public class ClientDataTable {
 		_mTempIteration=-1;
 		_mCursorSize = -1;
 		mIsCdtSorted=false;
-		mCdtUtils=new CDTStatusUtils();
+		mCdtObserverStack =new CDTObserverStack();
 	}
 
 	public ClientDataTable(Context pContext) {
@@ -170,7 +170,7 @@ public class ClientDataTable {
 	}
 
 	public void insertObserve(){
-		mCdtUtils.notifyOnBeforeInsert();
+		mCdtObserverStack.notifyOnBeforeInsert();
 
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot insert because CDT is empty!!");
@@ -193,7 +193,7 @@ public class ClientDataTable {
 	private void append(TRow row,boolean pIsObserve){
 
 		if(pIsObserve)
-			mCdtUtils.notifyOnBeforeInsert();
+			mCdtObserverStack.notifyOnBeforeInsert();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 			_mCDTStatus=CDTStatus.INSERT;
@@ -223,7 +223,7 @@ public class ClientDataTable {
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot Delete because CDT is empty!!");
 
-		mCdtUtils.notifyOnBeforeDelete();
+		mCdtObserverStack.notifyOnBeforeDelete();
 
 		if(_mCDTStatus==CDTStatus.DEFAULT){
 
@@ -240,7 +240,7 @@ public class ClientDataTable {
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
-		if(_mCDTStatus==CDTStatus.DEFAULT){
+		if(_mCDTStatus==CDTStatus.DEFAULT || _mCDTStatus==CDTStatus.UPDATE){
 
 			_mCDTStatus=CDTStatus.UPDATE;
 
@@ -248,7 +248,7 @@ public class ClientDataTable {
 
 			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 		}else
-			throw new AssertionError("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change");
+			throw new AssertionError("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change first to pass in mode DEFAULT");
 	}
 
 	public void editObserve(){
@@ -256,9 +256,9 @@ public class ClientDataTable {
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
-		mCdtUtils.notifyOnBeforeEdit();
+		mCdtObserverStack.notifyOnBeforeEdit();
 
-		if(_mCDTStatus==CDTStatus.DEFAULT){
+		if(_mCDTStatus==CDTStatus.DEFAULT || _mCDTStatus==CDTStatus.UPDATE){
 
 			_mCDTStatus=CDTStatus.UPDATE;
 
@@ -266,7 +266,7 @@ public class ClientDataTable {
 
 			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 		}else
-			throw new IllegalStateException("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change");
+			throw new IllegalStateException("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"   You must commit your change first to pass in mode DEFAULT");
 	}
 	/**
 	 * permet de faire un clone dela liste des celles ( prb des references)
@@ -302,7 +302,7 @@ public class ClientDataTable {
 
 
 		// if we have set CDTListener and the data is not valid return
-		for (OnCDTStatusObserver listener:mCdtUtils.mListOfStateListener) {
+		for (OnCDTStatusObserver listener: mCdtObserverStack) {
 			if (!listener.onBeforeValidate()) {
 				if (pCallback != null) pCallback.onError("");
 				return;
@@ -321,7 +321,7 @@ public class ClientDataTable {
 		if(_mCellHowValueChanged!=null)
 			_mCellHowValueChanged.setValueChanged(false);
 
-		mCdtUtils.notifyOnAfterValidate(pIsExecInDateBase);
+		mCdtObserverStack.notifyOnAfterValidate(pIsExecInDateBase);
 
 		if(pCallback!=null ) pCallback.onSuccess("");
 
@@ -371,7 +371,7 @@ public class ClientDataTable {
 
 	public void revert(){
 
-		mCdtUtils.notifyOnBeforeRevert();
+		mCdtObserverStack.notifyOnBeforeRevert();
 
 		switch (_mCDTStatus){
 			case INSERT:
@@ -394,7 +394,7 @@ public class ClientDataTable {
 				break;
 		}
 
-		mCdtUtils.notifyOnAfterRevert();
+		mCdtObserverStack.notifyOnAfterRevert();
 		clearListOfDeletedRows();
 	}
 
@@ -433,10 +433,10 @@ public class ClientDataTable {
 
 				if(isUseCDTListener)
 					if(_mCDTStatus==CDTStatus.INSERT)
-						mCdtUtils.notifyOnAfterInsert(true);
+						mCdtObserverStack.notifyOnAfterInsert(true);
 
 					else if(_mCDTStatus==CDTStatus.UPDATE)
-						mCdtUtils.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
+						mCdtObserverStack.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
 			}
 
 
@@ -445,7 +445,7 @@ public class ClientDataTable {
 				size = _mListOfDeletedRows.size();
 				for (int i = 0; i < size; i++){
 					if( isUseCDTListener)
-						mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
+						mCdtObserverStack.notifyOnAfterDelete(_mListOfDeletedRows.get(i), true);
 
 					deleteRowDataBase(_mListOfDeletedRows.get(i));
 				}
@@ -470,12 +470,12 @@ public class ClientDataTable {
 				// Pas besoin car on l a deja dans l Append()
 				//_mListOfRows.add(new TRow(_mContext, _mCDTStatus, getColumnsCount()));
 
-				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterInsert(pIsExecuteAction);
+				if(pIsUseCDTListener) mCdtObserverStack.notifyOnAfterInsert(pIsExecuteAction);
 				break;
 			case DELETE:
 				_mListOfDeletedRows.add(getCurrentRow());
 				_mListOfRows.remove(_mPosition);
-				if(pIsUseCDTListener) mCdtUtils.notifyOnAfterDelete(_mListOfDeletedRows.get(_mListOfDeletedRows.size()-1), pIsExecuteAction);
+				if(pIsUseCDTListener) mCdtObserverStack.notifyOnAfterDelete(_mListOfDeletedRows.get(_mListOfDeletedRows.size()-1), pIsExecuteAction);
 				if (_mPosition == getRowsCount()){
 					_mPosition--;
 				}
@@ -485,7 +485,7 @@ public class ClientDataTable {
 
 			case UPDATE:
 
-				if(pIsUseCDTListener && isValuesChanged()) mCdtUtils.notifyOnAfterEdit(_mOldRow, getCurrentRow(), pIsExecuteAction);
+				if(pIsUseCDTListener && isValuesChanged()) mCdtObserverStack.notifyOnAfterEdit(_mOldRow, getCurrentRow(), pIsExecuteAction);
 				if(_mOldRow!=null) {
 					_mOldRow.getCells().clear();
 					_mOldRow = null;
@@ -659,9 +659,19 @@ public class ClientDataTable {
 	 * NE JAMAIS METTRE UN BREAK DAANS Iterate, si c'est le cas, ajouter initForIterate()
 	 */
 	public boolean iterate() {
+		// Init
 		if(_mTempIteration==-1){
 			_mTempIteration=_mPosition;
 			_mPosition=-1;
+		}
+
+		// recover old position value
+		if(_mPosition + 1>=getRowsCount()){
+			if(_mTempIteration!=-1){
+				_mPosition=_mTempIteration;
+				_mTempIteration=-1;
+			}
+			return false;
 		}
 
 		return moveToPosition(_mPosition + 1);
@@ -670,6 +680,9 @@ public class ClientDataTable {
 	 * Move to next row
 	 */
 	public boolean moveToNext() {
+		if(_mPosition + 1>=getRowsCount())
+			return false;
+
 		return moveToPosition(_mPosition + 1);
 	}
 
@@ -677,6 +690,8 @@ public class ClientDataTable {
 	 * Move to the previous row.
 	 */
 	public boolean moveToPrevious() {
+		if(_mPosition -1<=0)
+			return false;
 		return moveToPosition(_mPosition -1);
 	}
 
@@ -705,24 +720,9 @@ public class ClientDataTable {
 	 */
 	public boolean moveToPosition(int pIndex) {
 
-		final int count = getRowsCount();
-		if (pIndex >= count) {
-			_mPosition = count;
-
-			if(_mTempIteration!=-1){
-				_mPosition=_mTempIteration;
-				_mTempIteration=-1;
-			}
-			return false;
-		}
-		if (pIndex < 0) {
-			_mPosition = -1;
-			return false;
-		}
-
-		if (pIndex == _mPosition) {
-			return true;
-		}
+		int count = getRowsCount();
+		if (pIndex >= count || pIndex <0 )
+			throw new IndexOutOfBoundsException("ClientDataTable size =" + count + " and selected index =" + pIndex);
 
 		_mPosition = pIndex;
 		return true;
@@ -1124,7 +1124,7 @@ public class ClientDataTable {
 		return column;
 	}
 
-	public TColumn addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,TColumn.ColumnType pColumnType,OnCDTColumnObserver pListener) {
 
 		TColumn column=new TColumn(pName, pType,pColumnType,pListener);
 		_mListOfColumns.add(column);
@@ -1132,7 +1132,7 @@ public class ClientDataTable {
 	}
 
 
-	public TColumn addColumn(String pName, ValueType pType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,OnCDTColumnObserver pListener) {
 
 		TColumn column=new TColumn(pName, pType, TCell.CellType.NONE,pListener);
 		_mListOfColumns.add(column);
@@ -1144,7 +1144,7 @@ public class ClientDataTable {
 		_mListOfColumns.add(column);
 		return column;
 	}
-	public TColumn addColumn(String pName, ValueType pType,TCell.CellType pCellType,OnCDTColumnListener pListener) {
+	public TColumn addColumn(String pName, ValueType pType,TCell.CellType pCellType,OnCDTColumnObserver pListener) {
 
 		TColumn column=new TColumn(pName, pType,pCellType,pListener);
 		_mListOfColumns.add(column);
@@ -1545,9 +1545,9 @@ public class ClientDataTable {
 
 
 	public void setOnCDTStatusObserver(OnCDTStatusObserver pListener){
-		mCdtUtils.mListOfStateListener.add(pListener);
+		mCdtObserverStack.add(pListener);
 	}
 	public void removeCDTStatusObserver(OnCDTStatusObserver pListener){
-		mCdtUtils.mListOfStateListener.remove(pListener);
+		mCdtObserverStack.remove(pListener);
 	}
 }

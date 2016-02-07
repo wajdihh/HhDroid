@@ -128,6 +128,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	}
 
 
+
 	/* Setter for listener. */
 	public void setClickListener(OnRecycleClickListener clickListener) {
 		this._mClickListener = clickListener;

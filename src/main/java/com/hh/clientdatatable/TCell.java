@@ -6,11 +6,10 @@ import android.content.Context;
 import android.util.Log;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.droid.HhDroid;
-import com.hh.listeners.OnCDTColumnListener;
+import com.hh.listeners.OnCDTColumnObserver;
 import com.hh.utility.PuDate;
 import com.hh.utility.PuUtils;
 
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -31,16 +30,16 @@ public class TCell implements Cloneable {
     private ValueType _mValueType;
     private CellType _mCellType;
     private CDTStatus _mCDTStatus;
-    private OnCDTColumnListener _mOnCDTColumnListener;
+    private OnCDTColumnObserver _mOnCDTColumnObserver;
     private Context _mContext;
     private boolean _mIsValueChanged;
 
 
-    public TCell(Context pContext, Object pValue, ValueType pValueType,CellType pCellType,String pCellName, CDTStatus pCDTStatus, OnCDTColumnListener pOnCDTColumnListener) {
+    public TCell(Context pContext, Object pValue, ValueType pValueType,CellType pCellType,String pCellName, CDTStatus pCDTStatus, OnCDTColumnObserver pOnCDTColumnObserver) {
 
         initTcell(pContext,pValueType,pCDTStatus,pCellName);
         _mCellType=pCellType;
-        _mOnCDTColumnListener = pOnCDTColumnListener;
+        _mOnCDTColumnObserver = pOnCDTColumnObserver;
 
         if (pValueType == ValueType.DATETIME) {
             try {
@@ -52,10 +51,10 @@ public class TCell implements Cloneable {
             _mValue = String.valueOf(pValue);
     }
 
-    public TCell(Context pContext, ValueType pValueType, CDTStatus pCDTStatus,CellType pCellType,String pCellName, OnCDTColumnListener pOnCDTColumnListener) {
+    public TCell(Context pContext, ValueType pValueType, CDTStatus pCDTStatus,CellType pCellType,String pCellName, OnCDTColumnObserver pOnCDTColumnObserver) {
         initTcell(pContext,pValueType,pCDTStatus,pCellName);
         _mCellType=pCellType;
-        _mOnCDTColumnListener = pOnCDTColumnListener;
+        _mOnCDTColumnObserver = pOnCDTColumnObserver;
     }
 
     public TCell(Context pContext, ValueType pValueType, CDTStatus pCDTStatus,String pCellName) {
@@ -104,8 +103,8 @@ public class TCell implements Cloneable {
     }
 
     public void setValue(String pValue) {
-        if (_mOnCDTColumnListener != null)
-            pValue = _mOnCDTColumnListener.onSetValue(pValue);
+        if (_mOnCDTColumnObserver != null)
+            pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
         if(_mValue==null || ((_mValue!=null && pValue!=null) &&!_mValue.equals(pValue.toString())))
             onValueChanged();
@@ -114,8 +113,8 @@ public class TCell implements Cloneable {
     }
 
     public void setValue(boolean pValue) {
-        if (_mOnCDTColumnListener != null)
-            pValue = _mOnCDTColumnListener.onSetValue(pValue);
+        if (_mOnCDTColumnObserver != null)
+            pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
         if(_mValue==null || !_mValue.equals(pValue))
             onValueChanged();
@@ -125,8 +124,8 @@ public class TCell implements Cloneable {
     }
 
     public void setValue(int pValue) {
-        if (_mOnCDTColumnListener != null)
-            pValue = _mOnCDTColumnListener.onSetValue(pValue);
+        if (_mOnCDTColumnObserver != null)
+            pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
         if(_mValue==null || !_mValue.equals(pValue))
             onValueChanged();
@@ -134,8 +133,8 @@ public class TCell implements Cloneable {
     }
 
     public void setValue(double pValue) {
-        if (_mOnCDTColumnListener != null)
-            pValue = _mOnCDTColumnListener.onSetValue(pValue);
+        if (_mOnCDTColumnObserver != null)
+            pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
         if(_mValue==null || !_mValue.equals(pValue))
             onValueChanged();
@@ -144,8 +143,8 @@ public class TCell implements Cloneable {
     }
 
     public void setValue(long pValueTimeInMillies) {
-        if (_mOnCDTColumnListener != null)
-            pValueTimeInMillies = _mOnCDTColumnListener.onSetValue(pValueTimeInMillies);
+        if (_mOnCDTColumnObserver != null)
+            pValueTimeInMillies = _mOnCDTColumnObserver.onSetValue(pValueTimeInMillies);
 
         if(_mValue==null || !_mValue.equals(pValueTimeInMillies))
             onValueChanged();
@@ -164,8 +163,8 @@ public class TCell implements Cloneable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        if (_mOnCDTColumnObserver != null)
+            lResult= _mOnCDTColumnObserver.onGetValue(lResult);
         return lResult;
     }
 
@@ -175,47 +174,37 @@ public class TCell implements Cloneable {
         if(_mValue==null)
             return lResult;
 
-        if (_mOnCDTColumnListener != null){
+        if (_mOnCDTColumnObserver != null){
 
             if(!_mValue.isEmpty()) {
                 switch (_mValueType) {
                     case INTEGER:
-                        lResult = _mOnCDTColumnListener.onGetValueInt(Integer.parseInt(_mValue));
+                        lResult = _mOnCDTColumnObserver.onGetValueInt(Integer.parseInt(_mValue));
                         break;
                     case BOOLEAN:
-                        lResult = _mOnCDTColumnListener.onGetValueBool(Boolean.parseBoolean(_mValue));
+                        lResult = _mOnCDTColumnObserver.onGetValueBool(Boolean.parseBoolean(_mValue));
                         break;
                     case DOUBLE:
-                        lResult = _mOnCDTColumnListener.onGetValueDouble(Double.parseDouble(_mValue));
-                        DecimalFormat format = new DecimalFormat();
-                        format.setDecimalSeparatorAlwaysShown(false);
-                        lResult =format.format(Double.parseDouble(lResult));
+                        lResult = _mOnCDTColumnObserver.onGetValueDouble(Double.parseDouble(_mValue));
                         break;
                     case DATETIME:
-                        lResult = _mOnCDTColumnListener.onGetValueDate(Long.parseLong(_mValue));
+                        lResult = _mOnCDTColumnObserver.onGetValueDate(Long.parseLong(_mValue));
                         break;
                     case TEXT:
-                        lResult = _mOnCDTColumnListener.onGetValue(_mValue);
+                        lResult = _mOnCDTColumnObserver.onGetValue(_mValue);
                         break;
                 }
             }else
-                lResult = _mOnCDTColumnListener.onGetValue(_mValue);
+                lResult = _mOnCDTColumnObserver.onGetValue(_mValue);
 
             if(_mValueType!=ValueType.TEXT)
-                lResult = _mOnCDTColumnListener.onGetValue(lResult);
+                lResult = _mOnCDTColumnObserver.onGetValue(lResult);
 
             // If we not define the listener
         }else{
-            if(!_mValue.isEmpty()){
-                if(_mValueType==ValueType.DATETIME){
-                    long dateLong=Long.parseLong(_mValue);
-                    lResult = PuDate.getStringFromDate(dateLong);
-                }else if(_mValueType==ValueType.DOUBLE){
-                    DecimalFormat format = new DecimalFormat();
-                    format.setDecimalSeparatorAlwaysShown(false);
-                    lResult =format.format(Double.parseDouble(_mValue));
-                }else
-                    lResult=_mValue;
+            if(_mValueType==ValueType.DATETIME &&!_mValue.isEmpty()){
+                long dateLong=Long.parseLong(_mValue);
+                lResult = PuDate.getStringFromDate(dateLong);
             }else
                 lResult=_mValue;
         }
@@ -256,8 +245,8 @@ public class TCell implements Cloneable {
             e.printStackTrace();
             Log.e("As ","CANNOT Parse the CELL :"+_mName+" WITH VALUE :"+_mValue);
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        if (_mOnCDTColumnObserver != null)
+            lResult= _mOnCDTColumnObserver.onGetValue(lResult);
         return lResult;
     }
 
@@ -273,8 +262,8 @@ public class TCell implements Cloneable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        if (_mOnCDTColumnObserver != null)
+            lResult= _mOnCDTColumnObserver.onGetValue(lResult);
         return lResult;
     }
 
@@ -290,8 +279,8 @@ public class TCell implements Cloneable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        if (_mOnCDTColumnObserver != null)
+            lResult= _mOnCDTColumnObserver.onGetValue(lResult);
         return lResult;
     }
 
@@ -307,8 +296,8 @@ public class TCell implements Cloneable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        if (_mOnCDTColumnObserver != null)
+            lResult= _mOnCDTColumnObserver.onGetValue(lResult);
         return lResult;
     }
 
@@ -324,8 +313,8 @@ public class TCell implements Cloneable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (_mOnCDTColumnListener != null)
-            lResult= _mOnCDTColumnListener.onGetValue(lResult);
+        if (_mOnCDTColumnObserver != null)
+            lResult= _mOnCDTColumnObserver.onGetValue(lResult);
         return lResult;
     }
 
@@ -361,9 +350,9 @@ public class TCell implements Cloneable {
         _mCDTStatus = pCDTStatus;
     }
 
-    public void setOnCDTColumnListener(OnCDTColumnListener pCDTColumnListener) {
+    public void setOnCDTColumnListener(OnCDTColumnObserver pCDTColumnListener) {
 
-        _mOnCDTColumnListener = pCDTColumnListener;
+        _mOnCDTColumnObserver = pCDTColumnListener;
     }
 
     private void onValueChanged() {

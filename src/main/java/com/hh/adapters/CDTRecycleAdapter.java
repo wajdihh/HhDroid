@@ -215,8 +215,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     protected void onIteratedRow(View row, View widget,String widgetTag) {
     }
 
-    ;
-
     /**
      * override this method to capture the click on selected row
      *

@@ -1,6 +1,5 @@
 package com.hh.utility;
 
-import android.content.Context;
 import android.util.Log;
 
 import java.io.BufferedWriter;
@@ -17,7 +16,7 @@ import java.util.Date;
  */
 public class PuLogger {
 
-    public static void appendLogFile(Context pContext,String pathFile,String tag,Throwable myEx)
+    public static void appendLogFile(String pathFile,String tag,Throwable myEx)
     {
         File logFile = new File(pathFile);
         if (!logFile.exists())
