@@ -232,9 +232,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                                 im.setImageDrawable(null);
                         }
                     }
-                    else
-                        throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
-                                " view that can be bounds by this SimpleAdapter");
 
                     onIteratedRow(convertView, lWidget, position);
                 }

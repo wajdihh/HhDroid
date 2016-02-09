@@ -113,9 +113,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                         else
                             im.setImageDrawable(null);
                     }
-                } else
-                    throw new IllegalStateException(lWidget.getClass().getName() + " is not a " +
-                            " view that can be bounds by this SimpleAdapter");
+                }
 
                 onIteratedRow(holder.mRowView,lWidget, lWidget.getTag().toString());
             }
