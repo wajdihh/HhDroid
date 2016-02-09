@@ -35,7 +35,6 @@ import java.util.ArrayList;
 public class CDTLayoutAdapter {
 
 
-	public static final int FLAG_AUTO_REQUERY = 0x01;
 	/**
 	 * mClientDataTable : the client data table used in this adapter to display data
 	 */
