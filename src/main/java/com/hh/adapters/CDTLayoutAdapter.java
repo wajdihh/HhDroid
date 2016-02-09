@@ -61,16 +61,10 @@ public class CDTLayoutAdapter {
 	 * @param pLayout : the layout parent , it's can be a linearLayout , relativeLatout etc...
 	 * @param pCDT : the client data table
 	 */
-	public CDTLayoutAdapter(Context pContext,ViewGroup pLayout,ClientDataTable pCDT){
-
+	public CDTLayoutAdapter(Context pContext,ClientDataTable pCDT){
 		mClientDataTable=pCDT;
 		mContext=pContext;
 		mRes=pContext.getResources();
-		mLayout=pLayout;
-		ViewHolder.clearAllTags();
-		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
-		mappingData();
-
 	}
 
 	/**<br>
@@ -78,14 +72,16 @@ public class CDTLayoutAdapter {
 	 * @param pContext
 	 * @param pLayout: the layout parent , it's can be a linearLayout , relativeLatout etc...
 	 */
-	public CDTLayoutAdapter(Context pContext,ViewGroup pLayout){
-
+	public CDTLayoutAdapter(Context pContext){
 		mContext=pContext;
 		mRes=pContext.getResources();
+	}
+
+	public void loadView(ViewGroup pLayout){
 		mLayout=pLayout;
 		ViewHolder.clearAllTags();
-		_mListOfTags=new ArrayList<String>(ViewHolder.getAllLayoutTags(pLayout));
-		mappingData();
+		_mListOfTags= new ArrayList<>(ViewHolder.getAllLayoutTags(pLayout));
+		createWidgets();
 	}
 	/**
 	 * Return the client data table used in this adapter
@@ -104,13 +100,13 @@ public class CDTLayoutAdapter {
 	 */
 	public void setClientDataTable(ClientDataTable mClientDataTable) {
 		this.mClientDataTable = mClientDataTable;
-		mappingData();
+		createWidgets();
 	}
 
 	/**
 	 * this local method is used to create the widgets and listeners
 	 */
-	private void mappingData(){
+	private void createWidgets(){
 
 		View lWidget=null;
 		_mHolder=new ViewHolder();
@@ -271,12 +267,10 @@ public class CDTLayoutAdapter {
 	 */
 	public void startEdit(){
 		mClientDataTable.edit();
-		mappingData();
 	}
 
 	public void startEditObserve(){
 		mClientDataTable.editObserve();
-		mappingData();
 	}
 
 	/**
@@ -284,31 +278,23 @@ public class CDTLayoutAdapter {
 	 */
 	public void startInsert(){
 		mClientDataTable.insert();
-		mappingData();
 	}
 
 	public void startInsertObserve(){
 		mClientDataTable.insertObserve();
-		mappingData();
 	}
 	public void startAppend(){
 		mClientDataTable.append();
-		mappingData();
 	}
 	public void startAppendObserve(){
 		mClientDataTable.appendObserve();
-		mappingData();
 	}
-	public void startLoad(){
-		mappingData();
-	}
+
 	public void startDelete(){
 		mClientDataTable.delete();
-		mappingData();
 	}
 	public void startDeleteObserve(){
 		mClientDataTable.deleteObserve();
-		mappingData();
 	}
 
 	public void executeChanges( ){
