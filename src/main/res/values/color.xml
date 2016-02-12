@@ -9,6 +9,7 @@
     <color name="gris">#a5a5a5</color>
     <color name="Black">#000000</color>
     <color name="Red">#F00</color>
+    <color name="default_android_gray">#808080</color>
     <color name="antracite">#595959</color>
     <color name="holo_blue_lev0">#b1e3fa</color>
     <color name="holo_gray_lev0">#e4e4e4</color>
