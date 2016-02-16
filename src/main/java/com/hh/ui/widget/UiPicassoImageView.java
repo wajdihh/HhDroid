@@ -20,7 +20,7 @@ public class UiPicassoImageView extends ImageView {
 
     private Picasso mPicasso;
     private RequestCreator mPicassoRequestCreator;
-
+    private String mUrl;
     public UiPicassoImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -31,12 +31,14 @@ public class UiPicassoImageView extends ImageView {
 
     public void setData(String uri){
         // SI on a pas encore chargé l image par picosso
+
+        mUrl=uri;
         if (uri.contains("http"))
             mPicassoRequestCreator= mPicasso.load(uri);
         else
             mPicassoRequestCreator= mPicasso.load(new File(uri));
 
-        mPicassoRequestCreator.fit().centerCrop().noFade().into(this);;
+        mPicassoRequestCreator.fit().centerCrop().noFade().into(this);
     }
 
     public RequestCreator getPicassoRequestCreator(){
@@ -44,11 +46,26 @@ public class UiPicassoImageView extends ImageView {
     }
 
     public void transform(Transformation transformation){
+
+        mPicasso.cancelRequest(this);
+        if (mUrl.contains("http"))
+            mPicassoRequestCreator= mPicasso.load(mUrl);
+        else
+            mPicassoRequestCreator= mPicasso.load(new File(mUrl));
+
         mPicassoRequestCreator.transform(transformation).into(this);
     }
 
     public void resize(int w,int h){
+
+        mPicasso.cancelRequest(this);
+        if (mUrl.contains("http"))
+            mPicassoRequestCreator= mPicasso.load(mUrl);
+        else
+            mPicassoRequestCreator= mPicasso.load(new File(mUrl));
+
         mPicassoRequestCreator.resize(w,h).centerCrop().into(this);;
+
     }
 
     public void placeHolder(int imageRes){
