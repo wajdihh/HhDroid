@@ -346,6 +346,30 @@ public class PuUtils {
 		}
 	}
 
+
+	/**
+	 * Share with installed application
+	 * @param pContext
+	 * @param urlToShare
+	 * @param subject
+	 * @param msg
+	 */
+
+	public  static void share(Context pContext,String urlToShare){
+		share(pContext,urlToShare,"","");
+	}
+	public  static void share(Context pContext,String urlToShare,String titleChosser){
+		share(pContext,urlToShare,titleChosser,"");
+	}
+	public  static void share(Context pContext,String urlToShare,String titleChosser,String subject){
+
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.putExtra(android.content.Intent.EXTRA_SUBJECT,subject);
+		intent.putExtra(Intent.EXTRA_TEXT, urlToShare);
+		intent.setType("text/plain");
+		intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+		pContext.startActivity(Intent.createChooser(intent,titleChosser));
+	}
 	public  static void shareOnFacebook(Context pContext,String urlToShare){
 
 		Intent intent = new Intent(Intent.ACTION_SEND);
