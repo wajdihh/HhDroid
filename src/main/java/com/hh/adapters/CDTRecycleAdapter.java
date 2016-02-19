@@ -59,6 +59,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     @Override
     public RecycleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(_mLayoutRes, null);
+        onCreateRow(v);
         return new RecycleViewHolder(mContext,v,mClientDataTable,_mIsEnableOnClickWidget);
     }
 
@@ -211,6 +212,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      * @param position : position of row
      */
     protected void onIteratedRow(View row, View widget,String widgetTag) {
+    }
+
+    protected void onCreateRow(View row) {
     }
 
     /**
