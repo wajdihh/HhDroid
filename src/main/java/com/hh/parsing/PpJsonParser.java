@@ -43,9 +43,10 @@ public class PpJsonParser {
 
 	static void parseJsonArrayIntoCDT(JSONArray pJsArray,ClientDataTable pCDT,boolean saveInDataBase) throws JSONException{
 
-		int lSizeJsArray = pJsArray.length();
-		if(lSizeJsArray==0)
+		if(pJsArray==null || pJsArray.length()==0)
 			return;
+
+		int lSizeJsArray = pJsArray.length();
 
 
 		pCDT.getListOfRows().clear();
