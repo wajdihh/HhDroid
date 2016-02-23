@@ -43,9 +43,10 @@ public class PpJsonParser {
 
 	static void parseJsonArrayIntoCDT(JSONArray pJsArray,ClientDataTable pCDT,boolean saveInDataBase) throws JSONException{
 
-		int lSizeJsArray = pJsArray.length();
-		if(lSizeJsArray==0)
+		if(pJsArray==null || pJsArray.length()==0)
 			return;
+
+		int lSizeJsArray = pJsArray.length();
 
 
 		pCDT.getListOfRows().clear();
@@ -75,7 +76,7 @@ public class PpJsonParser {
 						TColumn lColumn = pCDT.getListOfColumns().get(i);
 						for (int j = 0; j < lNbrColumnsJsArray; j++) {
 							if (lColumn != null && lColumn.getName().equals(lJsArrayColumnsNames.get(j))) {
-								lRow.addCell(pCDT.getContext(),lJsObject.getString(lColumn.getName()),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),pCDT.getCDTStatus(),lColumn.getCDTColumnListener());
+								lRow.addCell(pCDT.getContext(),optStringValue(lJsObject, lColumn.getName()),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),pCDT.getCDTStatus(),lColumn.getCDTColumnListener());
 								lIsColumnFound=true;
 								break;
 							}
@@ -88,7 +89,7 @@ public class PpJsonParser {
 				} else {
 					for (String lColumnName : lJsArrayColumnsNames) {
 						if (lColumnName != null && !lColumnName.equals(""))
-							lRow.addCell(pCDT.getContext(),lJsObject.getString(lColumnName), ValueType.TEXT, TCell.CellType.NONE,lColumnName,pCDT.getCDTStatus(),null);
+							lRow.addCell(pCDT.getContext(),optStringValue(lJsObject, lColumnName), ValueType.TEXT, TCell.CellType.NONE,lColumnName,pCDT.getCDTStatus(),null);
 					}
 				}
 				pCDT.append(lRow);
@@ -129,7 +130,6 @@ public class PpJsonParser {
 	 * Parse a JsonArray and put the values into a Table in dataBase
 	 * @author wajdihh
 	 * @param pJsArray
-	 * @param pCDT
 	 * @throws JSONException
 	 */
 	public static void parseJsonArrayIntoDBTable(JSONArray pJsArray,String pTableName,SQLiteDatabase pDataBase) throws JSONException{
@@ -160,7 +160,7 @@ public class PpJsonParser {
 
 				ContentValues values=new ContentValues();
 				for (String lColumnName:lMappingColumnsName)
-					values.put(lColumnName, lJsObject.getString(lColumnName));
+					values.put(lColumnName, optStringValue(lJsObject,lColumnName));
 
 				pDataBase.insert(pTableName, null, values);
 			}
@@ -170,4 +170,11 @@ public class PpJsonParser {
 			Log.i("fillDataBaseTableFromJsonArray","JsonArray est vide");
 	}
 
+	public static String optStringValue(JSONObject response,String key) throws JSONException {
+		String result=null;
+		if(((response.has(key) && !response.isNull(key))))
+			result=response.getString(key);
+
+		return result;
+	}
 }

@@ -1349,6 +1349,11 @@ public class ClientDataTable {
 		_mNestedJSONObject.put(key, jsonObjectCDT);
 		_mNestedJSONObjectParentKeys.add(parentKey);
 	}
+
+	public void removeNestedJSONObject(String key,String parentKey){
+		_mNestedJSONObject.remove(key);
+		_mNestedJSONObjectParentKeys.remove(parentKey);
+	}
 	public JSONArray toJSONArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
 		return createJsonArray(jsonObjectGeneratedMode);
 	}

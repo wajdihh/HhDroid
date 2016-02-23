@@ -49,7 +49,7 @@ public class TCell implements Cloneable {
                 _mValue=(String) pValue;
             }
         } else
-            _mValue = String.valueOf(pValue);
+            _mValue =(pValue==null)?"":String.valueOf(pValue);
     }
 
     public TCell(Context pContext, ValueType pValueType, CDTStatus pCDTStatus,CellType pCellType,String pCellName, OnCDTColumnObserver pOnCDTColumnObserver) {
