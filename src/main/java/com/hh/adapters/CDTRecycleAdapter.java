@@ -71,6 +71,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     @Override
     public void onBindViewHolder(RecycleViewHolder holder, int position) {
 
+        if(mClientDataTable.isEmpty())
+            return;
+
         mClientDataTable.moveToPosition(position);
 
         int lListHolderSize = holder.mSparseArrayHolderViews.size();

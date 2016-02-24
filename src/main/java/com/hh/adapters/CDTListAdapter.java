@@ -187,7 +187,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
 
     private void bindData(View convertView, View lWidget, int position) {
 
-        if (getItem(position) != null) {
+        if (getItem(position) != null && !mClientDataTable.isEmpty() ) {
 
             int lListHolderSize = _mHolder.mSparseArrayHolderViews.size();
             for (int i = 0; i < lListHolderSize; i++) {
