@@ -474,7 +474,8 @@ public class ClientDataTable {
 				break;
 			case DELETE:
 				_mListOfDeletedRows.add(getCurrentRow());
-				_mListOfRows.remove(_mPosition);
+				if(!isEmpty())
+					_mListOfRows.remove(_mPosition);
 				if(pIsUseCDTListener) mCdtObserverStack.notifyOnAfterDelete(_mListOfDeletedRows.get(_mListOfDeletedRows.size()-1), pIsExecuteAction);
 				if (_mPosition == getRowsCount()){
 					_mPosition--;
@@ -1066,6 +1067,10 @@ public class ClientDataTable {
 	 * Move the CDT to the first Row
 	 */
 	public boolean moveToFirst() {
+		if(isEmpty()){
+			_mPosition=-1;
+			return true;
+		}
 		return moveToPosition(0);
 	}
 
@@ -1488,9 +1493,15 @@ public class ClientDataTable {
 		if(cell.getValueType()==ValueType.BOOLEAN)
 			jsonObject.put(column.getName(),cell.asBoolean());
 		else if(cell.getValueType()==ValueType.INTEGER)
-			jsonObject.put(column.getName(),cell.asInteger());
+			if(cell.asInteger()==-1)
+				jsonObject.put(column.getName(),null);
+			else
+				jsonObject.put(column.getName(),cell.asInteger());
 		else if(cell.getValueType()==ValueType.DOUBLE)
-			jsonObject.put(column.getName(),cell.asDouble());
+			if(cell.asDouble()==-1)
+				jsonObject.put(column.getName(),null);
+			else
+				jsonObject.put(column.getName(),cell.asDouble());
 		else if(cell.getValueType()==ValueType.DATETIME)
 			jsonObject.put(column.getName(),hasFormatedDate?cell.asDateString():cell.asDateTime());
 		else
