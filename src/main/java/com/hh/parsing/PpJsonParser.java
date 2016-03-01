@@ -51,7 +51,7 @@ public class PpJsonParser {
 
 		pCDT.getListOfRows().clear();
 		pCDT.getListOfRows().ensureCapacity(lSizeJsArray);
-
+		pCDT.moveToFirst();
 		JSONObject lFirstJsObject=pJsArray.getJSONObject(0);
 		ArrayList<String> lJsArrayColumnsNames = getKeysNames(lFirstJsObject);
 

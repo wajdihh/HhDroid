@@ -178,9 +178,8 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
             _mHolder = (ViewHolder) convertView.getTag(R.id.TAG_HOLDER);
         }
         convertView.setTag(R.id.TAG_POSITION, position);
-        int lCurrentCDTPos = mClientDataTable.getPosition();
-        bindData(convertView, lWidget, position);
-        mClientDataTable.moveToPosition(lCurrentCDTPos);
+        if(!mClientDataTable.isEmpty())
+            bindData(convertView, lWidget, position);
 
         return convertView;
     }
@@ -188,7 +187,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     private void bindData(View convertView, View lWidget, int position) {
 
         if (getItem(position) != null) {
-
             int lListHolderSize = _mHolder.mSparseArrayHolderViews.size();
             for (int i = 0; i < lListHolderSize; i++) {
 
@@ -232,7 +230,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                                 im.setImageDrawable(null);
                         }
                     }
-
                     onIteratedRow(convertView, lWidget, position);
                 }
             }
