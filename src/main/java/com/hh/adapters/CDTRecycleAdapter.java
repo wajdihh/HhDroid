@@ -155,6 +155,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked, int position) {
 
+                if(position>=mClientDataTable.getRowsCount())
+                    return;
+
                 String columnName=buttonView.getTag().toString();
                 mClientDataTable.moveToPosition(position);
                 mClientDataTable.cellByName(columnName).setValue(isChecked);
@@ -164,6 +167,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         holder.setOnRecycleFocusedChangeListener(new OnRecycleFocusedChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus, int position) {
+
+                if(position>=mClientDataTable.getRowsCount())
+                    return;
 
                 mClientDataTable.moveToPosition(position);
 
@@ -224,6 +230,10 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      * @param position : position of selected row
      */
     protected void onClickRow(View row, int position) {
+
+        if(position>=mClientDataTable.getRowsCount())
+            return;
+
         mClientDataTable.moveToPosition(position);
     }
 
@@ -237,6 +247,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      */
 
     protected void onClickWidget(View parentView,View clickedView,String tagWidget, int position) {
+        if(position>=mClientDataTable.getRowsCount())
+            return;
+
         mClientDataTable.moveToPosition(position);
     }
 
@@ -249,6 +262,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      * @param position : position of selected row
      */
     protected void onLongClickRow(View row, int position) {
+        if(position>=mClientDataTable.getRowsCount())
+            return;
+
         mClientDataTable.moveToPosition(position);
     }
 
