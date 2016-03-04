@@ -8,11 +8,15 @@ import android.provider.MediaStore;
 import android.widget.Toast;
 import com.hh.droid.R;
 
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 
 /**
  * Created by WajdiHh on 14/10/2015.
@@ -27,11 +31,45 @@ public class PuFile {
 
     public static void download(String url,String path) throws IOException, URISyntaxException {
 
+        TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        }
+        };
+
+        // Install the all-trusting trust manager
+        SSLContext sc = null;
+        try {
+            sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
+
+
+        // Create all-trusting host name verifier
+        HostnameVerifier allHostsValid = new HostnameVerifier() {
+            public boolean verify(String hostname, SSLSession session) {
+                return true;
+            }
+        };
+
+
         int count=0;
         // C'est pour l encodage de l URL mettre l url dans une URI et puis l inverse
         URL myUrl = new URL(url);
         URI uri = new URI(myUrl.getProtocol(), myUrl.getUserInfo(), myUrl.getHost(), myUrl.getPort(), myUrl.getPath(), myUrl.getQuery(), myUrl.getRef());
         myUrl = uri.toURL();
+
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         URLConnection connection = myUrl.openConnection();
         connection.setConnectTimeout(3000);
         connection.connect();
