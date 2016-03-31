@@ -71,7 +71,7 @@ public class PuFile {
 
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         URLConnection connection = myUrl.openConnection();
-        connection.setConnectTimeout(10000);
+        connection.setConnectTimeout(30000);
         connection.connect();
         // input stream to read file - with 8k buffer
         InputStream input = new BufferedInputStream(myUrl.openStream(), 8192);
