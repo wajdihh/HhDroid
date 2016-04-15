@@ -270,6 +270,14 @@ public class PuImage {
         }
         return result;
     }
+
+    public static Bitmap resizeImage(File origin, double percentage) {
+
+        // we'll start with the original picture already open to a file
+        Bitmap b = BitmapFactory.decodeFile(origin.getAbsolutePath());
+        return Bitmap.createScaledBitmap(b,(int)(b.getWidth()*percentage), (int)(b.getHeight()*percentage), true);
+    }
+
     public static class MyRectangle {
 
         private int height;
