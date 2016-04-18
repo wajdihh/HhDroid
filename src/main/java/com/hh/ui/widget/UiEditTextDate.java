@@ -53,12 +53,10 @@ public class UiEditTextDate extends LinearLayout {
                     editable.insert(0,"0");
                     _mEdMonth.setFocusableInTouchMode(true);
                     _mEdMonth.requestFocus();
-                    _mEdMonth.setSelection(0);
                 }
                 if(editable.length()==2) {
                     _mEdMonth.setFocusableInTouchMode(true);
                     _mEdMonth.requestFocus();
-                    _mEdMonth.setSelection(0);
                 }
             }
         });
@@ -74,22 +72,19 @@ public class UiEditTextDate extends LinearLayout {
                     editable.insert(0,"0");
                     _mEdYear.setFocusableInTouchMode(true);
                     _mEdYear.requestFocus();
-                    _mEdYear.setSelection(0);
                 }
                 if(editable.length()==2) {
                     _mEdYear.setFocusableInTouchMode(true);
                     _mEdYear.requestFocus();
-                    _mEdYear.setSelection(0);
                 }
             }
         });
         _mEdMonth.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if(keyCode == KeyEvent.KEYCODE_DEL && _mEdMonth.getText().length()==0){
+                if (keyCode == KeyEvent.KEYCODE_DEL && _mEdMonth.getText().length() == 0) {
                     _mEdDay.setFocusableInTouchMode(true);
                     _mEdDay.requestFocus();
-                    _mEdDay.setSelection(2);
                 }
                 return false;
             }
@@ -112,14 +107,14 @@ public class UiEditTextDate extends LinearLayout {
         _mEdYear.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if(keyCode == KeyEvent.KEYCODE_DEL && _mEdYear.getText().length()==0){
+                if (keyCode == KeyEvent.KEYCODE_DEL && _mEdYear.getText().length() == 0) {
                     _mEdMonth.setFocusableInTouchMode(true);
                     _mEdMonth.requestFocus();
-                    _mEdMonth.setSelection(2);
                 }
                 return false;
             }
         });
+
     }
 
     public EditText getEdDay(){

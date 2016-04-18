@@ -159,6 +159,7 @@ public class PcHttpClient {
 		if(!isHeaderContainValue(headerParam.getName()))
 			headers.add(headerParam);
 	}
+
 	public void execute(String url,RequestMethod method) throws IOException
 	{
 		executeRequest(url, method, null);
@@ -365,6 +366,19 @@ public class PcHttpClient {
 			if(item.getName().equals(valueName))
 				return true;
 
+		}
+		return false;
+	}
+
+	public boolean removeHeaderParam(String valueName){
+
+		int index=0;
+		for (NameValuePair item:headers){
+			if(item.getName().equals(valueName)){
+				headers.remove(index);
+				return true;
+			}
+			index++;
 		}
 		return false;
 	}
