@@ -1488,9 +1488,17 @@ public class ClientDataTable {
 		if(cell.getValueType()==ValueType.BOOLEAN)
 			jsonObject.put(column.getName(),cell.asBoolean());
 		else if(cell.getValueType()==ValueType.INTEGER)
-			jsonObject.put(column.getName(),cell.asInteger());
+			//TODO when change the mecansime to Field , we will have @defaultValue annatotation so we must remove this test
+			if(cell.asInteger()==-1)
+				jsonObject.put(column.getName(),null);
+			else
+				jsonObject.put(column.getName(),cell.asInteger());
+
 		else if(cell.getValueType()==ValueType.DOUBLE)
-			jsonObject.put(column.getName(),cell.asDouble());
+			if(cell.asDouble()==-1)
+				jsonObject.put(column.getName(),null);
+			else
+				jsonObject.put(column.getName(),cell.asDouble());
 		else if(cell.getValueType()==ValueType.DATETIME)
 			jsonObject.put(column.getName(),hasFormatedDate?cell.asDateString():cell.asDateTime());
 		else
