@@ -186,9 +186,13 @@ public class TCell implements Cloneable {
                         lResult = _mOnCDTColumnObserver.onGetValueBool(Boolean.parseBoolean(_mValue));
                         break;
                     case DOUBLE:
+                        if(_mValue.contains(","))
+                            _mValue=_mValue.replace(",",".");
                         lResult = _mOnCDTColumnObserver.onGetValueDouble(Double.parseDouble(_mValue));
                         DecimalFormat format = new DecimalFormat();
                         format.setDecimalSeparatorAlwaysShown(false);
+                        if(_mValue.contains(","))
+                            _mValue=_mValue.replace(",",".");
                         lResult=format.format(Double.parseDouble(lResult));
                         break;
                     case DATETIME:
@@ -213,6 +217,8 @@ public class TCell implements Cloneable {
                 }else if(_mValueType==ValueType.DOUBLE){
                     DecimalFormat format = new DecimalFormat();
                     format.setDecimalSeparatorAlwaysShown(false);
+                    if(_mValue.contains(","))
+                        _mValue=_mValue.replace(",",".");
                     lResult=format.format(Double.parseDouble(_mValue));
                 }else
                     lResult=_mValue;
@@ -284,8 +290,12 @@ public class TCell implements Cloneable {
         if(_mValue==null)
             return lResult;
         try {
-            if (_mValue != null && !_mValue.isEmpty())
+            if (_mValue != null && !_mValue.isEmpty()){
+                if(_mValue.contains(","))
+                    _mValue=_mValue.replace(",",".");
                 lResult = Double.parseDouble(_mValue);
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
