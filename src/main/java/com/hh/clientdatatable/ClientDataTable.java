@@ -998,6 +998,7 @@ public class ClientDataTable {
 	public void clear() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
+		_mCDTStatus=CDTStatus.DEFAULT;
 	}
 
 	/**
@@ -1007,7 +1008,7 @@ public class ClientDataTable {
 	public void clearAttachedDatabaseTable() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
-
+		_mCDTStatus=CDTStatus.DEFAULT;
 		_mIsExecInDateBase=true;
 		if(isConnectedToDB()){
 			_mSqliteDataBase.delete(_mTableName,null,null);
@@ -1020,6 +1021,7 @@ public class ClientDataTable {
 	 */
 
 	public void clearAndExecute() {
+		_mCDTStatus=CDTStatus.DEFAULT;
 		_mCursorSize = -1;
 		while (iterate()){
 			delete();
@@ -1028,7 +1030,7 @@ public class ClientDataTable {
 	}
 
 	public void clearAndExecuteObserve() {
-
+		_mCDTStatus=CDTStatus.DEFAULT;
 		_mCursorSize = -1;
 		while (iterate()){
 			delete();
@@ -1513,43 +1515,37 @@ public class ClientDataTable {
 	 */
 	public void displayContent(String ...pColumnsToDisplay) {
 
-		if(pColumnsToDisplay!=null && pColumnsToDisplay.length!=0){
+		StringBuffer lColumns = new StringBuffer();
+		int lSize = _mListOfRows.size();
+		if(pColumnsToDisplay.length==0){
 
-			StringBuffer lColumns = new StringBuffer();
-			int lSize = _mListOfRows.size();
-			if(pColumnsToDisplay.length==1 && pColumnsToDisplay[0].equals("*")){
+			for (int i = 0; i < _mListOfColumns.size(); i++)
+				lColumns.append(_mListOfColumns.get(i).getName() + " | ");
+			// Display columns names
+			Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
 
-				for (int i = 0; i < _mListOfColumns.size(); i++)
-					lColumns.append(_mListOfColumns.get(i).getName() + " | ");
-				// Display columns names
-				Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
+			// Display rows
+			for (int i = 0; i < lSize; i++)
+				Log.v(TAG, "ROW NO" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
 
-				// Display rows
-				for (int i = 0; i < lSize; i++)
-					Log.v(TAG, "ROW NO" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
-
-			}else{
-				for (int i = 0; i < pColumnsToDisplay.length; i++)
-					lColumns.append(pColumnsToDisplay[i] + " | ");
-
-				// Display columns names
-				Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
-
-				for (int i = 0; i < lSize; i++) {
-
-					StringBuffer lRowContent=new StringBuffer();
-
-					for (int j = 0; j < pColumnsToDisplay.length; j++) {
-						String lCellContent=_mListOfRows.get(i).getCell(indexOfColumn(pColumnsToDisplay[j])).asString();
-						lRowContent.append(lCellContent+" | ");
-					}
-
-					Log.v(TAG, "ROW No" + (i + 1) + ":  " + lRowContent);
-				}
-			}
-			//TODO chaines dans les resources
 		}else{
-			PuUtils.showMessage(_mContext, "Erreur DisplayContent", "il faut que la liste != null ou elle contien au moins 1 element");
+			for (int i = 0; i < pColumnsToDisplay.length; i++)
+				lColumns.append(pColumnsToDisplay[i] + " | ");
+
+			// Display columns names
+			Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
+
+			for (int i = 0; i < lSize; i++) {
+
+				StringBuffer lRowContent=new StringBuffer();
+
+				for (int j = 0; j < pColumnsToDisplay.length; j++) {
+					String lCellContent=_mListOfRows.get(i).getCell(indexOfColumn(pColumnsToDisplay[j])).asString();
+					lRowContent.append(lCellContent+" | ");
+				}
+
+				Log.v(TAG, "ROW No" + (i + 1) + ":  " + lRowContent);
+			}
 		}
 	}
 	public void setOnNotifyDataSetChangedListener(OnNotifyDataSetChangedListener pListener){
