@@ -154,6 +154,9 @@ public class PuDate{
         setDateStringFormat(pDateFormat);
         return _mDateFormater.format(date);
     }
+	public String getFormattedDate(Date d) {
+		return _mDateFormater.format(d);
+	}
 	public String getFormattingDate(Date date,String pDateFormat) {
 		return  new SimpleDateFormat(pDateFormat, getLocal()).format(date);
 	}
