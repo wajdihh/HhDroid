@@ -103,6 +103,12 @@ public class UiPicassoImageView extends ImageView {
     public void errorImage(Drawable image) {
         mPicassoRequestCreator.error(image).into(this);
     }
+
+    /**
+     * MUST BE CALLED AFTER transform
+     * @param placeHolderImRes
+     * @param errorImageRes
+     */
     public void setImagesResources(int placeHolderImRes,int errorImageRes){
         mPicassoRequestCreator.placeholder(placeHolderImRes).error(errorImageRes).into(this);;
     }
