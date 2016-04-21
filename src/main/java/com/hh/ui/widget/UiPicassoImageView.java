@@ -33,7 +33,6 @@ public class UiPicassoImageView extends ImageView {
 
     public void setData(String uri){
         // SI on a pas encore chargé l image par picosso
-
         mUrl=uri;
         if (uri.contains("http"))
             mPicassoRequestCreator= mPicasso.load(uri);
@@ -57,6 +56,9 @@ public class UiPicassoImageView extends ImageView {
     }
     public void transform(Transformation transformation,int placeHolderImRes,int errorImageRes){
 
+        if(mUrl==null)
+            throw new IllegalArgumentException("You must specify a valid URI to load PicassoImage !");
+
         mPicasso.cancelRequest(this);
         if (mUrl.contains("http"))
             mPicassoRequestCreator= mPicasso.load(mUrl);
@@ -72,6 +74,9 @@ public class UiPicassoImageView extends ImageView {
     }
 
     public void resize(int w,int h){
+
+        if(mUrl==null)
+            throw new IllegalArgumentException("You must specify a valid URI to load PicassoImage !");
 
         mPicasso.cancelRequest(this);
         if (mUrl.contains("http"))

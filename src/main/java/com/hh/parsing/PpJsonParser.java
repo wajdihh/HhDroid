@@ -77,7 +77,7 @@ public class PpJsonParser {
 					assert lColumn != null;
 					String jsonParent=lColumn.getJsonParent();
 					String str="";
-					if(jsonParent!=null && !jsonParent.equals(""))
+					if(jsonParent!=null && !jsonParent.equals("") && !jsonParent.equals("MAIN"))
 						str=lRow.cellByName(jsonParent).asString();
 
 					if(!str.isEmpty()){
