@@ -62,6 +62,7 @@ public class ClientDataTable {
 
 	private Map<String,ClientDataTable> _mNestedJSONObject;
 	private List<String> _mNestedJSONObjectParentKeys;
+	private List<JSONObjectGeneratedMode> _mNestedJSONObjectGeneratedMode;
 
 	private CDTObserverStack mCdtObserverStack;
 
@@ -74,6 +75,7 @@ public class ClientDataTable {
 		_mNestedJsonArraysParentKeys=new ArrayList<>();
 		_mNestedJSONObject=new HashMap<>();
 		_mNestedJSONObjectParentKeys=new ArrayList<>();
+		_mNestedJSONObjectGeneratedMode=new ArrayList<>();
 		_mPosition = -1;
 		_mTempIteration=-1;
 		_mCursorSize = -1;
@@ -1347,14 +1349,16 @@ public class ClientDataTable {
 		_mNestedJsonArraysParentKeys.add(parentKey);
 	}
 
-	public void addNestedJSONObject(String key,String parentKey,ClientDataTable jsonObjectCDT){
+	public void addNestedJSONObject(String key,String parentKey,ClientDataTable jsonObjectCDT,JSONObjectGeneratedMode pMode){
 		_mNestedJSONObject.put(key, jsonObjectCDT);
 		_mNestedJSONObjectParentKeys.add(parentKey);
+		_mNestedJSONObjectGeneratedMode.add(pMode);
 	}
 
-	public void removeNestedJSONObject(String key,String parentKey){
+	public void removeNestedJSONObject(String key,String parentKey,JSONObjectGeneratedMode pMode){
 		_mNestedJSONObject.remove(key);
 		_mNestedJSONObjectParentKeys.remove(parentKey);
+		_mNestedJSONObjectGeneratedMode.remove(pMode);
 	}
 	public JSONArray toJSONArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
 		return createJsonArray(jsonObjectGeneratedMode);
@@ -1455,10 +1459,11 @@ public class ClientDataTable {
 				}
 
 				String parentKey=_mNestedJSONObjectParentKeys.get(i);
+				JSONObjectGeneratedMode mode=_mNestedJSONObjectGeneratedMode.get(i);
 				if(entry.getValue().isEmpty())
 					HhException.raiseErrorException("Cannot EDIT because CDT is empty!! >> "+entry.getKey());
 				else {
-					JSONObject subJSONObject = entry.getValue().toJSONObject();
+					JSONObject subJSONObject = entry.getValue().toJSONObject(mode);
 					JSONObject jsonParent = map.get(parentKey);
 
 					jsonParent.put(entry.getKey(), subJSONObject);
