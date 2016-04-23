@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="UiImageProgressAttrs">
-        <attr name="Imagetitle" format="string" />
-    </declare-styleable>
-
     <declare-styleable name="UiPicassoImageViewAttrs">
         <attr name="placeHolderImage" format="integer" />
         <attr name="errorImage" format="integer"/>
