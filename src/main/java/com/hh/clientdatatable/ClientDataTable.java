@@ -1219,7 +1219,7 @@ public class ClientDataTable {
 	public ArrayList<String> values(String pFieldName){
 		ArrayList<String> list=new ArrayList<>();
 		for (TRow row:_mListOfRows){
-			list.add(row.cellByName(pFieldName).asString());
+			list.add(row.cellByName(pFieldName).asValue());
 		}
 		return list;
 	}
