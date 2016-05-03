@@ -154,11 +154,17 @@ public class PuDate{
         setDateStringFormat(pDateFormat);
         return _mDateFormater.format(date);
     }
+	public String getFormattedDate(Date d) {
+		return _mDateFormater.format(d);
+	}
 	public String getFormattingDate(Date date,String pDateFormat) {
 		return  new SimpleDateFormat(pDateFormat, getLocal()).format(date);
 	}
 	public Date getDate(String date, String pDateFormat) throws ParseException {
 		return  new SimpleDateFormat(pDateFormat, getLocal()).parse(date);
+	}
+	public Date getDate(String date) throws ParseException {
+		return  new SimpleDateFormat(_mDateStringFormat, getLocal()).parse(date);
 	}
     public static String getStringFromDate(long pDateTime){
 		return _mDateFormater.format(pDateTime);

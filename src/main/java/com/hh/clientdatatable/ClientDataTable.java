@@ -57,12 +57,8 @@ public class ClientDataTable {
 	private TCell _mCellHowValueChanged;
 	private boolean _mIsExecInDateBase;
 	private boolean mIsCdtSorted;
-	private Map<String,ClientDataTable> _mNestedJsonArrays;
-	private List<String> _mNestedJsonArraysParentKeys;
-
-	private Map<String,ClientDataTable> _mNestedJSONObject;
-	private List<String> _mNestedJSONObjectParentKeys;
-
+	private ArrayList<CDTNestedJSONObject> mNestedJSONObjects;
+	private ArrayList<CDTNestedJSONArray> mNestedJSONArrays;
 	private CDTObserverStack mCdtObserverStack;
 
 	private OnNotifyDataSetChangedListener _mOnNotifyDataSetChangedListener;
@@ -70,10 +66,8 @@ public class ClientDataTable {
 	{
 		_mListOfRows = new ArrayList<>();
 		_mListOfColumns = new ArrayList<>();
-		_mNestedJsonArrays= new HashMap<>();
-		_mNestedJsonArraysParentKeys=new ArrayList<>();
-		_mNestedJSONObject=new HashMap<>();
-		_mNestedJSONObjectParentKeys=new ArrayList<>();
+		mNestedJSONObjects=new ArrayList<>();
+		mNestedJSONArrays=new ArrayList<>();
 		_mPosition = -1;
 		_mTempIteration=-1;
 		_mCursorSize = -1;
@@ -998,6 +992,7 @@ public class ClientDataTable {
 	public void clear() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
+		_mCDTStatus=CDTStatus.DEFAULT;
 	}
 
 	/**
@@ -1007,7 +1002,7 @@ public class ClientDataTable {
 	public void clearAttachedDatabaseTable() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
-
+		_mCDTStatus=CDTStatus.DEFAULT;
 		_mIsExecInDateBase=true;
 		if(isConnectedToDB()){
 			_mSqliteDataBase.delete(_mTableName,null,null);
@@ -1020,6 +1015,7 @@ public class ClientDataTable {
 	 */
 
 	public void clearAndExecute() {
+		_mCDTStatus=CDTStatus.DEFAULT;
 		_mCursorSize = -1;
 		while (iterate()){
 			delete();
@@ -1028,7 +1024,7 @@ public class ClientDataTable {
 	}
 
 	public void clearAndExecuteObserve() {
-
+		_mCDTStatus=CDTStatus.DEFAULT;
 		_mCursorSize = -1;
 		while (iterate()){
 			delete();
@@ -1223,7 +1219,7 @@ public class ClientDataTable {
 	public ArrayList<String> values(String pFieldName){
 		ArrayList<String> list=new ArrayList<>();
 		for (TRow row:_mListOfRows){
-			list.add(row.cellByName(pFieldName).asString());
+			list.add(row.cellByName(pFieldName).asValue());
 		}
 		return list;
 	}
@@ -1340,20 +1336,13 @@ public class ClientDataTable {
 
 
 	public void addJSONArray(String key,String parentKey,ClientDataTable arrays){
-
-		_mNestedJsonArrays.put(key, arrays);
-		_mNestedJsonArraysParentKeys.add(parentKey);
+		mNestedJSONArrays.add(new CDTNestedJSONArray(parentKey, key, arrays));
 	}
 
-	public void addNestedJSONObject(String key,String parentKey,ClientDataTable jsonObjectCDT){
-		_mNestedJSONObject.put(key, jsonObjectCDT);
-		_mNestedJSONObjectParentKeys.add(parentKey);
+	public void addNestedJSONObject(String key,String parentKey,ClientDataTable jsonObjectCDT,JSONObjectGeneratedMode pMode){
+		mNestedJSONObjects.add(new CDTNestedJSONObject(parentKey, key, jsonObjectCDT,pMode));
 	}
 
-	public void removeNestedJSONObject(String key,String parentKey){
-		_mNestedJSONObject.remove(key);
-		_mNestedJSONObjectParentKeys.remove(parentKey);
-	}
 	public JSONArray toJSONArray(JSONObjectGeneratedMode... jsonObjectGeneratedMode) throws JSONException {
 		return createJsonArray(jsonObjectGeneratedMode);
 	}
@@ -1423,44 +1412,43 @@ public class ClientDataTable {
 		}
 
 		// Json Arrays
-		if(!_mNestedJsonArrays.isEmpty()){
+		if(!mNestedJSONArrays.isEmpty()){
 
-			int i=0;
-			for (Map.Entry<String,ClientDataTable> entry : _mNestedJsonArrays.entrySet())
+
+			for (CDTNestedJSONArray entry : mNestedJSONArrays)
 			{
 
-				if(entry.getValue()==null)
-					continue;
-				String parentKey=_mNestedJsonArraysParentKeys.get(i);
-				JSONArray subArrays=entry.getValue().toJSONArray();
+				if(entry.getClientDataTable()==null)
+					throw new RuntimeException(entry.getKey()+" has a null value, check your clientDataTable instantiation");
+
+
+				String parentKey=entry.getParentKey();
+				JSONArray subArrays=entry.getClientDataTable().toJSONArray();
 				JSONObject jsonParent=map.get(parentKey);
 
 				jsonParent.put(entry.getKey(),subArrays);
-
-				i++;
 			}
 		}
 
 		// JSon Object
-		if(!_mNestedJSONObject.isEmpty()){
+		if(!mNestedJSONObjects.isEmpty()){
 
-			int i=0;
-			for (Map.Entry<String,ClientDataTable> entry : _mNestedJSONObject.entrySet())
+			for (CDTNestedJSONObject entry :mNestedJSONObjects)
 			{
 
-				if(entry.getValue()==null){
-					throw new RuntimeException(entry.getKey()+" has a null value, check your clientDataTable instancation");
+				if(entry.getClientDataTable()==null){
+					throw new RuntimeException(entry.getKey()+" has a null value, check your clientDataTable instantiation");
 				}
 
-				String parentKey=_mNestedJSONObjectParentKeys.get(i);
-				if(entry.getValue().isEmpty())
+				String parentKey=entry.getParentKey();
+				JSONObjectGeneratedMode mode=entry.getGeneratedMode();
+				if(entry.getClientDataTable().isEmpty())
 					HhException.raiseErrorException("Cannot EDIT because CDT is empty!! >> "+entry.getKey());
 				else {
-					JSONObject subJSONObject = entry.getValue().toJSONObject();
+					JSONObject subJSONObject = entry.getClientDataTable().toJSONObject(mode);
 					JSONObject jsonParent = map.get(parentKey);
 
 					jsonParent.put(entry.getKey(), subJSONObject);
-					i++;
 				}
 			}
 		}
@@ -1506,50 +1494,43 @@ public class ClientDataTable {
 	}
 	/**
 	 *
-	 * {@linkplain displayContent}
 	 * to display client data table content in LogCat
 	 * @param pColumnsToDisplay : List of columns to display
 	 * <strong>if we put * we will display all columns content</strong>
 	 */
 	public void displayContent(String ...pColumnsToDisplay) {
 
-		if(pColumnsToDisplay!=null && pColumnsToDisplay.length!=0){
+		StringBuffer lColumns = new StringBuffer();
+		int lSize = _mListOfRows.size();
+		if(pColumnsToDisplay.length==0){
 
-			StringBuffer lColumns = new StringBuffer();
-			int lSize = _mListOfRows.size();
-			if(pColumnsToDisplay.length==1 && pColumnsToDisplay[0].equals("*")){
+			for (int i = 0; i < _mListOfColumns.size(); i++)
+				lColumns.append(_mListOfColumns.get(i).getName() + " | ");
+			// Display columns names
+			Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
 
-				for (int i = 0; i < _mListOfColumns.size(); i++)
-					lColumns.append(_mListOfColumns.get(i).getName() + " | ");
-				// Display columns names
-				Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
+			// Display rows
+			for (int i = 0; i < lSize; i++)
+				Log.v(TAG, "ROW NO" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
 
-				// Display rows
-				for (int i = 0; i < lSize; i++)
-					Log.v(TAG, "ROW NO" + (i + 1) + ":  " + _mListOfRows.get(i).getContent());
-
-			}else{
-				for (int i = 0; i < pColumnsToDisplay.length; i++)
-					lColumns.append(pColumnsToDisplay[i] + " | ");
-
-				// Display columns names
-				Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
-
-				for (int i = 0; i < lSize; i++) {
-
-					StringBuffer lRowContent=new StringBuffer();
-
-					for (int j = 0; j < pColumnsToDisplay.length; j++) {
-						String lCellContent=_mListOfRows.get(i).getCell(indexOfColumn(pColumnsToDisplay[j])).asString();
-						lRowContent.append(lCellContent+" | ");
-					}
-
-					Log.v(TAG, "ROW No" + (i + 1) + ":  " + lRowContent);
-				}
-			}
-			//TODO chaines dans les resources
 		}else{
-			PuUtils.showMessage(_mContext, "Erreur DisplayContent", "il faut que la liste != null ou elle contien au moins 1 element");
+			for (int i = 0; i < pColumnsToDisplay.length; i++)
+				lColumns.append(pColumnsToDisplay[i] + " | ");
+
+			// Display columns names
+			Log.d(TAG, "COLUMNS:  " + lColumns.toString() + "\n");
+
+			for (int i = 0; i < lSize; i++) {
+
+				StringBuffer lRowContent=new StringBuffer();
+
+				for (int j = 0; j < pColumnsToDisplay.length; j++) {
+					String lCellContent=_mListOfRows.get(i).getCell(indexOfColumn(pColumnsToDisplay[j])).asString();
+					lRowContent.append(lCellContent+" | ");
+				}
+
+				Log.v(TAG, "ROW No" + (i + 1) + ":  " + lRowContent);
+			}
 		}
 	}
 	public void setOnNotifyDataSetChangedListener(OnNotifyDataSetChangedListener pListener){

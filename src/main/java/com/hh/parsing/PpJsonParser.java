@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import com.hh.clientdatatable.ClientDataTable;
-import com.hh.clientdatatable.TCell;
 import com.hh.clientdatatable.TCell.ValueType;
 import com.hh.clientdatatable.TColumn;
 import com.hh.clientdatatable.TRow;
@@ -48,56 +47,57 @@ public class PpJsonParser {
 
 		int lSizeJsArray = pJsArray.length();
 
-
-		pCDT.getListOfRows().clear();
-		pCDT.getListOfRows().ensureCapacity(lSizeJsArray);
 		JSONObject lFirstJsObject=pJsArray.getJSONObject(0);
 		ArrayList<String> lJsArrayColumnsNames = getKeysNames(lFirstJsObject);
 
-		int lNbrColumnsCDT = pCDT.getColumnsCount();
 		int lNbrColumnsJsArray= lJsArrayColumnsNames.size();
 
-		if (lNbrColumnsCDT == 0) {
+		if (pCDT.getColumnsCount() == 0) {
 			for (int i = 0; i < lNbrColumnsJsArray; i++) {
 				pCDT.addColumn(new TColumn(lJsArrayColumnsNames.get(i),ValueType.TEXT));
 			}
 		}
-		if (lSizeJsArray > 0) {
 
-			for (int k = 0; k < lSizeJsArray; k++) {
+		for (int k = 0; k < lSizeJsArray; k++) {
 
-				JSONObject lJsObject=pJsArray.getJSONObject(k);
-				TRow lRow = new TRow();
+			JSONObject lJsObject=pJsArray.getJSONObject(k);
+			TRow lRow = new TRow();
 
-				if (lNbrColumnsCDT > 0) {
-					for (int i = 0; i < lNbrColumnsCDT; i++) {
-						boolean lIsColumnFound=false;
-						TColumn lColumn = pCDT.getListOfColumns().get(i);
-						for (int j = 0; j < lNbrColumnsJsArray; j++) {
-							if (lColumn != null && lColumn.getName().equals(lJsArrayColumnsNames.get(j))) {
-								lRow.addCell(pCDT.getContext(),optStringValue(lJsObject, lColumn.getName()),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),pCDT.getCDTStatus(),lColumn.getCDTColumnListener());
-								lIsColumnFound=true;
-								break;
-							}
-						}
-						if(!lIsColumnFound) {
-							assert lColumn != null;
-							lRow.addCell(pCDT.getContext(),"",lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),pCDT.getCDTStatus(),lColumn.getCDTColumnListener());
-						}
-					}
-				} else {
-					for (String lColumnName : lJsArrayColumnsNames) {
-						if (lColumnName != null && !lColumnName.equals(""))
-							lRow.addCell(pCDT.getContext(),optStringValue(lJsObject, lColumnName), ValueType.TEXT, TCell.CellType.NONE,lColumnName,pCDT.getCDTStatus(),null);
+			for (TColumn lColumn :pCDT.getListOfColumns()) {
+				boolean lIsColumnFound=false;
+
+				for (String jsonColumnName:lJsArrayColumnsNames) {
+					if (lColumn != null && lColumn.getName().equals(jsonColumnName)) {
+						lRow.addCell(pCDT.getContext(),optStringValue(lJsObject, lColumn.getName()),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),pCDT.getCDTStatus(),lColumn.getCDTColumnListener());
+						lIsColumnFound=true;
+						break;
 					}
 				}
-				pCDT.append(lRow);
-				if (saveInDataBase)
-					pCDT.execute();
-				else
-					pCDT.commit();
+				if(!lIsColumnFound) {
+					assert lColumn != null;
+					String jsonParent=lColumn.getJsonParent();
+					String str="";
+					if(jsonParent!=null && !jsonParent.equals("") && !jsonParent.equals("MAIN"))
+						str=lRow.cellByName(jsonParent).asString();
+
+					if(!str.isEmpty()){
+						JSONObject sub=new JSONObject(str);
+						lRow.addCell(pCDT.getContext(),optStringValue(sub, lColumn.getName()),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),pCDT.getCDTStatus(),lColumn.getCDTColumnListener());
+					} else
+						lRow.addCell(pCDT.getContext(),"",lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),pCDT.getCDTStatus(),lColumn.getCDTColumnListener());
+
+
+				}
 			}
+			pCDT.append(lRow);
+			if (saveInDataBase)
+				pCDT.execute();
+			else
+				pCDT.commit();
 		}
+
+
+
 		pCDT.moveToFirst();
 
 		Log.i("fillFromJsonArray"," Count :"+ lSizeJsArray);
@@ -110,19 +110,24 @@ public class PpJsonParser {
 	 */
 	public static void syncJsonArrayInCdt(JSONArray pJsArray,ClientDataTable pCDT) throws JSONException{
 
-		parseJsonArrayIntoCDT(pJsArray,pCDT,false);
+		pCDT.clear();
+		parseJsonArrayIntoCDT(pJsArray, pCDT, false);
 	}
 
 	public static void syncJSONObjectInCdt(JSONObject pJsonObj,ClientDataTable pCDT) throws JSONException{
 
+		pCDT.clear();
 		parseJsonArrayIntoCDT(new JSONArray().put(pJsonObj),pCDT,false);
 	}
 	public static void syncJSONObjectInCdtWithExec(JSONObject pJsonObj,ClientDataTable pCDT) throws JSONException{
 
+		pCDT.clear();
 		parseJsonArrayIntoCDT(new JSONArray().put(pJsonObj),pCDT,true);
 	}
 
 	public static void syncJsonArrayInCdtWithExec(JSONArray pJsArray,ClientDataTable pCDT) throws JSONException{
+
+		pCDT.clear();
 		parseJsonArrayIntoCDT(pJsArray,pCDT,true);
 	}
 	/**

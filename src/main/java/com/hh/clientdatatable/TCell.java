@@ -186,9 +186,13 @@ public class TCell implements Cloneable {
                         lResult = _mOnCDTColumnObserver.onGetValueBool(Boolean.parseBoolean(_mValue));
                         break;
                     case DOUBLE:
+                        if(_mValue.contains(","))
+                            _mValue=_mValue.replace(",",".");
                         lResult = _mOnCDTColumnObserver.onGetValueDouble(Double.parseDouble(_mValue));
                         DecimalFormat format = new DecimalFormat();
                         format.setDecimalSeparatorAlwaysShown(false);
+                        if(_mValue.contains(","))
+                            _mValue=_mValue.replace(",",".");
                         lResult=format.format(Double.parseDouble(lResult));
                         break;
                     case DATETIME:
@@ -213,6 +217,8 @@ public class TCell implements Cloneable {
                 }else if(_mValueType==ValueType.DOUBLE){
                     DecimalFormat format = new DecimalFormat();
                     format.setDecimalSeparatorAlwaysShown(false);
+                    if(_mValue.contains(","))
+                        _mValue=_mValue.replace(",",".");
                     lResult=format.format(Double.parseDouble(_mValue));
                 }else
                     lResult=_mValue;
@@ -254,7 +260,7 @@ public class TCell implements Cloneable {
                 lResult = Integer.parseInt(_mValue);
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e("As ","CANNOT Parse the CELL :"+_mName+" WITH VALUE :"+_mValue);
+            Log.e("As ", "CANNOT Parse the CELL :" + _mName + " WITH VALUE :" + _mValue);
         }
         if (_mOnCDTColumnObserver != null)
             lResult= _mOnCDTColumnObserver.onGetValue(lResult);
@@ -284,8 +290,12 @@ public class TCell implements Cloneable {
         if(_mValue==null)
             return lResult;
         try {
-            if (_mValue != null && !_mValue.isEmpty())
+            if (_mValue != null && !_mValue.isEmpty()){
+                if(_mValue.contains(","))
+                    _mValue=_mValue.replace(",",".");
                 lResult = Double.parseDouble(_mValue);
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -331,16 +341,26 @@ public class TCell implements Cloneable {
 
     public String asDateString() {
 
-        String lResult = "error";
+        String lResult = "01/01/1970";
         if(_mValue==null)
             return lResult;
-        try {
-            if (_mValue != null)
-                lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
 
+        boolean mIsDateInLongFormat=false;
+        try {
+            /**
+             * If date is in String format exp 12/12/2015 and it's valid (no exception)
+             */
+            PuDate.parseDate(_mValue);
+
+            // return the date as it is
+            lResult=_mValue;
         } catch (Exception e) {
-            e.printStackTrace();
+            // if the date is not in String format so it sur than it is in long format like 1254725121212
+            mIsDateInLongFormat=true;
         }
+
+        if(mIsDateInLongFormat)
+            lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
 
         return lResult;
     }

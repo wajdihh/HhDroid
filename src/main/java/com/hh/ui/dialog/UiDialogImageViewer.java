@@ -37,11 +37,13 @@ public class UiDialogImageViewer extends DialogFragment {
     public static UiDialogImageViewer newInstance(String[] pUrls) {
         _mUrls=pUrls;
         _mDrawable=null;
+        _mOnClickListener=null;
         return new UiDialogImageViewer();
     }
     public static UiDialogImageViewer newInstance(Drawable pDrawable) {
         _mDrawable=pDrawable;
         _mUrls=null;
+        _mOnClickListener=null;
         return new UiDialogImageViewer();
     }
 
