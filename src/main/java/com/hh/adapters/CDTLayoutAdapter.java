@@ -356,9 +356,10 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 
-			if(!mClientDataTable.isEmpty() && mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT) {
+			if(!mClientDataTable.isEmpty()){
+				if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
+					mClientDataTable.edit();
 
-				mClientDataTable.edit();
 				TextView lTextView=(TextView) v;
 				String lColumnName=v.getTag().toString();
 				mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
@@ -372,8 +373,10 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-			if(!mClientDataTable.isEmpty() && mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT) {
-				mClientDataTable.edit();
+			if(!mClientDataTable.isEmpty()){
+				if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
+					mClientDataTable.edit();
+
 				String lColumnName=buttonView.getTag().toString();
 				mClientDataTable.cellByName(lColumnName).setValue(isChecked);
 			}
