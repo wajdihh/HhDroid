@@ -10,7 +10,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import com.hh.clientdatatable.ClientDataTable;
-import com.hh.droid.R;
 import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
@@ -44,7 +43,6 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 
 		mListOfTags=getAllLayoutTags(itemView);
 		mRowView=itemView;
-		itemView.setBackgroundResource(R.drawable.selector_row);
 		int index=0;
 		for (final String tag:mListOfTags){
 
