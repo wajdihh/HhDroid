@@ -2,6 +2,7 @@ package com.hh.adapters;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -150,7 +151,12 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     else
                         _mHolder.mSparseArrayHolderViewsNotInCDT.put(i, lWidget);
 
-                    convertView.setBackgroundResource(R.drawable.selector_row);
+                    //Conserve the main background selector
+                    int[] attrs = new int[]{R.attr.selectableItemBackground};
+                    TypedArray typedArray = mContext.obtainStyledAttributes(attrs);
+                    int backgroundResource = typedArray.getResourceId(0, 0);
+                    convertView.setBackgroundResource(backgroundResource);
+                    typedArray.recycle();
 
                     if (_mIsEnableOnClickWidget) {
 

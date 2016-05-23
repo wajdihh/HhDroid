@@ -1,6 +1,7 @@
 package com.hh.adapters;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import com.hh.clientdatatable.ClientDataTable;
+import com.hh.droid.R;
 import com.hh.listeners.OnRecycleCheckedChangeListener;
 import com.hh.listeners.OnRecycleClickListener;
 import com.hh.listeners.OnRecycleFocusedChangeListener;
@@ -43,6 +45,16 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 
 		mListOfTags=getAllLayoutTags(itemView);
 		mRowView=itemView;
+
+
+		//Conserve the main background selector
+		int[] attrs = new int[]{R.attr.selectableItemBackground};
+		TypedArray typedArray = pContext.obtainStyledAttributes(attrs);
+		int backgroundResource = typedArray.getResourceId(0, 0);
+		mRowView.setBackgroundResource(backgroundResource);
+		typedArray.recycle();
+
+
 		int index=0;
 		for (final String tag:mListOfTags){
 
