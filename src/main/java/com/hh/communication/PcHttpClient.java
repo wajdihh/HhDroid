@@ -32,13 +32,8 @@ import org.apache.http.protocol.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.*;
 import java.net.URLEncoder;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 
 public class PcHttpClient {
@@ -63,9 +58,9 @@ public class PcHttpClient {
 		return _mResponse;
 	}
 
-	public PcHttpClient(){
+	public PcHttpClient(SSLSocketFactory sslSocketFactory){
 
-		httpClient = createHttpClient();
+		httpClient = createHttpClient(sslSocketFactory);
 		HttpParams Httpparams = httpClient.getParams();
 		HttpConnectionParams.setConnectionTimeout(Httpparams, _mConnexionTimeOut);
 		HttpConnectionParams.setSoTimeout(Httpparams, _mConnexionMaxTimeOut);
@@ -81,34 +76,17 @@ public class PcHttpClient {
 	 * @return
 	 */
 
-	public static HttpClient createHttpClient()
+	public static HttpClient createHttpClient(SSLSocketFactory sslSocketFactory)
 	{
 		HttpClient client=new DefaultHttpClient();
 		try{
-			X509TrustManager x509TrustManager = new X509TrustManager() {
-				@Override
-				public void checkClientTrusted(X509Certificate[] chain,
-											   String authType) throws CertificateException {
-				}
-
-				@Override
-				public void checkServerTrusted(X509Certificate[] chain,
-											   String authType) throws CertificateException {
-				}
-
-				@Override
-				public X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
-			};
-
-			SSLContext sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(null, new TrustManager[]{x509TrustManager}, null);
-			SSLSocketFactory sslSocketFactory = new ExSSLSocketFactory(sslContext);
-			sslSocketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 			ClientConnectionManager clientConnectionManager = client.getConnectionManager();
 			SchemeRegistry schemeRegistry = clientConnectionManager.getSchemeRegistry();
-			schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
+			if(sslSocketFactory!=null)
+				schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
+			else
+			   Log.i("PcHttpClient","sslSocketFactory NULL (not specified)");
+
 			schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
 			return new DefaultHttpClient(clientConnectionManager, client.getParams());
 		} catch (Exception ex) {
