@@ -150,7 +150,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     else
                         _mHolder.mSparseArrayHolderViewsNotInCDT.put(i, lWidget);
 
-                    convertView.setBackgroundResource(R.drawable.selector_row);
+                    convertView.setBackgroundResource(R.drawable.selector_row_light);
 
                     if (_mIsEnableOnClickWidget) {
 
