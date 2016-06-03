@@ -5,7 +5,7 @@ import java.util.Date;
 /**
  * Created by Wajdi Hh on 13/01/2015.
  */
-public class OnCDTColumnObserver {
+public abstract class OnCDTColumnObserver {
 
 
     public String onGetValue(String pValue){return pValue;}
