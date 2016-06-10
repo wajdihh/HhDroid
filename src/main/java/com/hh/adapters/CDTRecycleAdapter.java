@@ -272,7 +272,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     }
 
 
-
+    public boolean isEmpty(){
+        return getItemCount()==0;
+    }
 
 
 }
