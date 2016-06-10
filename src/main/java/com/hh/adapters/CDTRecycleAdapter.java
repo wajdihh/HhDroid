@@ -76,6 +76,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
         mClientDataTable.moveToPosition(position);
 
+        if ((position >= getItemCount() - 1))
+            onLoadMore();
+
         int lListHolderSize = holder.mSparseArrayHolderViews.size();
 
         for (int i = 0; i < lListHolderSize; i++) {
@@ -149,8 +152,8 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         holder.setOnRecycleWidgetClickListener(new OnRecycleWidgetClickListener() {
 
             @Override
-            public void onClick(View parentView,View clickedView, String tag, int position) {
-                onClickWidget(parentView,clickedView, tag, position);
+            public void onClick(View parentView, View clickedView, String tag, int position) {
+                onClickWidget(parentView, clickedView, tag, position);
             }
         });
 
@@ -158,10 +161,10 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked, int position) {
 
-                if(position>=mClientDataTable.getRowsCount())
+                if (position >= mClientDataTable.getRowsCount())
                     return;
 
-                String columnName=buttonView.getTag().toString();
+                String columnName = buttonView.getTag().toString();
                 mClientDataTable.moveToPosition(position);
                 mClientDataTable.cellByName(columnName).setValue(isChecked);
             }
@@ -171,7 +174,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             @Override
             public void onFocusChange(View v, boolean hasFocus, int position) {
 
-                if(position>=mClientDataTable.getRowsCount())
+                if (position >= mClientDataTable.getRowsCount())
                     return;
 
                 mClientDataTable.moveToPosition(position);
@@ -182,6 +185,8 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                 mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
             }
         });
+
+
     }
 
     public void setViewImage(ImageView v, String value) {
@@ -220,11 +225,11 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
      * @param widget   : Button , TextView etc...
      * @param position : position of row
      */
-    protected void onIteratedRow(View row, View widget,String widgetTag) {
-    }
+    protected void onIteratedRow(View row, View widget,String widgetTag){};
 
-    protected void onCreateRow(View row) {
-    }
+    protected void onLoadMore(){};
+
+    protected void onCreateRow(View row){} ;
 
     /**
      * override this method to capture the click on selected row
