@@ -58,7 +58,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
     @Override
     public RecycleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(_mLayoutRes, null);
+        View v = LayoutInflater.from(parent.getContext()).inflate(_mLayoutRes, parent,false);
         onCreateRow(v);
         return new RecycleViewHolder(mContext,v,mClientDataTable,_mIsEnableOnClickWidget);
     }
