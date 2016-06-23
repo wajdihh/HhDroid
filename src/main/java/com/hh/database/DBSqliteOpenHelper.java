@@ -57,7 +57,11 @@ public class DBSqliteOpenHelper extends SQLiteOpenHelper{
 				}
 				lWriter.close();
 			}
-			excuteCMD(lWriter, db); 			
+			excuteCMD(lWriter, db);
+
+			// Invoquer le onUpgrade avec 1 comme version ancienne de la base et 'lDBVersion' comme
+			// version actuelle pour excuter les script de mise à jour
+			onUpgrade(db, 1, HhDroid.getInstance(_mContext).mDBVersion);
 
 		} catch (IOException e) {
 			e.printStackTrace();
