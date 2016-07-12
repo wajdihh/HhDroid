@@ -3,12 +3,10 @@ package com.hh.communication;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
-import com.hh.execption.HhException;
 import com.hh.listeners.MyCallback;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -85,7 +83,7 @@ public class PcHttpClient {
 			if(sslSocketFactory!=null)
 				schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
 			else
-			   Log.i("PcHttpClient","sslSocketFactory NULL (not specified)");
+				Log.i("PcHttpClient","sslSocketFactory NULL (not specified)");
 
 			schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
 			return new DefaultHttpClient(clientConnectionManager, client.getParams());
@@ -236,36 +234,24 @@ public class PcHttpClient {
 
 		return _mHttpEntity;
 	}
-	private void executeRequest(HttpUriRequest request, String url,MyCallback callback)
-	{
+	private void executeRequest(HttpUriRequest request, String url,MyCallback callback) throws IOException {
 
 		HttpResponse httpResponse;
 
-		try {
-			httpResponse = httpClient.execute(request);
-			_mResponseCode = httpResponse.getStatusLine().getStatusCode();
-			_mMessageStatus = httpResponse.getStatusLine().getReasonPhrase();
+		httpResponse = httpClient.execute(request);
+		_mResponseCode = httpResponse.getStatusLine().getStatusCode();
+		_mMessageStatus = httpResponse.getStatusLine().getReasonPhrase();
 
-			_mHttpEntity= httpResponse.getEntity();
+		_mHttpEntity= httpResponse.getEntity();
 
-			if (_mHttpEntity != null) {
+		if (_mHttpEntity != null) {
 
-				InputStream instream = _mHttpEntity.getContent();
-				_mResponse = convertStreamToString(instream);
+			InputStream instream = _mHttpEntity.getContent();
+			_mResponse = convertStreamToString(instream);
 
-				instream.close();
+			instream.close();
 
-				if(callback!=null) callback.onSuccess(_mResponse);
-			}
-
-		} catch (ClientProtocolException e)  {
-			Log.e("EXxception : ClientProtocolException :", HhException.getExceptionMessage(e));
-			//httpClient.getConnectionManager().shutdown();
-			e.printStackTrace();
-		} catch (IOException e) {
-			Log.e("EXxception : IOException :", HhException.getExceptionMessage(e));
-			//httpClient.getConnectionManager().shutdown();
-			e.printStackTrace();
+			if(callback!=null) callback.onSuccess(_mResponse);
 		}
 	}
 
