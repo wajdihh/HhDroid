@@ -5,7 +5,6 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import com.hh.droid.HhDroid;
 import com.hh.droid.R;
 import com.hh.execption.HhException;
 
@@ -27,7 +26,7 @@ public class DBSqliteOpenHelper extends SQLiteOpenHelper{
 	private Context _mContext;
 
 	public DBSqliteOpenHelper(Context context) {		
-		super(context, context.getResources().getString(R.string.DataBaseName), null, HhDroid.getInstance(context).mDBVersion);
+		super(context, context.getResources().getString(R.string.DataBaseName), null, DAOManager.mDBVersion);
 		_mContext=context;
 		_mRes=context.getResources();
 	}
@@ -57,11 +56,7 @@ public class DBSqliteOpenHelper extends SQLiteOpenHelper{
 				}
 				lWriter.close();
 			}
-			excuteCMD(lWriter, db);
-
-			// Invoquer le onUpgrade avec 1 comme version ancienne de la base et 'lDBVersion' comme
-			// version actuelle pour excuter les script de mise à jour
-			onUpgrade(db, 1, HhDroid.getInstance(_mContext).mDBVersion);
+			excuteCMD(lWriter, db); 			
 
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -123,7 +123,7 @@ public class CDTLayoutAdapter {
 					_mHolder.mListHoldersViewsNotInCDT.add(lWidget);
 
 				if(lWidget instanceof ImageView)
-					lWidget.setBackgroundResource(R.drawable.selector_row);
+					lWidget.setBackgroundResource(R.drawable.selector_row_light);
 
 				lWidget.setOnClickListener(new MyOnClickListener());
 				if (lWidget instanceof CheckBox){
@@ -356,10 +356,9 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 
-			if(!mClientDataTable.isEmpty()){
-				if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
-					mClientDataTable.edit();
+			if(!mClientDataTable.isEmpty() && mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT) {
 
+				mClientDataTable.edit();
 				TextView lTextView=(TextView) v;
 				String lColumnName=v.getTag().toString();
 				mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
@@ -373,10 +372,8 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-			if(!mClientDataTable.isEmpty()){
-				if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT)
-					mClientDataTable.edit();
-
+			if(!mClientDataTable.isEmpty() && mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT) {
+				mClientDataTable.edit();
 				String lColumnName=buttonView.getTag().toString();
 				mClientDataTable.cellByName(lColumnName).setValue(isChecked);
 			}

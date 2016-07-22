@@ -88,15 +88,13 @@ public class PuImage {
         return bmpUri;
     }
 
- 
-
     /**
      * Permet de donner la largeur et la hauteur selon une valueur à ne pas dépasser
      * @param bitmap
      * @param boundBoxInDp
      * @return
      */
-    public static Bitmap scaleImage(Bitmap bitmap, int boundBoxInDp)
+    public static MyRectangle scaleImage(Bitmap bitmap, int boundBoxInDp)
     {
 
         int width = bitmap.getWidth();
@@ -112,7 +110,11 @@ public class PuImage {
         matrix.postScale(scale, scale);
 
         // Create a new bitmap and convert it to a format understood by the ImageView
-        return  Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        width = scaledBitmap.getWidth();
+        height = scaledBitmap.getHeight();
+
+        return new MyRectangle(width,height);
     }
 
     public static int getImageOrientationOnGallery(Context pContext,Uri imageUri){

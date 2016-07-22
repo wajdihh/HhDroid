@@ -9,6 +9,8 @@ import java.util.Calendar;
 
 public class DAOManager {
 
+	public static int mDBVersion=1;
+
 	private DBSqliteOpenHelper _mSqliteHelper;
 	protected Context mContext;
 	protected Resources mRes;
