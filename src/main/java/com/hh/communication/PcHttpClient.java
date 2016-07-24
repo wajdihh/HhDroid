@@ -67,6 +67,12 @@ public class PcHttpClient {
 		headers = new ArrayList<NameValuePair>();
 	}
 
+	public ArrayList<NameValuePair> getParams(){
+		return params;
+	}
+	public ArrayList<NameValuePair> getHeaders(){
+		return headers;
+	}
 	/**
 	 * Create HTTP Client that use HTTP and HTTPS Type
 	 *
