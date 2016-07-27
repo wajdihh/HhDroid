@@ -181,7 +181,7 @@ public class PcHttpClient {
 					request.addHeader(h.getName(), h.getValue());
 				}
 
-				executeRequest(request, url,callback);
+				executeRequest(request,callback);
 				break;
 			}
 			case POST:
@@ -203,7 +203,7 @@ public class PcHttpClient {
 					request.setEntity(se);
 				}
 
-				executeRequest(request, url,callback);
+				executeRequest(request,callback);
 				break;
 			}
 			case PUT:
@@ -225,7 +225,7 @@ public class PcHttpClient {
 					request.setEntity(new StringEntity(_mJsonObject.toString(),"UTF-8"));
 				}
 
-				executeRequest(request, url,callback);
+				executeRequest(request,callback);
 				break;
 			}
 		}
@@ -234,7 +234,7 @@ public class PcHttpClient {
 
 		return _mHttpEntity;
 	}
-	private void executeRequest(HttpUriRequest request, String url,MyCallback callback) throws IOException {
+	private void executeRequest(HttpUriRequest request,MyCallback callback) throws IOException {
 
 		HttpResponse httpResponse;
 

@@ -1,8 +1,6 @@
 package com.hh.application;
 
 import android.app.Application;
-
-import com.hh.droid.HhDroid;
 import com.hh.utility.PuDate;
 
 public abstract class HhDroidApplication extends Application{
@@ -27,7 +25,7 @@ public abstract class HhDroidApplication extends Application{
 		Thread.setDefaultUncaughtExceptionHandler(_unCaughtExceptionHandler);
 	}
 
-
+	public abstract  int getDatabaseVersion();
 	public abstract  String getCurrencySymbole();
 	public abstract  PuDate getConfiguredDate();
 

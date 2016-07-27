@@ -88,13 +88,32 @@ public class PuImage {
         return bmpUri;
     }
 
+    public static Bitmap scaleImage(Bitmap bitmap, int boundBoxInDp)
+    {
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+
+        float xScale = ((float) boundBoxInDp) / width;
+        float yScale = ((float) boundBoxInDp) / height;
+        float scale = (xScale <= yScale) ? xScale : yScale;
+
+        // Create a matrix for the scaling and add the scaling data
+        Matrix matrix = new Matrix();
+        matrix.postScale(scale, scale);
+
+        // Create a new bitmap and convert it to a format understood by the ImageView
+        return  Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+    }
+
     /**
      * Permet de donner la largeur et la hauteur selon une valueur à ne pas dépasser
      * @param bitmap
      * @param boundBoxInDp
      * @return
      */
-    public static MyRectangle scaleImage(Bitmap bitmap, int boundBoxInDp)
+    public static MyRectangle scaleImageRec(Bitmap bitmap, int boundBoxInDp)
     {
 
         int width = bitmap.getWidth();
