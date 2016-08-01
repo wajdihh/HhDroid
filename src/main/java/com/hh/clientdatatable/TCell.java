@@ -213,7 +213,11 @@ public class TCell implements Cloneable {
             if(!_mValue.isEmpty()){
                 if(_mValueType==ValueType.DATETIME){
                     long dateLong=Long.parseLong(_mValue);
-                    lResult = PuDate.getStringFromDate(dateLong);
+                    //3600000 its 01/01/1970 equivalent to NULL
+                    if(dateLong==-3600000)
+                        lResult="";
+                    else
+                        lResult = PuDate.getStringFromDate(dateLong);
                 }else if(_mValueType==ValueType.DOUBLE){
                     DecimalFormat format = new DecimalFormat();
                     format.setDecimalSeparatorAlwaysShown(false);
