@@ -214,7 +214,7 @@ public class TCell implements Cloneable {
                 if(_mValueType==ValueType.DATETIME){
                     long dateLong=Long.parseLong(_mValue);
                     //3600000 its 01/01/1970 equivalent to NULL
-                    if(dateLong==-3600000)
+                    if(dateLong==-3600000 || dateLong==-1)
                         lResult="";
                     else
                         lResult = PuDate.getStringFromDate(dateLong);
