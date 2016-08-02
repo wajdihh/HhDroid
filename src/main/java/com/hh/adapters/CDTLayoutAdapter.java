@@ -125,7 +125,13 @@ public class CDTLayoutAdapter {
 				if(lWidget instanceof ImageView)
 					lWidget.setBackgroundResource(R.drawable.selector_row_light);
 
-				lWidget.setOnClickListener(new MyOnClickListener());
+
+				if(lWidget instanceof  Spinner)
+					((Spinner) lWidget).setOnItemSelectedListener(new MyOnItemClickListener((Spinner) lWidget));
+				else
+					lWidget.setOnClickListener(new MyOnClickListener());
+
+
 				if (lWidget instanceof CheckBox){
 					CheckBox lCheckBox = (CheckBox) lWidget;
 					lCheckBox.setOnCheckedChangeListener(new MyCheckedChangeListener());
@@ -228,7 +234,9 @@ public class CDTLayoutAdapter {
 	 * <hr>
 	 * @param widgetTag : the tag defined in widget
 	 */
-	protected  void onClickWidget(String widgetTag){};
+	protected  void onClickWidget(View v,String widgetTag){};
+
+	protected  void onItemClickWidget(View v,String widgetTag,int position){};
 	/**
 	 * Override this method to define listeners or events when creating the different widgets
 	 * <b>This method is invoked JUSTE one time on creating constructor</b>
@@ -388,7 +396,29 @@ public class CDTLayoutAdapter {
 			String lTag="";
 			if(v.getTag()!=null)
 				lTag=v.getTag().toString();
-			onClickWidget(lTag);
+			onClickWidget(v,lTag);
+		}
+	}
+
+	class MyOnItemClickListener implements AdapterView.OnItemSelectedListener{
+
+		private Spinner mSpinner;
+
+		public MyOnItemClickListener(Spinner spinner){
+			mSpinner=spinner;
+		}
+		@Override
+		public void onItemSelected(AdapterView<?> adapterView, View v, int position, long l) {
+			String tag="";
+			if(mSpinner!=null && mSpinner.getTag()!=null)
+				tag=mSpinner.getTag().toString();
+
+			onItemClickWidget(v,tag, position);
+		}
+
+		@Override
+		public void onNothingSelected(AdapterView<?> adapterView) {
+
 		}
 	}
 
