@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -364,9 +365,12 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 
-			if(!mClientDataTable.isEmpty() && mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT) {
+			if(!mClientDataTable.isEmpty()){
 
-				mClientDataTable.edit();
+				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
+					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
+					return;
+				}
 				TextView lTextView=(TextView) v;
 				String lColumnName=v.getTag().toString();
 				mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
@@ -380,8 +384,12 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-			if(!mClientDataTable.isEmpty() && mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT) {
-				mClientDataTable.edit();
+			if(!mClientDataTable.isEmpty()) {
+				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
+					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
+					return;
+				}
+
 				String lColumnName=buttonView.getTag().toString();
 				mClientDataTable.cellByName(lColumnName).setValue(isChecked);
 			}
