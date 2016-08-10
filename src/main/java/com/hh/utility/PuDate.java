@@ -48,6 +48,11 @@ public class PuDate{
 	 * Format : Samedi dd/MM/yyyy HH:mm
 	 */
 	public static final String FORMAT_DATETIME_DAY_HOUR_FR = "EEEE dd/MM/yyyy HH:mm";
+
+	/**
+	 * Format : Samedi dd/MM/yyyy
+	 */
+	public static final String FORMAT_DATE_DAY_HOUR_FR = "EEEE dd/MM/yyyy";
     /**
      * Format : MM/dd/yyyy HH:mm
      */

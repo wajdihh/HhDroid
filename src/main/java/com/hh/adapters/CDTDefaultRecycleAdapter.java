@@ -9,6 +9,7 @@ import com.hh.clientdatatable.ClientDataTable;
  *
  * Default recycleView Adapter, To use when we don't  need to override methods
  */
+
 public class CDTDefaultRecycleAdapter extends  CDTRecycleAdapter{
     public CDTDefaultRecycleAdapter(Context pContext, int pLayoutRow, ClientDataTable pCDT) {
         super(pContext, pLayoutRow, pCDT);
