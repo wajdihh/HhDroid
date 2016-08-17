@@ -5,4 +5,8 @@
         <attr name="placeHolderImage" format="integer" />
         <attr name="errorImage" format="integer"/>
     </declare-styleable>
+
+    <declare-styleable name="UiBooleanRadioGroupAttrs">
+        <attr name="text" format="string" />
+    </declare-styleable>
 </resources>
