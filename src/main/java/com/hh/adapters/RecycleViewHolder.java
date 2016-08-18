@@ -5,30 +5,27 @@ import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.TextView;
+import android.widget.*;
 import com.hh.clientdatatable.ClientDataTable;
-import com.hh.listeners.OnRecycleCheckedChangeListener;
-import com.hh.listeners.OnRecycleClickListener;
-import com.hh.listeners.OnRecycleFocusedChangeListener;
-import com.hh.listeners.OnRecycleWidgetClickListener;
+import com.hh.listeners.*;
+import com.hh.ui.widget.UiBooleanRadioGroup;
 
 import java.util.HashSet;
 
 public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 
-	 HashSet<String> mListOfTags;
+	HashSet<String> mListOfTags;
 	//init block
-	 {
+	{
 		mListOfTags=new HashSet<String>();
 	}
 
 	private OnRecycleClickListener _mClickListener;
 	private OnRecycleWidgetClickListener _mOnRecycleWidgetClickListener;
 	private OnRecycleCheckedChangeListener _mOnRecycleCheckedChangeListener;
+	private OnRecycleCheckedRBChangeListener _mOnRecycleCheckedRBChangeListener;
 	private OnRecycleFocusedChangeListener _mOnRecycleFocusedChangeListener;
+	private OnRecycleUiBoolRBListener mOnRecycleUiBoolRBListener;
 
 	SparseArray<View> mSparseArrayHolderViews;
 	SparseArray<View> mSparseArrayHolderViewsNotInCDT;
@@ -46,7 +43,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 		int index=0;
 		for (final String tag:mListOfTags){
 
-			View lWidget = itemView.findViewWithTag(tag);
+			final View lWidget = itemView.findViewWithTag(tag);
 			if (lWidget != null) {
 
 				int lColumnIndex = pClientDataTable.indexOfColumn(tag);
@@ -57,7 +54,25 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 					mSparseArrayHolderViewsNotInCDT.put(index, lWidget);
 
 
-				if (lWidget instanceof CheckBox) {
+				if(lWidget instanceof UiBooleanRadioGroup)
+					((UiBooleanRadioGroup) lWidget).setOnSelectedUiBooleanRGValue(new UiBooleanRadioGroup.OnSelectedUiBooleanRGValue() {
+						@Override
+						public void onSelectedValue(View clickedView,String tag, boolean isChecked) {
+							if(mOnRecycleUiBoolRBListener!=null) mOnRecycleUiBoolRBListener.onSelectedValue(mRowView,lWidget,tag, isChecked, getPosition());
+						}
+					});
+				else if(lWidget instanceof RadioGroup)
+					((RadioGroup) lWidget).setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+						@Override
+						public void onCheckedChanged(RadioGroup radioGroup, int i) {
+							String tag="";
+							if(lWidget.getTag()!=null)
+								tag=lWidget.getTag().toString();
+							if(_mOnRecycleCheckedRBChangeListener!=null) _mOnRecycleCheckedRBChangeListener.onCheckedChanged(mRowView,lWidget,tag, i, getPosition());
+						}
+					});
+
+				else if (lWidget instanceof CheckBox) {
 					CheckBox lCheckBox = (CheckBox) lWidget;
 					lCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 						@Override
@@ -66,7 +81,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 						}
 					});
 				}
-				if (lWidget instanceof TextView) {
+				else if (lWidget instanceof TextView) {
 					TextView lTextView = (TextView) lWidget;
 					lTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 						@Override
@@ -141,5 +156,11 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	}
 	public void setOnRecycleCheckedChangeListener(OnRecycleCheckedChangeListener pOnRecycleCheckedChangeListener) {
 		_mOnRecycleCheckedChangeListener = pOnRecycleCheckedChangeListener;
+	}
+	public void setOnRecycleUiBoolRBListener(OnRecycleUiBoolRBListener pOnRecycleUiBoolRBListener) {
+		mOnRecycleUiBoolRBListener = pOnRecycleUiBoolRBListener;
+	}
+	public void setOnRecycleCheckedRBChangeListener(OnRecycleCheckedRBChangeListener pOnRecycleCheckedRBChangeListener) {
+		_mOnRecycleCheckedRBChangeListener = pOnRecycleCheckedRBChangeListener;
 	}
 }

@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.*;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
@@ -20,6 +19,7 @@ import com.hh.execption.WrongTypeException;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.MyCallback;
 import com.hh.ui.UiUtility;
+import com.hh.ui.widget.UiBooleanRadioGroup;
 import com.hh.ui.widget.UiPicassoImageView;
 import com.hh.utility.PuUtils;
 
@@ -129,6 +129,10 @@ public class CDTLayoutAdapter {
 
 				if(lWidget instanceof  Spinner)
 					((Spinner) lWidget).setOnItemSelectedListener(new MyOnItemClickListener((Spinner) lWidget));
+				else if(lWidget instanceof UiBooleanRadioGroup)
+					((UiBooleanRadioGroup) lWidget).setOnSelectedUiBooleanRGValue(new MyOnSelectedUiBooleanRGValue());
+				else if(lWidget instanceof RadioGroup)
+					((RadioGroup) lWidget).setOnCheckedChangeListener(new MyOnCheckedChangeListener());
 				else
 					lWidget.setOnClickListener(new MyOnClickListener());
 
@@ -238,6 +242,10 @@ public class CDTLayoutAdapter {
 	protected  void onClickWidget(View v,String widgetTag){};
 
 	protected  void onItemClickWidget(View v,String widgetTag,int position){};
+
+	protected  void onClickUiBoolRGWidget(View clickedView,String widgetTag,boolean isChecked){};
+
+	protected  void onCheckRadioButtonWidget(View clickedView,String widgetTag,int radioButtonID){};
 	/**
 	 * Override this method to define listeners or events when creating the different widgets
 	 * <b>This method is invoked JUSTE one time on creating constructor</b>
@@ -379,7 +387,7 @@ public class CDTLayoutAdapter {
 	}
 
 
-	class MyCheckedChangeListener implements OnCheckedChangeListener{
+	class MyCheckedChangeListener implements CompoundButton.OnCheckedChangeListener {
 
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -427,6 +435,39 @@ public class CDTLayoutAdapter {
 		@Override
 		public void onNothingSelected(AdapterView<?> adapterView) {
 
+		}
+	}
+
+	/**
+	 * OnClickListener in case of radioButton Boolean
+	 */
+	class MyOnSelectedUiBooleanRGValue implements UiBooleanRadioGroup.OnSelectedUiBooleanRGValue {
+		@Override
+		public void onSelectedValue(View clickedView,String tag,boolean isChecked) {
+			onClickUiBoolRGWidget(clickedView,tag, isChecked);
+
+			if(!mClientDataTable.isEmpty()) {
+				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
+					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
+					return;
+				}
+				mClientDataTable.cellByName(tag).setValue(isChecked);
+			}
+		}
+	}
+
+	/**
+	 * OnClickListener in case of radioButton Boolean
+	 */
+	class MyOnCheckedChangeListener implements RadioGroup.OnCheckedChangeListener {
+		@Override
+		public void onCheckedChanged(RadioGroup radioGroup, int i) {
+
+			String lTag="";
+			if(radioGroup.getTag()!=null)
+				lTag=radioGroup.getTag().toString();
+
+			onCheckRadioButtonWidget(radioGroup,lTag,i);
 		}
 	}
 

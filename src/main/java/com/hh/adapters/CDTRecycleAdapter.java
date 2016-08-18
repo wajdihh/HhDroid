@@ -18,10 +18,7 @@ import com.hh.clientdatatable.ClientDataTable;
 import com.hh.clientdatatable.TCell;
 import com.hh.droid.R;
 import com.hh.execption.WrongTypeException;
-import com.hh.listeners.OnRecycleCheckedChangeListener;
-import com.hh.listeners.OnRecycleClickListener;
-import com.hh.listeners.OnRecycleFocusedChangeListener;
-import com.hh.listeners.OnRecycleWidgetClickListener;
+import com.hh.listeners.*;
 import com.hh.ui.widget.UiPicassoImageView;
 
 /**
@@ -47,8 +44,6 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         _mLayoutRes = pLayoutRes;
 
         setHasStableIds(true);
-
-
     }
     @Override
     protected void finalize() throws Throwable {
@@ -157,6 +152,20 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             }
         });
 
+        holder.setOnRecycleUiBoolRBListener(new OnRecycleUiBoolRBListener() {
+            @Override
+            public void onSelectedValue(View parentView,View clickedView,String widgetTag, boolean isChecked, int position) {
+                onClickUiBoolRGWidget(parentView,clickedView,widgetTag,isChecked,position);
+            }
+        });
+
+        holder.setOnRecycleCheckedRBChangeListener(new OnRecycleCheckedRBChangeListener() {
+            @Override
+            public void onCheckedChanged(View parentView,View clickedView,String widgetTag, int radioButtonID, int position) {
+                onCheckRadioButtonWidget(parentView,clickedView,widgetTag, radioButtonID, position);
+            }
+        });
+
         holder.setOnRecycleCheckedChangeListener(new OnRecycleCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked, int position) {
@@ -261,7 +270,20 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         mClientDataTable.moveToPosition(position);
     }
 
+    protected  void onClickUiBoolRGWidget(View parentView,View clickedView,String widgetTag,boolean isChecked, int position){
+        if(position>=mClientDataTable.getRowsCount())
+            return;
 
+        mClientDataTable.moveToPosition(position);
+    };
+
+    protected  void onCheckRadioButtonWidget(View parentView,View clickedView,String widgetTag,int radioButtonID, int position){
+        if(position>=mClientDataTable.getRowsCount())
+            return;
+
+        mClientDataTable.moveToPosition(position);
+    };
+    ;
     /**
      * override this method to capture the Long click on selected Row,
      * and we can create context Menu inside this method

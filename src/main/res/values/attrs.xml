@@ -8,5 +8,9 @@
 
     <declare-styleable name="UiBooleanRadioGroupAttrs">
         <attr name="text" format="string" />
+        <attr name="positiveText" format="string" />
+        <attr name="negativeText" format="string" />
+        <attr name="android:tag" />
+
     </declare-styleable>
 </resources>

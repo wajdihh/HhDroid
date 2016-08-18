@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.util.Base64;
+import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
@@ -22,6 +23,7 @@ import com.hh.execption.WrongTypeException;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
 import com.hh.ui.UiUtility;
+import com.hh.ui.widget.UiBooleanRadioGroup;
 import com.hh.ui.widget.UiPicassoImageView;
 
 import java.util.ArrayList;
@@ -163,11 +165,15 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     convertView.setOnClickListener(new onClickRowListener(convertView));
                     convertView.setOnCreateContextMenuListener(new onCreateRowContextMenuListener(convertView));
 
-                    if (lWidget instanceof CheckBox) {
+                    if(lWidget instanceof UiBooleanRadioGroup)
+                        ((UiBooleanRadioGroup) lWidget).setOnSelectedUiBooleanRGValue(new MyOnSelectedUiBooleanRGValue(convertView));
+                    else if(lWidget instanceof RadioGroup)
+                        ((RadioGroup) lWidget).setOnCheckedChangeListener(new MyOnCheckedChangeListener(convertView));
+                    else if (lWidget instanceof CheckBox) {
                         CheckBox lCheckBox = (CheckBox) lWidget;
                         lCheckBox.setOnCheckedChangeListener(new onCheckedRowChangeListener(convertView, _mListOfTags.get(i)));
                     }
-                    if (lWidget instanceof TextView) {
+                    else if (lWidget instanceof TextView) {
                         TextView lTextView = (TextView) lWidget;
                         lTextView.setOnFocusChangeListener(new onFocusedRowChangeListener(convertView, _mListOfTags.get(i)));
                     }
@@ -305,6 +311,9 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     protected void onLongClickRow(View row, Menu menu, int position) {
     }
 
+    protected  void onClickUiBoolRGWidget(View parentView,View clickedView,String widgetTag,boolean isChecked, int position){};
+
+    protected  void onCheckRadioButtonWidget(View parentView,View clickedView,String widgetTag,int radioButtonID, int position){};
     ;
 
     /**
@@ -336,7 +345,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     class onClickWidgetListener implements OnClickListener {
 
         private View _mRow;
-
         public onClickWidgetListener(View pRow) {
             _mRow = pRow;
         }
@@ -372,18 +380,13 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
             int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
             getItem(lCurrentPos);
 
-            if (mClientDataTable.isConnectedToDB()) {
-
-                if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT)
-                    mClientDataTable.cellByName(_mColumnName).insertIntoDB(isChecked);
-
-                else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE)
-                    mClientDataTable.cellByName(_mColumnName).updateFromDB(isChecked);
-
-                else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
-                    mClientDataTable.cellByName(_mColumnName).setValue(isChecked);
-            } else
+            if(!mClientDataTable.isEmpty()) {
+                if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
+                    Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
+                    return;
+                }
                 mClientDataTable.cellByName(_mColumnName).setValue(isChecked);
+            }
         }
     }
 
@@ -407,21 +410,65 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
             TextView lTextView = (TextView) v;
             getItem(lCurrentPos);
 
-            if (mClientDataTable.isConnectedToDB()) {
-
-                if (mClientDataTable.getCDTStatus() == CDTStatus.INSERT)
-                    mClientDataTable.cellByName(_mColumnName).insertIntoDB(lTextView.getText().toString());
-
-                else if (mClientDataTable.getCDTStatus() == CDTStatus.UPDATE)
-                    mClientDataTable.cellByName(_mColumnName).updateFromDB(lTextView.getText().toString());
-
-                else if (mClientDataTable.getCDTStatus() == CDTStatus.DEFAULT)
-                    mClientDataTable.cellByName(_mColumnName).setValue(lTextView.getText().toString());
-            } else
+            if(!mClientDataTable.isEmpty()) {
+                if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
+                    Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
+                    return;
+                }
                 mClientDataTable.cellByName(_mColumnName).setValue(lTextView.getText().toString());
+            }
         }
     }
 
+    /**
+     * OnClickListener in case of radioButton Boolean
+     */
+    class MyOnSelectedUiBooleanRGValue implements UiBooleanRadioGroup.OnSelectedUiBooleanRGValue {
+
+        private View _mRow;
+        public MyOnSelectedUiBooleanRGValue(View pRow) {
+            _mRow = pRow;
+        }
+
+        @Override
+        public void onSelectedValue(View view,String tag,boolean isChecked) {
+
+            int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
+            getItem(lCurrentPos);
+            onClickUiBoolRGWidget(_mRow,view,tag, isChecked,lCurrentPos);
+
+            if(!mClientDataTable.isEmpty()) {
+                if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
+                    Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
+                    return;
+                }
+                mClientDataTable.cellByName(tag).setValue(isChecked);
+            }
+        }
+    }
+
+    /**
+     * OnClickListener in case of radioButton Boolean
+     */
+    class MyOnCheckedChangeListener implements RadioGroup.OnCheckedChangeListener {
+
+        private View _mRow;
+        public MyOnCheckedChangeListener(View pRow) {
+            _mRow = pRow;
+        }
+
+        @Override
+        public void onCheckedChanged(RadioGroup radioGroup, int i) {
+
+            int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
+            getItem(lCurrentPos);
+            String lTag = "";
+            if (radioGroup.getTag() != null)
+                lTag = radioGroup.getTag().toString();
+
+            onCheckRadioButtonWidget(_mRow,radioGroup,lTag,i,lCurrentPos);
+        }
+    }
     /**
      * Create a contextMenu for eachRow or get the longClick event
      *
