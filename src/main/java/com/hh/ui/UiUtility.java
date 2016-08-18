@@ -28,9 +28,10 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
-import android.view.Display;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.view.*;
+import android.view.inputmethod.EditorInfo;
+import android.widget.TextView;
+import com.hh.features.PfKeyboard;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -206,5 +207,23 @@ public class UiUtility {
 
         cursor.moveToFirst();
         return cursor.getInt(0);
+    }
+
+    /**
+     * Clear focus, when EditText is set with imeoption=done
+     * @param pTextView
+     */
+    public static void clearFocusWhenKeyboardActionIsDone(final Context pContext,final ViewGroup parentView,final TextView pTextView){
+        pTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    clearAllChildrensFocus(parentView);
+                    PfKeyboard.hide(pContext,pTextView);
+                }
+                return false;
+            }
+        });
+
     }
 }

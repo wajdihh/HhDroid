@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.listeners.*;
+import com.hh.ui.UiUtility;
 import com.hh.ui.widget.UiBooleanRadioGroup;
 
 import java.util.HashSet;
@@ -82,13 +83,18 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 					});
 				}
 				else if (lWidget instanceof TextView) {
-					TextView lTextView = (TextView) lWidget;
+					final TextView lTextView = (TextView) lWidget;
+					if(mRowView instanceof ViewGroup)
+						UiUtility.clearFocusWhenKeyboardActionIsDone(pContext,(ViewGroup) mRowView,lTextView);
+
 					lTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 						@Override
 						public void onFocusChange(View view, boolean b) {
-							if(_mOnRecycleFocusedChangeListener!=null) _mOnRecycleFocusedChangeListener.onFocusChange(view,b,getPosition());
+							if (_mOnRecycleFocusedChangeListener != null)
+								_mOnRecycleFocusedChangeListener.onFocusChange(view, b, getPosition());
 						}
 					});
+
 				}
 
 

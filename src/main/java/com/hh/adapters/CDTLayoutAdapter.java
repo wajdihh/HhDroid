@@ -143,6 +143,7 @@ public class CDTLayoutAdapter {
 				}
 				if (lWidget instanceof TextView){
 					final TextView lTextView = (TextView) lWidget;
+					UiUtility.clearFocusWhenKeyboardActionIsDone(mContext,getParentLayout(),lTextView);
 					lTextView.setOnFocusChangeListener(new MyFocusChangeListener());
 				}
 

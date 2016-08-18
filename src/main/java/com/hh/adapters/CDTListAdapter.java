@@ -175,6 +175,9 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     }
                     else if (lWidget instanceof TextView) {
                         TextView lTextView = (TextView) lWidget;
+                        if(_mConvertView instanceof ViewGroup)
+                            UiUtility.clearFocusWhenKeyboardActionIsDone(mContext,(ViewGroup) _mConvertView,lTextView);
+
                         lTextView.setOnFocusChangeListener(new onFocusedRowChangeListener(convertView, _mListOfTags.get(i)));
                     }
                 }
