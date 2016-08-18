@@ -1320,7 +1320,16 @@ public class ClientDataTable {
 	 */
 	public ClientDataTable clone() {
 
-		ClientDataTable lResult = new ClientDataTable(_mContext);
+		ClientDataTable lResult = null;
+		if(_mTableName!=null && _mSqliteDataBase!=null && _mWhereClauseColumns !=null)
+			lResult =new ClientDataTable(_mContext,_mSqliteDataBase,_mTableName,_mWhereClauseColumns);
+		else
+			lResult =new ClientDataTable(_mContext);
+
+
+		if(mCdtObserverStack!=null  && !mCdtObserverStack.isEmpty())
+			for (OnCDTStatusObserver o:mCdtObserverStack)
+				lResult.setOnCDTStatusObserver(o);
 
 		for (TColumn iTColumn : _mListOfColumns) {
 			lResult.addColumn(iTColumn);
