@@ -354,7 +354,7 @@ public class CDTLayoutAdapter {
 		PfKeyboard.hide(mContext, mLayout);
 
 		if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-			PuUtils.showMessage(mContext, "Error CDT", "CDT is in default STATUS, you can't validate in default");
+			Log.e(this.getClass().getName(), "CDT is in default STATUS, you can't validate in default");
 			return;
 		}
 
@@ -368,12 +368,16 @@ public class CDTLayoutAdapter {
 			if(!mClientDataTable.isEmpty()){
 
 				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
+					Log.e(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
 					return;
 				}
 				TextView lTextView=(TextView) v;
 				String lColumnName=v.getTag().toString();
-				mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
+				try{
+					mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
+				}catch (AssertionError e){
+					Log.e(this.getClass().getName(),e.getMessage());
+				}
 			}
 		}
 	}
@@ -386,12 +390,16 @@ public class CDTLayoutAdapter {
 
 			if(!mClientDataTable.isEmpty()) {
 				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
+					Log.e(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
 					return;
 				}
 
 				String lColumnName=buttonView.getTag().toString();
-				mClientDataTable.cellByName(lColumnName).setValue(isChecked);
+				try{
+					mClientDataTable.cellByName(lColumnName).setValue(isChecked);
+				}catch (AssertionError e){
+					Log.e(this.getClass().getName(),e.getMessage());
+				}
 			}
 		}
 	}
