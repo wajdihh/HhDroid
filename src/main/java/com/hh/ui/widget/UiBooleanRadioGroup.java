@@ -23,9 +23,11 @@ public class UiBooleanRadioGroup extends LinearLayout {
     private RadioButton mRadioButtonYes;
     private RadioButton mRadioButtonNo;
     private String mTag="";
+    private boolean mIsFirstInit;
     public UiBooleanRadioGroup(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext=context;
+        mIsFirstInit=true;
         initView();
         setAttrs(context, attrs);
     }
@@ -40,6 +42,11 @@ public class UiBooleanRadioGroup extends LinearLayout {
         mRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                if(mIsFirstInit) {
+                    mIsFirstInit=false;
+                    return;
+                }
+
                 if (mOnSelectedUiBooleanRGValue != null)
                     mOnSelectedUiBooleanRGValue.onSelectedValue(mRadioGroup, mTag, (i == R.id.UiBooleanIDYes));
             }
