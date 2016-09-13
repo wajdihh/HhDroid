@@ -41,7 +41,7 @@ public class UiBooleanRadioGroup extends LinearLayout {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
                 if (mOnSelectedUiBooleanRGValue != null)
-                    mOnSelectedUiBooleanRGValue.onSelectedValue(mRadioGroup,mTag, (i == R.id.UiBooleanIDYes));
+                    mOnSelectedUiBooleanRGValue.onSelectedValue(mRadioGroup, mTag, (i == R.id.UiBooleanIDYes));
             }
         });
     }
@@ -56,6 +56,10 @@ public class UiBooleanRadioGroup extends LinearLayout {
         mRadioButtonNo.setText(text);
     }
 
+    public void setActivatePositiveRadioButton(boolean isActivatePositiveRadioButton){
+        mRadioButtonYes.setChecked(isActivatePositiveRadioButton);
+        mRadioButtonNo.setChecked(!isActivatePositiveRadioButton);
+    }
     public void setText(int textRes){
         mTVLabel.setText(textRes);
     }
