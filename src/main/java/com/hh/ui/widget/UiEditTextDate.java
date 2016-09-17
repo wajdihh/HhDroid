@@ -138,12 +138,12 @@ public class UiEditTextDate extends LinearLayout {
 
         Calendar c = Calendar.getInstance();
         c.setTime(date);
-        int year=c.get(Calendar.YEAR);
-        _mEdDay.setText(year==1970?"":"" + c.get(Calendar.DAY_OF_MONTH));
-        _mEdMonth.setText(year==1970?"":""+(c.get(Calendar.MONTH)+1));
-        _mEdYear.setText(year==1970?"":""+year);
+        boolean is1970=(c.get(Calendar.YEAR)==1970 && c.get(Calendar.MONTH)==0 && c.get(Calendar.DAY_OF_MONTH)==1);
+        _mEdDay.setText(is1970?"":"" + c.get(Calendar.DAY_OF_MONTH));
+        _mEdMonth.setText(is1970?"":""+(c.get(Calendar.MONTH)+1));
+        _mEdYear.setText(is1970?"":""+c.get(Calendar.YEAR));
 
-        if(year==1970){
+        if(is1970){
             _mEdDay.setHint(R.string.lab_day);
             _mEdMonth.setHint(R.string.lab_month);
             _mEdYear.setHint(R.string.lab_year);
