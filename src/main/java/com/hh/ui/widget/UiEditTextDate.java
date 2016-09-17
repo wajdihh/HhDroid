@@ -175,4 +175,13 @@ public class UiEditTextDate extends LinearLayout {
         }
         return lValue;
     }
+
+    public void setError(String str){
+        _mEdYear.setError(str);
+        _mEdYear.requestFocus();
+    }
+    public void setError(int strRes){
+        _mEdYear.setError(_myContext.getString(strRes));
+        _mEdYear.requestFocus();
+    }
 }
