@@ -53,4 +53,7 @@ public class DAOManager {
 	public int getTempPrimaryKeyValue(){
 		return Calendar.getInstance().get(Calendar.MILLISECOND)*Calendar.getInstance().get(Calendar.SECOND);
 	}
+	public String getString(int resID){
+		return mRes.getString(resID);
+	}
 }

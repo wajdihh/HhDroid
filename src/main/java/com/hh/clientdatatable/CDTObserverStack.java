@@ -42,7 +42,7 @@ public class CDTObserverStack extends ArrayList<OnCDTStatusObserver> {
 
     public void notifyOnAfterEdit(TRow oldRow,TRow newRow,boolean isExecuteMode){
         for (OnCDTStatusObserver listener:this)
-            listener.onAfterEdit(oldRow,newRow,isExecuteMode);
+            listener.onAfterEdit(oldRow, newRow, isExecuteMode);
     }
 
     public void notifyOnAfterInsert(boolean isExecuteMode){

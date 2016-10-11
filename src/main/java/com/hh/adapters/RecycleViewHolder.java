@@ -2,14 +2,14 @@ package com.hh.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.listeners.*;
-import com.hh.ui.UiUtility;
-import com.hh.ui.widget.UiBooleanRadioGroup;
 
 import java.util.HashSet;
 
@@ -25,8 +25,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	private OnRecycleWidgetClickListener _mOnRecycleWidgetClickListener;
 	private OnRecycleCheckedChangeListener _mOnRecycleCheckedChangeListener;
 	private OnRecycleCheckedRBChangeListener _mOnRecycleCheckedRBChangeListener;
-	private OnRecycleFocusedChangeListener _mOnRecycleFocusedChangeListener;
-	private OnRecycleUiBoolRBListener mOnRecycleUiBoolRBListener;
+	private OnRecycleTextWatcher _mOnRecycleTextWatcher;
 
 	SparseArray<View> mSparseArrayHolderViews;
 	SparseArray<View> mSparseArrayHolderViewsNotInCDT;
@@ -54,15 +53,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 				else
 					mSparseArrayHolderViewsNotInCDT.put(index, lWidget);
 
-
-				if(lWidget instanceof UiBooleanRadioGroup)
-					((UiBooleanRadioGroup) lWidget).setOnSelectedUiBooleanRGValue(new UiBooleanRadioGroup.OnSelectedUiBooleanRGValue() {
-						@Override
-						public void onSelectedValue(View clickedView,String tag, boolean isChecked) {
-							if(mOnRecycleUiBoolRBListener!=null) mOnRecycleUiBoolRBListener.onSelectedValue(mRowView,lWidget,tag, isChecked, getPosition());
-						}
-					});
-				else if(lWidget instanceof RadioGroup)
+				if(lWidget instanceof RadioGroup)
 					((RadioGroup) lWidget).setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 						@Override
 						public void onCheckedChanged(RadioGroup radioGroup, int i) {
@@ -82,19 +73,25 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 						}
 					});
 				}
-				else if (lWidget instanceof TextView) {
-					final TextView lTextView = (TextView) lWidget;
-					if(mRowView instanceof ViewGroup)
-						UiUtility.clearFocusWhenKeyboardActionIsDone(pContext,(ViewGroup) mRowView,lTextView);
-
-					lTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+				else if (lWidget instanceof EditText) {
+					final EditText lEditText = (EditText) lWidget;
+					lEditText.addTextChangedListener(new TextWatcher() {
 						@Override
-						public void onFocusChange(View view, boolean b) {
-							if (_mOnRecycleFocusedChangeListener != null)
-								_mOnRecycleFocusedChangeListener.onFocusChange(view, b, getPosition());
+						public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+						}
+
+						@Override
+						public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+						}
+
+						@Override
+						public void afterTextChanged(Editable editable) {
+							if (_mOnRecycleTextWatcher != null)
+								_mOnRecycleTextWatcher.afterTextChanged(lEditText, editable.toString(), getPosition());
 						}
 					});
-
 				}
 
 
@@ -102,11 +99,17 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 					lWidget.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View view) {
-							if (!(view instanceof TextView))
-								if(_mOnRecycleWidgetClickListener!=null) _mOnRecycleWidgetClickListener.onClick(itemView,view, tag,getPosition());
+							if(_mOnRecycleWidgetClickListener==null)
+								return;
 
 							if (view instanceof Button)
-								if(_mOnRecycleWidgetClickListener!=null) _mOnRecycleWidgetClickListener.onClick(itemView,view, tag,getPosition());
+								_mOnRecycleWidgetClickListener.onClick(itemView, view, tag, getPosition());
+							else if (view instanceof EditText)
+								_mOnRecycleWidgetClickListener.onClick(itemView, view, tag, getPosition());
+							else{
+								if (!(view instanceof TextView))
+									_mOnRecycleWidgetClickListener.onClick(itemView,view, tag,getPosition());
+							}
 						}
 					});
 
@@ -157,14 +160,11 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	public void setOnRecycleWidgetClickListener(OnRecycleWidgetClickListener clickListener) {
 		this._mOnRecycleWidgetClickListener = clickListener;
 	}
-	public void setOnRecycleFocusedChangeListener(OnRecycleFocusedChangeListener pOnRecycleFocusedChangeListener) {
-		_mOnRecycleFocusedChangeListener = pOnRecycleFocusedChangeListener;
+	public void setOnRecycleTextWatcher(OnRecycleTextWatcher pOnRecycleTextWatcher) {
+		_mOnRecycleTextWatcher = pOnRecycleTextWatcher;
 	}
 	public void setOnRecycleCheckedChangeListener(OnRecycleCheckedChangeListener pOnRecycleCheckedChangeListener) {
 		_mOnRecycleCheckedChangeListener = pOnRecycleCheckedChangeListener;
-	}
-	public void setOnRecycleUiBoolRBListener(OnRecycleUiBoolRBListener pOnRecycleUiBoolRBListener) {
-		mOnRecycleUiBoolRBListener = pOnRecycleUiBoolRBListener;
 	}
 	public void setOnRecycleCheckedRBChangeListener(OnRecycleCheckedRBChangeListener pOnRecycleCheckedRBChangeListener) {
 		_mOnRecycleCheckedRBChangeListener = pOnRecycleCheckedRBChangeListener;

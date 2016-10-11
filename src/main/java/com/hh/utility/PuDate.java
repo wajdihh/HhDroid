@@ -179,4 +179,8 @@ public class PuDate{
     public static String getStringFromDate(long pDateTime){
 		return _mDateFormater.format(pDateTime);
 	}
+    public static String getStringFromDate(long pDateTime,String dateFormat){
+		SimpleDateFormat pDateFormater=new SimpleDateFormat(dateFormat,Locale.getDefault());
+		return pDateFormater.format(pDateTime);
+	}
 }

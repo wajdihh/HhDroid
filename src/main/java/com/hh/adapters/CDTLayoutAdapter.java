@@ -5,6 +5,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -19,9 +21,7 @@ import com.hh.execption.WrongTypeException;
 import com.hh.features.PfKeyboard;
 import com.hh.listeners.MyCallback;
 import com.hh.ui.UiUtility;
-import com.hh.ui.widget.UiBooleanRadioGroup;
 import com.hh.ui.widget.UiPicassoImageView;
-import com.hh.utility.PuUtils;
 
 import java.util.ArrayList;
 
@@ -125,12 +125,8 @@ public class CDTLayoutAdapter {
 
 				if(lWidget instanceof ImageView)
 					lWidget.setBackgroundResource(R.drawable.selector_row_light);
-
-
 				if(lWidget instanceof  Spinner)
 					((Spinner) lWidget).setOnItemSelectedListener(new MyOnItemClickListener((Spinner) lWidget));
-				else if(lWidget instanceof UiBooleanRadioGroup)
-					((UiBooleanRadioGroup) lWidget).setOnSelectedUiBooleanRGValue(new MyOnSelectedUiBooleanRGValue());
 				else if(lWidget instanceof RadioGroup)
 					((RadioGroup) lWidget).setOnCheckedChangeListener(new MyOnCheckedChangeListener());
 				else
@@ -141,10 +137,9 @@ public class CDTLayoutAdapter {
 					CheckBox lCheckBox = (CheckBox) lWidget;
 					lCheckBox.setOnCheckedChangeListener(new MyCheckedChangeListener());
 				}
-				if (lWidget instanceof TextView){
-					final TextView lTextView = (TextView) lWidget;
-					UiUtility.clearFocusWhenKeyboardActionIsDone(mContext,getParentLayout(),lTextView);
-					lTextView.setOnFocusChangeListener(new MyFocusChangeListener());
+				if (lWidget instanceof EditText){
+					final EditText lEditText = (EditText) lWidget;
+					lEditText.addTextChangedListener(new MyTextWatcher(lEditText));
 				}
 
 				onCreateWidget(lWidget);
@@ -205,6 +200,14 @@ public class CDTLayoutAdapter {
 						else
 							im.setImageDrawable(null);
 					}
+				} else if (lWidget instanceof Spinner) {
+					Spinner spinner=((Spinner) lWidget);
+					if(spinner.getAdapter() instanceof  ArrayAdapter){
+						ArrayAdapter arrayAdapter= (ArrayAdapter) spinner.getAdapter();
+						spinner.setSelection(arrayAdapter.getPosition(data.asString()));
+					}else
+						Log.e(this.getClass().getName(), "Cannot set Spinner default value, because Spinner Adapter is not ArrayAdapter Type, you need to customize it in onIterateWidget method");
+
 				}
 
 				onIteratedWidget(lWidget, tag);
@@ -357,32 +360,44 @@ public class CDTLayoutAdapter {
 		validateChanges();
 		mClientDataTable.commitObserve(pMyCallback);
 	}
-	private void validateChanges(){
+	public void validateChanges(){
 
 		UiUtility.clearAllChildrensFocus((ViewGroup) mLayout);
 		PfKeyboard.hide(mContext, mLayout);
 
 		if(mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-			PuUtils.showMessage(mContext, "Error CDT", "CDT is in default STATUS, you can't validate in default");
+			Log.e(this.getClass().getName(), "CDT is in default STATUS, you can't validate in default mode");
 			return;
 		}
 
 	}
 
-	class MyFocusChangeListener implements View.OnFocusChangeListener{
+	class MyTextWatcher implements TextWatcher{
+
+		private TextView mTextView;
+		public  MyTextWatcher(TextView v){
+			mTextView=v;
+		}
+		@Override
+		public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+		}
 
 		@Override
-		public void onFocusChange(View v, boolean hasFocus) {
+		public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
+		}
+
+		@Override
+		public void afterTextChanged(Editable editable) {
 			if(!mClientDataTable.isEmpty()){
 
 				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
+					Log.e(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
 					return;
 				}
-				TextView lTextView=(TextView) v;
-				String lColumnName=v.getTag().toString();
-				mClientDataTable.cellByName(lColumnName).setValue(lTextView.getText().toString());
+				String lColumnName=mTextView.getTag().toString();
+				mClientDataTable.cellByName(lColumnName).setValue(editable.toString());
 			}
 		}
 	}
@@ -395,7 +410,7 @@ public class CDTLayoutAdapter {
 
 			if(!mClientDataTable.isEmpty()) {
 				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
+					Log.e(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
 					return;
 				}
 
@@ -420,12 +435,20 @@ public class CDTLayoutAdapter {
 	class MyOnItemClickListener implements AdapterView.OnItemSelectedListener{
 
 		private Spinner mSpinner;
+		// To not fire onItemSelected event in the first initialisation of the spinner view
+		private int mLastSpinnerPosition = 0;
 
 		public MyOnItemClickListener(Spinner spinner){
 			mSpinner=spinner;
 		}
 		@Override
 		public void onItemSelected(AdapterView<?> adapterView, View v, int position, long l) {
+
+			if(mLastSpinnerPosition == position){
+				return; //do nothing
+			}
+
+			mLastSpinnerPosition =position;
 			String tag="";
 			if(mSpinner!=null && mSpinner.getTag()!=null)
 				tag=mSpinner.getTag().toString();
@@ -439,23 +462,7 @@ public class CDTLayoutAdapter {
 		}
 	}
 
-	/**
-	 * OnClickListener in case of radioButton Boolean
-	 */
-	class MyOnSelectedUiBooleanRGValue implements UiBooleanRadioGroup.OnSelectedUiBooleanRGValue {
-		@Override
-		public void onSelectedValue(View clickedView,String tag,boolean isChecked) {
-			onClickUiBoolRGWidget(clickedView,tag, isChecked);
 
-			if(!mClientDataTable.isEmpty()) {
-				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-					Log.i(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
-					return;
-				}
-				mClientDataTable.cellByName(tag).setValue(isChecked);
-			}
-		}
-	}
 
 	/**
 	 * OnClickListener in case of radioButton Boolean

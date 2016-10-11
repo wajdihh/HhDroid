@@ -32,7 +32,7 @@ public class ClientDataTable {
 	private final String TAG_Error="HhDroidError";
 
 	public enum SortType{/** Assendent*/ ASC,	/** Dessendent */	DESC}
-	public enum CDTStatus {DEFAULT,UPDATE, INSERT,DELETE};
+	public enum CDTStatus {DEFAULT,UPDATE, INSERT, CDTStatus, DELETE};
 	public enum JSONObjectGeneratedMode {DEFAULT,NoEmptyField,FormatedDate};
 
 	// List of Rows
@@ -207,7 +207,8 @@ public class ClientDataTable {
 			_mCDTStatus=CDTStatus.DELETE;
 			if(_mListOfDeletedRows==null)
 				_mListOfDeletedRows=new ArrayList<>();
-		}
+		}else
+			throw new AssertionError("Cannot DELETE a new line because CDT is in mode :"+_mCDTStatus.name()+" You must commit your change");
 
 		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 	}
@@ -224,7 +225,8 @@ public class ClientDataTable {
 			_mCDTStatus=CDTStatus.DELETE;
 			if(_mListOfDeletedRows==null)
 				_mListOfDeletedRows=new ArrayList<>();
-		}
+		}else
+			throw new AssertionError("Cannot DELETE a new line because CDT is in mode :"+_mCDTStatus.name()+" You must commit your change");
 
 		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 	}

@@ -7,13 +7,11 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Checkable;
-import android.widget.CompoundButton;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.*;
 import com.hh.clientdatatable.ClientDataTable;
 import com.hh.clientdatatable.TCell;
 import com.hh.droid.R;
@@ -115,6 +113,14 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                         else
                             im.setImageDrawable(null);
                     }
+                } else if (lWidget instanceof Spinner) {
+                    Spinner spinner=((Spinner) lWidget);
+                    if(spinner.getAdapter() instanceof  ArrayAdapter){
+                        ArrayAdapter arrayAdapter= (ArrayAdapter) spinner.getAdapter();
+                        spinner.setSelection(arrayAdapter.getPosition(data.asString()));
+                    }else
+                        Log.e(this.getClass().getName(), "Cannot set Spinner default value, because Spinner Adapter is not ArrayAdapter Type, you need to customize it in onIterateWidget method");
+
                 }
 
                 onIteratedRow(holder.mRowView,lWidget, lWidget.getTag().toString());
@@ -152,17 +158,10 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             }
         });
 
-        holder.setOnRecycleUiBoolRBListener(new OnRecycleUiBoolRBListener() {
-            @Override
-            public void onSelectedValue(View parentView,View clickedView,String widgetTag, boolean isChecked, int position) {
-                onClickUiBoolRGWidget(parentView,clickedView,widgetTag,isChecked,position);
-            }
-        });
-
         holder.setOnRecycleCheckedRBChangeListener(new OnRecycleCheckedRBChangeListener() {
             @Override
             public void onCheckedChanged(View parentView,View clickedView,String widgetTag, int radioButtonID, int position) {
-                onCheckRadioButtonWidget(parentView,clickedView,widgetTag, radioButtonID, position);
+                onCheckRadioGroupWidget(parentView, clickedView, widgetTag, radioButtonID, position);
             }
         });
 
@@ -179,19 +178,15 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             }
         });
 
-        holder.setOnRecycleFocusedChangeListener(new OnRecycleFocusedChangeListener() {
+        holder.setOnRecycleTextWatcher(new OnRecycleTextWatcher() {
             @Override
-            public void onFocusChange(View v, boolean hasFocus, int position) {
-
+            public void afterTextChanged(TextView v, String newText, int position) {
                 if (position >= mClientDataTable.getRowsCount())
                     return;
 
                 mClientDataTable.moveToPosition(position);
-
-                TextView lTextView = (TextView) v;
                 String columnName = v.getTag().toString();
-
-                mClientDataTable.cellByName(columnName).setValue(lTextView.getText().toString());
+                mClientDataTable.cellByName(columnName).setValue(newText);
             }
         });
 
@@ -270,19 +265,12 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         mClientDataTable.moveToPosition(position);
     }
 
-    protected  void onClickUiBoolRGWidget(View parentView,View clickedView,String widgetTag,boolean isChecked, int position){
+    protected  void onCheckRadioGroupWidget(View parentView,View clickedView,String widgetTag,int radioButtonID, int position){
         if(position>=mClientDataTable.getRowsCount())
             return;
 
         mClientDataTable.moveToPosition(position);
-    };
-
-    protected  void onCheckRadioButtonWidget(View parentView,View clickedView,String widgetTag,int radioButtonID, int position){
-        if(position>=mClientDataTable.getRowsCount())
-            return;
-
-        mClientDataTable.moveToPosition(position);
-    };
+    }
     ;
     /**
      * override this method to capture the Long click on selected Row,
@@ -303,5 +291,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         return getItemCount()==0;
     }
 
-
+    public String getString(int resID){
+        return mRes.getString(resID);
+    }
 }

@@ -107,20 +107,23 @@ public class TCell implements Cloneable {
         if (_mOnCDTColumnObserver != null)
             pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
-        if(_mValue==null || ((_mValue!=null && pValue!=null) &&!_mValue.equals(pValue.toString())))
-            onValueChanged();
+        if(pValue==null)
+            pValue="";
 
-        _mValue = pValue;
+        if(!_mValue.equals(pValue)) {
+            _mValue = pValue;
+            onValueChanged();
+        }
     }
 
     public void setValue(boolean pValue) {
         if (_mOnCDTColumnObserver != null)
             pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
-        if(_mValue==null || !_mValue.equals(pValue))
+        if(!_mValue.equals(String.valueOf(pValue))) {
+            _mValue = String.valueOf(pValue);
             onValueChanged();
-
-        _mValue = String.valueOf(pValue);
+        }
 
     }
 
@@ -128,28 +131,30 @@ public class TCell implements Cloneable {
         if (_mOnCDTColumnObserver != null)
             pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
-        if(_mValue==null || !_mValue.equals(pValue))
+        if(!_mValue.equals(String.valueOf(pValue))) {
+            _mValue = String.valueOf(pValue);
             onValueChanged();
-        _mValue = String.valueOf(pValue);
+        }
     }
 
     public void setValue(double pValue) {
         if (_mOnCDTColumnObserver != null)
             pValue = _mOnCDTColumnObserver.onSetValue(pValue);
 
-        if(_mValue==null || !_mValue.equals(pValue))
+        if(!_mValue.equals(String.valueOf(pValue))) {
+            _mValue = String.valueOf(pValue);
             onValueChanged();
-
-        _mValue = String.valueOf(pValue);
+        }
     }
 
     public void setValue(long pValueTimeInMillies) {
         if (_mOnCDTColumnObserver != null)
             pValueTimeInMillies = _mOnCDTColumnObserver.onSetValue(pValueTimeInMillies);
 
-        if(_mValue==null || !_mValue.equals(pValueTimeInMillies))
+        if(!_mValue.equals(String.valueOf(pValueTimeInMillies))) {
+            _mValue = String.valueOf(pValueTimeInMillies);
             onValueChanged();
-        _mValue = String.valueOf(pValueTimeInMillies);
+        }
     }
 
     public boolean asBoolean() {
@@ -391,8 +396,11 @@ public class TCell implements Cloneable {
     }
 
     private void onValueChanged() {
+        if(_mCDTStatus==CDTStatus.DEFAULT)
+            return;
+
         _mIsValueChanged=true;
-        Log.i("onValueChanged","Cell Name ("+_mName+") : Value ("+_mValue+")");
+        Log.i("onValueChanged","Cell Name ("+_mName+") : Value ("+_mValue+") AND CDT Status ="+_mCDTStatus.name());
     }
 
 

@@ -6,13 +6,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.View.OnCreateContextMenuListener;
-import android.view.View.OnFocusChangeListener;
 import android.widget.*;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import com.hh.clientdatatable.ClientDataTable;
@@ -20,10 +21,7 @@ import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.clientdatatable.TCell;
 import com.hh.droid.R;
 import com.hh.execption.WrongTypeException;
-import com.hh.features.PfKeyboard;
 import com.hh.listeners.OnNotifyDataSetChangedListener;
-import com.hh.ui.UiUtility;
-import com.hh.ui.widget.UiBooleanRadioGroup;
 import com.hh.ui.widget.UiPicassoImageView;
 
 import java.util.ArrayList;
@@ -155,19 +153,19 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     convertView.setBackgroundResource(R.drawable.selector_row_light);
 
                     if (_mIsEnableOnClickWidget) {
-
-                        if (!(lWidget instanceof TextView))
-                            lWidget.setOnClickListener(new onClickWidgetListener(convertView));
-
                         if (lWidget instanceof Button)
                             lWidget.setOnClickListener(new onClickWidgetListener(convertView));
+                        else if (lWidget instanceof EditText)
+                            lWidget.setOnClickListener(new onClickWidgetListener(convertView));
+                        else{
+                            if (!(lWidget instanceof TextView))
+                                lWidget.setOnClickListener(new onClickWidgetListener(convertView));
+                        }
                     }
                     convertView.setOnClickListener(new onClickRowListener(convertView));
                     convertView.setOnCreateContextMenuListener(new onCreateRowContextMenuListener(convertView));
 
-                    if(lWidget instanceof UiBooleanRadioGroup)
-                        ((UiBooleanRadioGroup) lWidget).setOnSelectedUiBooleanRGValue(new MyOnSelectedUiBooleanRGValue(convertView));
-                    else if(lWidget instanceof RadioGroup)
+                    if(lWidget instanceof RadioGroup)
                         ((RadioGroup) lWidget).setOnCheckedChangeListener(new MyOnCheckedChangeListener(convertView));
                     else if (lWidget instanceof CheckBox) {
                         CheckBox lCheckBox = (CheckBox) lWidget;
@@ -175,10 +173,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     }
                     else if (lWidget instanceof TextView) {
                         TextView lTextView = (TextView) lWidget;
-                        if(_mConvertView instanceof ViewGroup)
-                            UiUtility.clearFocusWhenKeyboardActionIsDone(mContext,(ViewGroup) _mConvertView,lTextView);
-
-                        lTextView.setOnFocusChangeListener(new onFocusedRowChangeListener(convertView, _mListOfTags.get(i)));
+                        lTextView.addTextChangedListener(new MyTextWatcher(convertView, _mListOfTags.get(i)));
                     }
                 }
             }
@@ -238,6 +233,14 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                             else
                                 im.setImageDrawable(null);
                         }
+                    } else if (lWidget instanceof Spinner) {
+                        Spinner spinner=((Spinner) lWidget);
+                        if(spinner.getAdapter() instanceof  ArrayAdapter){
+                            ArrayAdapter arrayAdapter= (ArrayAdapter) spinner.getAdapter();
+                            spinner.setSelection(arrayAdapter.getPosition(data.asString()));
+                        }else
+                            Log.e(this.getClass().getName(), "Cannot set Spinner default value, because Spinner Adapter is not ArrayAdapter Type, you need to customize it in onIterateWidget method");
+
                     }
                     onIteratedRow(convertView, lWidget, position);
                 }
@@ -260,12 +263,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
         } catch (NumberFormatException nfe) {
             v.setImageURI(Uri.parse(value));
         }
-    }
-
-    public void validateEditTextChanges() {
-        UiUtility.clearAllChildrensFocus((ViewGroup) _mConvertView);
-        mClientDataTable.edit();
-        PfKeyboard.hide(mContext, _mConvertView);
     }
 
     /**
@@ -313,8 +310,6 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
      */
     protected void onLongClickRow(View row, Menu menu, int position) {
     }
-
-    protected  void onClickUiBoolRGWidget(View parentView,View clickedView,String widgetTag,boolean isChecked, int position){};
 
     protected  void onCheckRadioButtonWidget(View parentView,View clickedView,String widgetTag,int radioButtonID, int position){};
     ;
@@ -394,23 +389,32 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     }
 
     /**
-     * onCheckedRowChangeListener to change status of Checkbox for each row
+     * To change texte content when we tap with keyboard
      *
      * @author WajdiHh
      */
-    class onFocusedRowChangeListener implements OnFocusChangeListener {
+    class MyTextWatcher implements TextWatcher {
+
         private View _mRow;
         private String _mColumnName;
 
-        public onFocusedRowChangeListener(View pRow, String pColumnName) {
+        public MyTextWatcher(View pRow, String pColumnName) {
             _mRow = pRow;
             _mColumnName = pColumnName;
         }
+        @Override
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+        }
 
         @Override
-        public void onFocusChange(View v, boolean hasFocus) {
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable editable) {
             int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
-            TextView lTextView = (TextView) v;
             getItem(lCurrentPos);
 
             if(!mClientDataTable.isEmpty()) {
@@ -418,34 +422,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                     Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
                     return;
                 }
-                mClientDataTable.cellByName(_mColumnName).setValue(lTextView.getText().toString());
-            }
-        }
-    }
-
-    /**
-     * OnClickListener in case of radioButton Boolean
-     */
-    class MyOnSelectedUiBooleanRGValue implements UiBooleanRadioGroup.OnSelectedUiBooleanRGValue {
-
-        private View _mRow;
-        public MyOnSelectedUiBooleanRGValue(View pRow) {
-            _mRow = pRow;
-        }
-
-        @Override
-        public void onSelectedValue(View view,String tag,boolean isChecked) {
-
-            int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
-            getItem(lCurrentPos);
-            onClickUiBoolRGWidget(_mRow,view,tag, isChecked,lCurrentPos);
-
-            if(!mClientDataTable.isEmpty()) {
-                if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
-                    Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
-                    return;
-                }
-                mClientDataTable.cellByName(tag).setValue(isChecked);
+                mClientDataTable.cellByName(_mColumnName).setValue(editable.toString());
             }
         }
     }
@@ -492,6 +469,9 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
         }
     }
 
+    public String getString(int resID){
+        return mRes.getString(resID);
+    }
     public void onCancel(){}
     @Override
     public void notifyValueChanged() {
