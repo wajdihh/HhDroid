@@ -56,7 +56,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         return new RecycleViewHolder(mContext,v,mClientDataTable,_mIsEnableOnClickWidget);
     }
 
-
+    public int getLayoutRes(){
+        return _mLayoutRes;
+    }
     public void setEnableOnClickWidget(boolean pIsEnabled) {
         _mIsEnableOnClickWidget = pIsEnabled;
     }

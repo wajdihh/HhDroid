@@ -247,8 +247,6 @@ public class CDTLayoutAdapter {
 
 	protected  void onItemClickWidget(View v,String widgetTag,int position){};
 
-	protected  void onClickUiBoolRGWidget(View clickedView,String widgetTag,boolean isChecked){};
-
 	protected  void onCheckRadioButtonWidget(View clickedView,String widgetTag,int radioButtonID){};
 	/**
 	 * Override this method to define listeners or events when creating the different widgets

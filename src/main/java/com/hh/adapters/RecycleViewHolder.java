@@ -31,7 +31,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	SparseArray<View> mSparseArrayHolderViewsNotInCDT;
 	View mRowView;
 
-	public RecycleViewHolder(Context pContext, final View itemView,ClientDataTable pClientDataTable,final boolean pIsEnableOnClickWidget) {
+	public RecycleViewHolder(Context pContext, final View itemView, ClientDataTable pClientDataTable, final boolean pIsEnableOnClickWidget) {
 		super(itemView);
 
 		mSparseArrayHolderViews=new SparseArray<View>();
@@ -46,6 +46,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 			final View lWidget = itemView.findViewWithTag(tag);
 			if (lWidget != null) {
 
+				onCreateRowInViewHolder(mRowView,lWidget);
 				int lColumnIndex = pClientDataTable.indexOfColumn(tag);
 
 				if (lColumnIndex != -1)
@@ -60,7 +61,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 							String tag="";
 							if(lWidget.getTag()!=null)
 								tag=lWidget.getTag().toString();
-							if(_mOnRecycleCheckedRBChangeListener!=null) _mOnRecycleCheckedRBChangeListener.onCheckedChanged(mRowView,lWidget,tag, i, getPosition());
+							if(_mOnRecycleCheckedRBChangeListener!=null) _mOnRecycleCheckedRBChangeListener.onCheckedChanged(mRowView,lWidget,tag, i, getAdapterPosition());
 						}
 					});
 
@@ -69,7 +70,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 					lCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 						@Override
 						public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-							if(_mOnRecycleCheckedChangeListener!=null) _mOnRecycleCheckedChangeListener.onCheckedChanged(compoundButton, b, getPosition());
+							if(_mOnRecycleCheckedChangeListener!=null) _mOnRecycleCheckedChangeListener.onCheckedChanged(compoundButton, b, getAdapterPosition());
 						}
 					});
 				}
@@ -89,7 +90,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 						@Override
 						public void afterTextChanged(Editable editable) {
 							if (_mOnRecycleTextWatcher != null)
-								_mOnRecycleTextWatcher.afterTextChanged(lEditText, editable.toString(), getPosition());
+								_mOnRecycleTextWatcher.afterTextChanged(lEditText, editable.toString(), getAdapterPosition());
 						}
 					});
 				}
@@ -103,12 +104,12 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 								return;
 
 							if (view instanceof Button)
-								_mOnRecycleWidgetClickListener.onClick(itemView, view, tag, getPosition());
+								_mOnRecycleWidgetClickListener.onClick(itemView, view, tag, getAdapterPosition());
 							else if (view instanceof EditText)
-								_mOnRecycleWidgetClickListener.onClick(itemView, view, tag, getPosition());
+								_mOnRecycleWidgetClickListener.onClick(itemView, view, tag, getAdapterPosition());
 							else{
 								if (!(view instanceof TextView))
-									_mOnRecycleWidgetClickListener.onClick(itemView,view, tag,getPosition());
+									_mOnRecycleWidgetClickListener.onClick(itemView,view, tag,getAdapterPosition());
 							}
 						}
 					});
@@ -121,13 +122,13 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 			itemView.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View view) {
-					if(_mClickListener!=null) _mClickListener.onClick(view, getPosition());
+					if(_mClickListener!=null) _mClickListener.onClick(view, getAdapterPosition());
 				}
 			});
 			itemView.setOnLongClickListener(new View.OnLongClickListener() {
 				@Override
 				public boolean onLongClick(View view) {
-					if(_mClickListener!=null) _mClickListener.onLongClick(view, getPosition());
+					if(_mClickListener!=null) _mClickListener.onLongClick(view, getAdapterPosition());
 					return true;
 				}
 			});
@@ -168,5 +169,9 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	}
 	public void setOnRecycleCheckedRBChangeListener(OnRecycleCheckedRBChangeListener pOnRecycleCheckedRBChangeListener) {
 		_mOnRecycleCheckedRBChangeListener = pOnRecycleCheckedRBChangeListener;
+	}
+
+	protected  void onCreateRowInViewHolder(View row,View widget){
+
 	}
 }
