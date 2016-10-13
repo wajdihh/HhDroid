@@ -192,7 +192,7 @@ public class ClientDataTable {
 		if(pIsObserve)
 			mCdtObserverStack.notifyOnBeforeInsert();
 
-		if(getCDTStatus()==CDTStatus.DEFAULT){
+		if(getCDTStatus()==CDTStatus.DEFAULT || getCDTStatus()==CDTStatus.INSERT){
 			setCDTStatus(CDTStatus.INSERT);
 			addRow(row);
 			_mPosition=_mListOfRows.size()-1;
@@ -205,12 +205,13 @@ public class ClientDataTable {
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot Delete because CDT is empty!!");
 
-		if(getCDTStatus()==CDTStatus.DEFAULT){
+		if(getCDTStatus()==CDTStatus.DEFAULT || getCDTStatus()==CDTStatus.DELETE){
 
 			setCDTStatus(CDTStatus.DELETE);
 			if(_mListOfDeletedRows==null)
 				_mListOfDeletedRows=new ArrayList<>();
-		}
+		}else
+			throw new AssertionError("Cannot delete the selected row, because CDT is in mode :"+getCDTStatus().name()+"  You must commit your change first, to pass in mode DELETE");
 
 		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 	}
@@ -222,12 +223,12 @@ public class ClientDataTable {
 
 		mCdtObserverStack.notifyOnBeforeDelete();
 
-		if(getCDTStatus()==CDTStatus.DEFAULT){
-
+		if(getCDTStatus()==CDTStatus.DEFAULT || getCDTStatus()==CDTStatus.DELETE){
 			setCDTStatus(CDTStatus.DELETE);
 			if(_mListOfDeletedRows==null)
 				_mListOfDeletedRows=new ArrayList<>();
-		}
+		}else
+			throw new AssertionError("Cannot delete the selected row, because CDT is in mode :"+getCDTStatus().name()+"  You must commit your change first, to pass in mode DELETE");
 
 		_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 	}
