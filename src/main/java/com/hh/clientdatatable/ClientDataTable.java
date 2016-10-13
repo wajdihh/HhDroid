@@ -125,6 +125,9 @@ public class ClientDataTable {
 	public CDTStatus getCDTStatus(){
 		return _mCDTStatus;
 	}
+	public void setCDTStatus(CDTStatus pCdtStatus){
+		 _mCDTStatus=pCdtStatus;
+	}
 
 	public boolean isConnectedToDB(){
 		if(_mSqliteDataBase!=null && !_mTableName.isEmpty() && _mIsExecInDateBase)
@@ -145,10 +148,10 @@ public class ClientDataTable {
 
 
 	public void append(){
-		append(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
+		append(new TRow(_mContext, getCDTStatus(), getListOfColumns()));
 	}
 	public void appendObserve(){
-		appendObserve(new TRow(_mContext, _mCDTStatus, getListOfColumns()));
+		appendObserve(new TRow(_mContext, getCDTStatus(), getListOfColumns()));
 	}
 	public void insert(){
 
@@ -158,8 +161,8 @@ public class ClientDataTable {
 		if(_mPosition>=_mListOfRows.size())
 			throw new AssertionError("Cannot insert because CDT Position is outbound the list rows size");
 
-		if (_mCDTStatus == CDTStatus.DEFAULT){
-			_mCDTStatus=CDTStatus.INSERT;
+		if (getCDTStatus() == CDTStatus.DEFAULT){
+			setCDTStatus(CDTStatus.INSERT);
 		}
 	}
 
@@ -172,8 +175,8 @@ public class ClientDataTable {
 		if(_mPosition>=_mListOfRows.size())
 			throw new AssertionError("Cannot insert because CDT Position is outbound the list rows size");
 
-		if (_mCDTStatus == CDTStatus.DEFAULT){
-			_mCDTStatus=CDTStatus.INSERT;
+		if (getCDTStatus() == CDTStatus.DEFAULT){
+			setCDTStatus(CDTStatus.INSERT);
 		}
 	}
 	public void append(TRow row){
@@ -189,12 +192,12 @@ public class ClientDataTable {
 		if(pIsObserve)
 			mCdtObserverStack.notifyOnBeforeInsert();
 
-		if(_mCDTStatus==CDTStatus.DEFAULT){
-			_mCDTStatus=CDTStatus.INSERT;
+		if(getCDTStatus()==CDTStatus.DEFAULT){
+			setCDTStatus(CDTStatus.INSERT);
 			addRow(row);
 			_mPosition=_mListOfRows.size()-1;
 		}else
-			throw new AssertionError("Cannot append a new line because CDT is in mode :"+_mCDTStatus.name()+" You must commit your change");
+			throw new AssertionError("Cannot append a new line because CDT is in mode :"+getCDTStatus().name()+" You must commit your change");
 	}
 
 	public void delete(){
@@ -202,9 +205,9 @@ public class ClientDataTable {
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot Delete because CDT is empty!!");
 
-		if(_mCDTStatus==CDTStatus.DEFAULT){
+		if(getCDTStatus()==CDTStatus.DEFAULT){
 
-			_mCDTStatus=CDTStatus.DELETE;
+			setCDTStatus(CDTStatus.DELETE);
 			if(_mListOfDeletedRows==null)
 				_mListOfDeletedRows=new ArrayList<>();
 		}
@@ -219,9 +222,9 @@ public class ClientDataTable {
 
 		mCdtObserverStack.notifyOnBeforeDelete();
 
-		if(_mCDTStatus==CDTStatus.DEFAULT){
+		if(getCDTStatus()==CDTStatus.DEFAULT){
 
-			_mCDTStatus=CDTStatus.DELETE;
+			setCDTStatus(CDTStatus.DELETE);
 			if(_mListOfDeletedRows==null)
 				_mListOfDeletedRows=new ArrayList<>();
 		}
@@ -234,15 +237,15 @@ public class ClientDataTable {
 		if(_mListOfRows.isEmpty())
 			throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
-		if(_mCDTStatus==CDTStatus.DEFAULT || _mCDTStatus==CDTStatus.UPDATE){
+		if(getCDTStatus()==CDTStatus.DEFAULT || getCDTStatus()==CDTStatus.UPDATE){
 
-			_mCDTStatus=CDTStatus.UPDATE;
+			setCDTStatus(CDTStatus.UPDATE);
 
 			getCurrentRow().memorizeValues();
 
 			_mOldRow=new TRow(cloneListOfCells(getCurrentRow().getCells()));
 		}else
-			throw new AssertionError("Cannot edit the selected row, because CDT is in mode :"+_mCDTStatus.name()+"  You must commit your change first to pass in mode DEFAULT");
+			throw new AssertionError("Cannot edit the selected row, because CDT is in mode :"+getCDTStatus().name()+"  You must commit your change first to pass in mode DEFAULT");
 	}
 
 	public void editObserve(){
@@ -252,9 +255,9 @@ public class ClientDataTable {
 
 		mCdtObserverStack.notifyOnBeforeEdit();
 
-		if(_mCDTStatus==CDTStatus.DEFAULT || _mCDTStatus==CDTStatus.UPDATE){
+		if(getCDTStatus()==CDTStatus.DEFAULT || getCDTStatus()==CDTStatus.UPDATE){
 
-			_mCDTStatus=CDTStatus.UPDATE;
+			setCDTStatus(CDTStatus.UPDATE);
 
 			getCurrentRow().memorizeValues();
 
@@ -290,7 +293,7 @@ public class ClientDataTable {
 
 
 		_mIsExecInDateBase=pIsExecInDateBase;
-		if(_mCDTStatus==CDTStatus.DELETE || _mCDTStatus==CDTStatus.UPDATE)
+		if(getCDTStatus()==CDTStatus.DELETE || getCDTStatus()==CDTStatus.UPDATE)
 			if(getRowsCount()==0)
 				throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
@@ -310,7 +313,7 @@ public class ClientDataTable {
 				throw new AssertionError("The Database is closed !");
 
 		commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
-		_mCDTStatus=CDTStatus.DEFAULT;
+		setCDTStatus(CDTStatus.DEFAULT);
 
 		if(_mCellHowValueChanged!=null)
 			_mCellHowValueChanged.setValueChanged(false);
@@ -367,15 +370,15 @@ public class ClientDataTable {
 
 		mCdtObserverStack.notifyOnBeforeRevert();
 
-		switch (_mCDTStatus){
+		switch (getCDTStatus()){
 			case INSERT:
 				_mListOfRows.remove(_mPosition);
-				_mCDTStatus=CDTStatus.DEFAULT;
+				setCDTStatus(CDTStatus.DEFAULT);
 				break;
 
 			case UPDATE:
 				getCurrentRow().revertOldValues();
-				_mCDTStatus=CDTStatus.DEFAULT;
+				setCDTStatus(CDTStatus.DEFAULT);
 				break;
 
 			case DELETE:
@@ -384,7 +387,7 @@ public class ClientDataTable {
 					_mOldRow.getCells().clear();
 					_mOldRow = null;
 				}
-				_mCDTStatus=CDTStatus.DEFAULT;
+				setCDTStatus(CDTStatus.DEFAULT);
 				break;
 		}
 
@@ -408,17 +411,17 @@ public class ClientDataTable {
 
 	private void saveCDTChangesIntoDatabase(boolean isUseCDTListener,CDTStatus pCDTStatus){
 
-		_mCDTStatus=pCDTStatus;
+		setCDTStatus(pCDTStatus);
 		_mIsExecInDateBase=true;
 
 
-		if(_mCDTStatus==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
+		if(getCDTStatus()==CDTStatus.UPDATE &&(_mListOfDeletedRows==null|| _mListOfDeletedRows.isEmpty()))
 			if(getRowsCount()==0)
 				throw new AssertionError("Cannot EDIT because CDT is empty!!");
 
 
 
-		if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (_mCDTStatus==CDTStatus.INSERT || _mCDTStatus==CDTStatus.UPDATE)){
+		if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (getCDTStatus()==CDTStatus.INSERT || getCDTStatus()==CDTStatus.UPDATE)){
 			int size = _mListOfRows.size();
 			for (int i = 0; i < size; i++){
 
@@ -426,10 +429,10 @@ public class ClientDataTable {
 				commitIntoDataBase(true);
 
 				if(isUseCDTListener)
-					if(_mCDTStatus==CDTStatus.INSERT)
+					if(getCDTStatus()==CDTStatus.INSERT)
 						mCdtObserverStack.notifyOnAfterInsert(true);
 
-					else if(_mCDTStatus==CDTStatus.UPDATE)
+					else if(getCDTStatus()==CDTStatus.UPDATE)
 						mCdtObserverStack.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
 			}
 
@@ -447,7 +450,7 @@ public class ClientDataTable {
 				clearListOfDeletedRows();
 			}
 
-			_mCDTStatus=CDTStatus.DEFAULT;
+			setCDTStatus(CDTStatus.DEFAULT);
 
 			if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
 
@@ -459,7 +462,7 @@ public class ClientDataTable {
 
 	private void commitIntoCDT(boolean pIsUseCDTListener,boolean pIsExecuteAction){
 
-		switch (_mCDTStatus) {
+		switch (getCDTStatus()) {
 			case INSERT:
 				// Pas besoin car on l a deja dans l Append()
 				//_mListOfRows.add(new TRow(_mContext, _mCDTStatus, getColumnsCount()));
@@ -491,7 +494,7 @@ public class ClientDataTable {
 	}
 	private void commitIntoDataBase(boolean pInsertIfNotUpdated){
 
-		switch (_mCDTStatus) {
+		switch (getCDTStatus()) {
 			case INSERT:
 				insertInDB();
 				break;
@@ -826,7 +829,7 @@ public class ClientDataTable {
 
 		TCell lResult;
 		if(isConnectedToDB())
-			lResult=new TCell(_mContext,ValueType.TEXT, _mCDTStatus,pCellName);
+			lResult=new TCell(_mContext,ValueType.TEXT, getCDTStatus(),pCellName);
 		else
 			lResult=new TCell();
 
@@ -835,7 +838,7 @@ public class ClientDataTable {
 		for (int i = 0; i < lColumnSize && getRowsCount() != 0; i++) {
 			if (_mListOfColumns.get(i).getName().equalsIgnoreCase(pCellName)) {
 				lResult = getCell(_mPosition, i);
-				lResult.setCDTStatus(_mCDTStatus);
+				lResult.setCDTStatus(getCDTStatus());
 				lResult.setValueType(_mListOfColumns.get(i).getValueType());
 				lResult.setOnCDTColumnListener(_mListOfColumns.get(i).getCDTColumnListener());
 				lIsCellFound=true;
@@ -962,21 +965,21 @@ public class ClientDataTable {
 						TColumn lColumn = _mListOfColumns.get(i);
 						for (int j = 0; j < lNbrColumnsCursor; j++) {
 							if (lColumn != null && lColumn.getName().equals(lCursorColumnsNames[j])) {
-								lRow.addCell(_mContext,pCursor.getString(j),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),_mCDTStatus,lColumn.getCDTColumnListener());
+								lRow.addCell(_mContext,pCursor.getString(j),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),getCDTStatus(),lColumn.getCDTColumnListener());
 								lIsColumnFound=true;
 								break;
 							}
 						}
 						if(!lIsColumnFound) {
 							assert lColumn != null;
-							lRow.addCell(_mContext,_mRes.getString(R.string.cst_notInCursor),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),_mCDTStatus,lColumn.getCDTColumnListener());
+							lRow.addCell(_mContext,_mRes.getString(R.string.cst_notInCursor),lColumn.getValueType(),lColumn.getCellType(),lColumn.getName(),getCDTStatus(),lColumn.getCDTColumnListener());
 						}
 					}
 				} else {
 					for (int i = 0; i < lNbrColumnsCursor; i++) {
 						String lColumnName = lCursorColumnsNames[i];
 						if (lColumnName != null && !lColumnName.equals(""))
-							lRow.addCell(_mContext,pCursor.getString(i), ValueType.TEXT, TCell.CellType.NONE,lColumnName,_mCDTStatus,null);
+							lRow.addCell(_mContext,pCursor.getString(i), ValueType.TEXT, TCell.CellType.NONE,lColumnName,getCDTStatus(),null);
 					}
 				}
 				_mListOfRows.add(lRow);
@@ -992,7 +995,7 @@ public class ClientDataTable {
 	public void clear() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
-		_mCDTStatus=CDTStatus.DEFAULT;
+		setCDTStatus(CDTStatus.DEFAULT);
 	}
 
 	/**
@@ -1002,7 +1005,7 @@ public class ClientDataTable {
 	public void clearAttachedDatabaseTable() {
 		_mCursorSize = -1;
 		_mListOfRows.clear();
-		_mCDTStatus=CDTStatus.DEFAULT;
+		setCDTStatus(CDTStatus.DEFAULT);
 		_mIsExecInDateBase=true;
 		if(isConnectedToDB()){
 			_mSqliteDataBase.delete(_mTableName,null,null);
@@ -1015,7 +1018,7 @@ public class ClientDataTable {
 	 */
 
 	public void clearAndExecute() {
-		_mCDTStatus=CDTStatus.DEFAULT;
+		setCDTStatus(CDTStatus.DEFAULT);
 		_mCursorSize = -1;
 		while (iterate()){
 			delete();
@@ -1024,7 +1027,7 @@ public class ClientDataTable {
 	}
 
 	public void clearAndExecuteObserve() {
-		_mCDTStatus=CDTStatus.DEFAULT;
+		setCDTStatus(CDTStatus.DEFAULT);
 		_mCursorSize = -1;
 		while (iterate()){
 			delete();
@@ -1170,9 +1173,9 @@ public class ClientDataTable {
 
 			TColumn lCol = columnIt.next();
 			if(_mSqliteDataBase==null)
-				lRow.addCell(_mContext,values[i], lCol.getValueType(),lCol.getCellType(),lCol.getName(),_mCDTStatus,lCol.getCDTColumnListener());
+				lRow.addCell(_mContext,values[i], lCol.getValueType(),lCol.getCellType(),lCol.getName(),getCDTStatus(),lCol.getCDTColumnListener());
 			else
-				lRow.addCell(_mContext,values[i], lCol.getValueType(),lCol.getCellType(),lCol.getName(),_mCDTStatus,lCol.getCDTColumnListener());
+				lRow.addCell(_mContext,values[i], lCol.getValueType(),lCol.getCellType(),lCol.getName(),getCDTStatus(),lCol.getCDTColumnListener());
 		}
 
 		addRow(lRow);
