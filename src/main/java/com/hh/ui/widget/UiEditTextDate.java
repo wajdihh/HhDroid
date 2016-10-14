@@ -138,9 +138,16 @@ public class UiEditTextDate extends LinearLayout {
 
         Calendar c = Calendar.getInstance();
         c.setTime(date);
-        _mEdDay.setText("" + c.get(Calendar.DAY_OF_MONTH));
-        _mEdMonth.setText(""+(c.get(Calendar.MONTH)+1));
-        _mEdYear.setText(""+c.get(Calendar.YEAR));
+        boolean is1970=(c.get(Calendar.YEAR)==1970 && c.get(Calendar.MONTH)==0 && c.get(Calendar.DAY_OF_MONTH)==1);
+        _mEdDay.setText(is1970?"":"" + c.get(Calendar.DAY_OF_MONTH));
+        _mEdMonth.setText(is1970?"":""+(c.get(Calendar.MONTH)+1));
+        _mEdYear.setText(is1970?"":""+c.get(Calendar.YEAR));
+
+        if(is1970){
+            _mEdDay.setHint(R.string.lab_day);
+            _mEdMonth.setHint(R.string.lab_month);
+            _mEdYear.setHint(R.string.lab_year);
+        }
     }
     public int getMonth(){
         String lContent=_mEdMonth.getText().toString();
@@ -167,5 +174,14 @@ public class UiEditTextDate extends LinearLayout {
             return -1;
         }
         return lValue;
+    }
+
+    public void setError(String str){
+        _mEdYear.setError(str);
+        _mEdYear.requestFocus();
+    }
+    public void setError(int strRes){
+        _mEdYear.setError(_myContext.getString(strRes));
+        _mEdYear.requestFocus();
     }
 }
