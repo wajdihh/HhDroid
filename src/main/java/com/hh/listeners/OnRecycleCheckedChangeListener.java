@@ -8,5 +8,5 @@ import android.widget.CompoundButton;
  */
 public interface OnRecycleCheckedChangeListener {
 
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked,int position) ;
+    public void onCheckedChanged(boolean pIsWidgetInCDT,CompoundButton buttonView, boolean isChecked,int position) ;
 }

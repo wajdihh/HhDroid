@@ -8,5 +8,5 @@ import android.widget.TextView;
  */
 public interface OnRecycleTextWatcher {
 
-    public void afterTextChanged(TextView v, String newText, int position) ;
+    public void afterTextChanged(boolean pIsWidgetInCDT,TextView v, String newText, int position) ;
 }

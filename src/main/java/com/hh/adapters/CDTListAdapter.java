@@ -141,13 +141,16 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
             for (int i = 0; i < lNbrTags; i++) {
 
                 lWidget = convertView.findViewWithTag(_mListOfTags.get(i));
+
                 if (lWidget != null) {
 
                     int lColumnIndex = mClientDataTable.indexOfColumn(_mListOfTags.get(i));
+                    boolean isWidgetInCDT=false;
 
-                    if (lColumnIndex != -1)
+                    if (lColumnIndex != -1) {
                         _mHolder.mSparseArrayHolderViews.put(lColumnIndex, lWidget);
-                    else
+                        isWidgetInCDT = true;
+                    }else
                         _mHolder.mSparseArrayHolderViewsNotInCDT.put(i, lWidget);
 
                     convertView.setBackgroundResource(R.drawable.selector_row_light);
@@ -169,11 +172,11 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                         ((RadioGroup) lWidget).setOnCheckedChangeListener(new MyOnCheckedChangeListener(convertView));
                     else if (lWidget instanceof CheckBox) {
                         CheckBox lCheckBox = (CheckBox) lWidget;
-                        lCheckBox.setOnCheckedChangeListener(new onCheckedRowChangeListener(convertView, _mListOfTags.get(i)));
+                        lCheckBox.setOnCheckedChangeListener(new onCheckedRowChangeListener(convertView, _mListOfTags.get(i),isWidgetInCDT));
                     }
                     else if (lWidget instanceof TextView) {
                         TextView lTextView = (TextView) lWidget;
-                        lTextView.addTextChangedListener(new MyTextWatcher(convertView, _mListOfTags.get(i)));
+                        lTextView.addTextChangedListener(new MyTextWatcher(convertView, _mListOfTags.get(i),isWidgetInCDT));
                     }
                 }
             }
@@ -367,10 +370,11 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     class onCheckedRowChangeListener implements OnCheckedChangeListener {
         private View _mRow;
         private String _mColumnName;
-
-        public onCheckedRowChangeListener(View pRow, String pColumnName) {
+        private boolean mIsWidgetInCDT;
+        public onCheckedRowChangeListener(View pRow, String pColumnName,boolean pIsWidgetInCDT) {
             _mRow = pRow;
             _mColumnName = pColumnName;
+            mIsWidgetInCDT=pIsWidgetInCDT;
         }
 
         @Override
@@ -378,7 +382,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
             int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
             getItem(lCurrentPos);
 
-            if(!mClientDataTable.isEmpty()) {
+            if(mIsWidgetInCDT && !mClientDataTable.isEmpty()) {
                 if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
                     Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
                     return;
@@ -397,10 +401,12 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
 
         private View _mRow;
         private String _mColumnName;
+        private boolean mIsWidgetInCDT;
 
-        public MyTextWatcher(View pRow, String pColumnName) {
+        public MyTextWatcher(View pRow, String pColumnName,boolean pIsWidgetInCDT) {
             _mRow = pRow;
             _mColumnName = pColumnName;
+            mIsWidgetInCDT=pIsWidgetInCDT;
         }
         @Override
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -417,7 +423,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
             int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
             getItem(lCurrentPos);
 
-            if(!mClientDataTable.isEmpty()) {
+            if(mIsWidgetInCDT && !mClientDataTable.isEmpty()) {
                 if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
                     Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
                     return;

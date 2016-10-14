@@ -396,6 +396,12 @@ public class ClientDataTable {
 		clearListOfDeletedRows();
 	}
 
+	/**
+	 * Cancel action : edit, update or Delete, and set the CDT to Default without touching data
+	 */
+	public void cancel(){
+		setCDTStatus(CDTStatus.DEFAULT);
+	}
 
 	/**
 	 * Apply changes on Date base (if connected) , used when we set the _mIsTemporaryIgnoreDatabase to true

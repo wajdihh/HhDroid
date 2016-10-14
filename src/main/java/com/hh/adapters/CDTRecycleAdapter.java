@@ -169,9 +169,9 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
         holder.setOnRecycleCheckedChangeListener(new OnRecycleCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked, int position) {
+            public void onCheckedChanged(boolean isWidgetInCDT,CompoundButton buttonView, boolean isChecked, int position) {
 
-                if (position >= mClientDataTable.getRowsCount())
+                if (!isWidgetInCDT || position >= mClientDataTable.getRowsCount())
                     return;
 
                 String columnName = buttonView.getTag().toString();
@@ -182,8 +182,8 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
         holder.setOnRecycleTextWatcher(new OnRecycleTextWatcher() {
             @Override
-            public void afterTextChanged(TextView v, String newText, int position) {
-                if (position >= mClientDataTable.getRowsCount())
+            public void afterTextChanged(boolean isWidgetInCDT,TextView v, String newText, int position) {
+                if (!isWidgetInCDT || position >= mClientDataTable.getRowsCount())
                     return;
 
                 mClientDataTable.moveToPosition(position);

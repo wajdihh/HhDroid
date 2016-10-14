@@ -116,11 +116,12 @@ public class CDTLayoutAdapter {
 		for (int i = 0; i < lNbrTags; i++) {
 
 			lWidget=mLayout.findViewWithTag(_mListOfTags.get(i));
-
+			boolean isWidgetInCDT=false;
 			if (lWidget!=null){
-				if(mClientDataTable.indexOfColumn(_mListOfTags.get(i))!=-1)
+				if(mClientDataTable.indexOfColumn(_mListOfTags.get(i))!=-1) {
 					_mHolder.mListHoldersViews.add(lWidget);
-				else
+					isWidgetInCDT = true;
+				}else
 					_mHolder.mListHoldersViewsNotInCDT.add(lWidget);
 
 				if(lWidget instanceof ImageView)
@@ -135,11 +136,11 @@ public class CDTLayoutAdapter {
 
 				if (lWidget instanceof CheckBox){
 					CheckBox lCheckBox = (CheckBox) lWidget;
-					lCheckBox.setOnCheckedChangeListener(new MyCheckedChangeListener());
+					lCheckBox.setOnCheckedChangeListener(new MyCheckedChangeListener(isWidgetInCDT));
 				}
 				if (lWidget instanceof EditText){
 					final EditText lEditText = (EditText) lWidget;
-					lEditText.addTextChangedListener(new MyTextWatcher(lEditText));
+					lEditText.addTextChangedListener(new MyTextWatcher(lEditText,isWidgetInCDT));
 				}
 
 				onCreateWidget(lWidget);
@@ -373,8 +374,10 @@ public class CDTLayoutAdapter {
 	class MyTextWatcher implements TextWatcher{
 
 		private TextView mTextView;
-		public  MyTextWatcher(TextView v){
+		private boolean mIsWidgetInCDT;
+		public  MyTextWatcher(TextView v,boolean pIsWidgetInCDT){
 			mTextView=v;
+			mIsWidgetInCDT=pIsWidgetInCDT;
 		}
 		@Override
 		public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -388,7 +391,7 @@ public class CDTLayoutAdapter {
 
 		@Override
 		public void afterTextChanged(Editable editable) {
-			if(!mClientDataTable.isEmpty()){
+			if(mIsWidgetInCDT && !mClientDataTable.isEmpty()){
 
 				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
 					Log.e(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
@@ -403,10 +406,15 @@ public class CDTLayoutAdapter {
 
 	class MyCheckedChangeListener implements CompoundButton.OnCheckedChangeListener {
 
+		private boolean mIsWidgetInCDT;
+		public MyCheckedChangeListener(boolean pIsWidgetInCDT){
+			mIsWidgetInCDT=pIsWidgetInCDT;
+		}
+
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-			if(!mClientDataTable.isEmpty()) {
+			if(mIsWidgetInCDT &&!mClientDataTable.isEmpty()) {
 				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
 					Log.e(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
 					return;

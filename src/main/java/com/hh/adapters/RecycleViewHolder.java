@@ -30,6 +30,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	SparseArray<View> mSparseArrayHolderViews;
 	SparseArray<View> mSparseArrayHolderViewsNotInCDT;
 	View mRowView;
+	boolean isWidgetInCDT=false;
 
 	public RecycleViewHolder(Context pContext, final View itemView, ClientDataTable pClientDataTable, final boolean pIsEnableOnClickWidget) {
 		super(itemView);
@@ -48,10 +49,12 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 
 				onCreateRowInViewHolder(mRowView,lWidget);
 				int lColumnIndex = pClientDataTable.indexOfColumn(tag);
+				isWidgetInCDT=false;
 
-				if (lColumnIndex != -1)
+				if (lColumnIndex != -1) {
 					mSparseArrayHolderViews.put(lColumnIndex, lWidget);
-				else
+					isWidgetInCDT=true;
+				}else
 					mSparseArrayHolderViewsNotInCDT.put(index, lWidget);
 
 				if(lWidget instanceof RadioGroup)
@@ -70,7 +73,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 					lCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 						@Override
 						public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-							if(_mOnRecycleCheckedChangeListener!=null) _mOnRecycleCheckedChangeListener.onCheckedChanged(compoundButton, b, getAdapterPosition());
+							if(_mOnRecycleCheckedChangeListener!=null) _mOnRecycleCheckedChangeListener.onCheckedChanged(isWidgetInCDT,compoundButton, b, getAdapterPosition());
 						}
 					});
 				}
@@ -90,7 +93,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 						@Override
 						public void afterTextChanged(Editable editable) {
 							if (_mOnRecycleTextWatcher != null)
-								_mOnRecycleTextWatcher.afterTextChanged(lEditText, editable.toString(), getAdapterPosition());
+								_mOnRecycleTextWatcher.afterTextChanged(isWidgetInCDT,lEditText, editable.toString(), getAdapterPosition());
 						}
 					});
 				}
