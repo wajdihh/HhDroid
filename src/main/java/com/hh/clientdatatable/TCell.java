@@ -396,11 +396,13 @@ public class TCell implements Cloneable {
     }
 
     private void onValueChanged() {
-        if(_mCDTStatus==CDTStatus.DEFAULT)
+        if(_mCDTStatus==CDTStatus.DEFAULT) {
+            Log.e("onValueChanged ERROR","Cell Name = "+_mName+" AND Value = "+_mValue+" : Your modification will be ignored because your CDT is in Default mode");
             return;
+        }
 
         _mIsValueChanged=true;
-        Log.i("onValueChanged","Cell Name ("+_mName+") : Value ("+_mValue+") AND CDT Status ="+_mCDTStatus.name());
+        Log.i("onValueChanged","Cell Name = "+_mName+" AND   Value = "+_mValue+" AND CDT Status ="+_mCDTStatus.name());
     }
 
 

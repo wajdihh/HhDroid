@@ -145,11 +145,11 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                 if (lWidget != null) {
 
                     int lColumnIndex = mClientDataTable.indexOfColumn(_mListOfTags.get(i));
-                    boolean isWidgetInCDT=false;
+                    lWidget.setTag(R.id.TAG_IS_WIDGET_IN_CDT,false);
 
                     if (lColumnIndex != -1) {
                         _mHolder.mSparseArrayHolderViews.put(lColumnIndex, lWidget);
-                        isWidgetInCDT = true;
+                        lWidget.setTag(R.id.TAG_IS_WIDGET_IN_CDT,true);
                     }else
                         _mHolder.mSparseArrayHolderViewsNotInCDT.put(i, lWidget);
 
@@ -172,11 +172,13 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                         ((RadioGroup) lWidget).setOnCheckedChangeListener(new MyOnCheckedChangeListener(convertView));
                     else if (lWidget instanceof CheckBox) {
                         CheckBox lCheckBox = (CheckBox) lWidget;
-                        lCheckBox.setOnCheckedChangeListener(new onCheckedRowChangeListener(convertView, _mListOfTags.get(i),isWidgetInCDT));
+                        lCheckBox.setOnCheckedChangeListener(new onCheckedRowChangeListener(convertView, _mListOfTags.get(i),
+                                (Boolean) lWidget.getTag(R.id.TAG_IS_WIDGET_IN_CDT)));
                     }
                     else if (lWidget instanceof TextView) {
                         TextView lTextView = (TextView) lWidget;
-                        lTextView.addTextChangedListener(new MyTextWatcher(convertView, _mListOfTags.get(i),isWidgetInCDT));
+                        lTextView.addTextChangedListener(new MyTextWatcher(convertView, _mListOfTags.get(i),
+                                (Boolean) lWidget.getTag(R.id.TAG_IS_WIDGET_IN_CDT)));
                     }
                 }
             }

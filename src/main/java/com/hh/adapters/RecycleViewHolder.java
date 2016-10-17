@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.hh.clientdatatable.ClientDataTable;
+import com.hh.droid.R;
 import com.hh.listeners.*;
 
 import java.util.HashSet;
@@ -24,13 +25,12 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	private OnRecycleClickListener _mClickListener;
 	private OnRecycleWidgetClickListener _mOnRecycleWidgetClickListener;
 	private OnRecycleCheckedChangeListener _mOnRecycleCheckedChangeListener;
-	private OnRecycleCheckedRBChangeListener _mOnRecycleCheckedRBChangeListener;
+	private OnRecycleCheckedRadioButtonGroupChangeListener mOnRecycleCheckedRadioButtonGroupChangeListener;
 	private OnRecycleTextWatcher _mOnRecycleTextWatcher;
 
 	SparseArray<View> mSparseArrayHolderViews;
 	SparseArray<View> mSparseArrayHolderViewsNotInCDT;
 	View mRowView;
-	boolean isWidgetInCDT=false;
 
 	public RecycleViewHolder(Context pContext, final View itemView, ClientDataTable pClientDataTable, final boolean pIsEnableOnClickWidget) {
 		super(itemView);
@@ -47,13 +47,13 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 			final View lWidget = itemView.findViewWithTag(tag);
 			if (lWidget != null) {
 
+				lWidget.setTag(R.id.TAG_IS_WIDGET_IN_CDT,false);
 				onCreateRowInViewHolder(mRowView,lWidget);
 				int lColumnIndex = pClientDataTable.indexOfColumn(tag);
-				isWidgetInCDT=false;
 
 				if (lColumnIndex != -1) {
 					mSparseArrayHolderViews.put(lColumnIndex, lWidget);
-					isWidgetInCDT=true;
+					lWidget.setTag(R.id.TAG_IS_WIDGET_IN_CDT,true);
 				}else
 					mSparseArrayHolderViewsNotInCDT.put(index, lWidget);
 
@@ -64,7 +64,7 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 							String tag="";
 							if(lWidget.getTag()!=null)
 								tag=lWidget.getTag().toString();
-							if(_mOnRecycleCheckedRBChangeListener!=null) _mOnRecycleCheckedRBChangeListener.onCheckedChanged(mRowView,lWidget,tag, i, getAdapterPosition());
+							if(mOnRecycleCheckedRadioButtonGroupChangeListener!=null) mOnRecycleCheckedRadioButtonGroupChangeListener.onCheckedChanged(mRowView,radioGroup,tag, i, getAdapterPosition());
 						}
 					});
 
@@ -73,7 +73,8 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 					lCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 						@Override
 						public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-							if(_mOnRecycleCheckedChangeListener!=null) _mOnRecycleCheckedChangeListener.onCheckedChanged(isWidgetInCDT,compoundButton, b, getAdapterPosition());
+							if(_mOnRecycleCheckedChangeListener!=null) _mOnRecycleCheckedChangeListener.onCheckedChanged(
+									(Boolean) lWidget.getTag(R.id.TAG_IS_WIDGET_IN_CDT),compoundButton, b, getAdapterPosition());
 						}
 					});
 				}
@@ -93,7 +94,8 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 						@Override
 						public void afterTextChanged(Editable editable) {
 							if (_mOnRecycleTextWatcher != null)
-								_mOnRecycleTextWatcher.afterTextChanged(isWidgetInCDT,lEditText, editable.toString(), getAdapterPosition());
+								_mOnRecycleTextWatcher.afterTextChanged((Boolean) lWidget.getTag(R.id.TAG_IS_WIDGET_IN_CDT)
+										,lEditText, editable.toString(), getAdapterPosition());
 						}
 					});
 				}
@@ -170,8 +172,8 @@ public  class RecycleViewHolder extends RecyclerView.ViewHolder {
 	public void setOnRecycleCheckedChangeListener(OnRecycleCheckedChangeListener pOnRecycleCheckedChangeListener) {
 		_mOnRecycleCheckedChangeListener = pOnRecycleCheckedChangeListener;
 	}
-	public void setOnRecycleCheckedRBChangeListener(OnRecycleCheckedRBChangeListener pOnRecycleCheckedRBChangeListener) {
-		_mOnRecycleCheckedRBChangeListener = pOnRecycleCheckedRBChangeListener;
+	public void setOnRecycleCheckedRadioButtonGroupChangeListener(OnRecycleCheckedRadioButtonGroupChangeListener pOnRecycleCheckedRadioButtonGroupChangeListener) {
+		mOnRecycleCheckedRadioButtonGroupChangeListener = pOnRecycleCheckedRadioButtonGroupChangeListener;
 	}
 
 	protected  void onCreateRowInViewHolder(View row,View widget){

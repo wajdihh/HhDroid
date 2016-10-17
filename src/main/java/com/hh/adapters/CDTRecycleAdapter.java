@@ -160,10 +160,10 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             }
         });
 
-        holder.setOnRecycleCheckedRBChangeListener(new OnRecycleCheckedRBChangeListener() {
+        holder.setOnRecycleCheckedRadioButtonGroupChangeListener(new OnRecycleCheckedRadioButtonGroupChangeListener() {
             @Override
-            public void onCheckedChanged(View parentView,View clickedView,String widgetTag, int radioButtonID, int position) {
-                onCheckRadioGroupWidget(parentView, clickedView, widgetTag, radioButtonID, position);
+            public void onCheckedChanged(View parentView, RadioGroup radioButtonGroup, String widgetTag, int radioButtonID, int position) {
+                onCheckRadioButtonGroupWidget(parentView, radioButtonGroup, widgetTag, radioButtonID, position);
             }
         });
 
@@ -191,6 +191,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                 mClientDataTable.cellByName(columnName).setValue(newText);
             }
         });
+
 
 
     }
@@ -267,7 +268,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
         mClientDataTable.moveToPosition(position);
     }
 
-    protected  void onCheckRadioGroupWidget(View parentView,View clickedView,String widgetTag,int radioButtonID, int position){
+    protected  void onCheckRadioButtonGroupWidget(View parentView,RadioGroup radioGroup,String widgetTag,int radioButtonID, int position){
         if(position>=mClientDataTable.getRowsCount())
             return;
 
