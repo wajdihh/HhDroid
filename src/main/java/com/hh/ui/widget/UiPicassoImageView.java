@@ -23,11 +23,12 @@ public class UiPicassoImageView extends ImageView {
     private Drawable mDefaultDrawableError;
     private Drawable mDefaultDrawablePlaceHolder;
     private String mUrl;
+    Context mContext;
     public UiPicassoImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         mPicasso = new Picasso.Builder(context).executor(Executors.newSingleThreadExecutor()).build();
-
+        mContext=context;
         setAttrs(context, attrs);
     }
 
@@ -47,6 +48,9 @@ public class UiPicassoImageView extends ImageView {
         mPicassoRequestCreator.fit().centerCrop().noFade().into(this);
     }
 
+    public void invalidate(String path){
+        mPicasso.invalidate(new File(path));
+    }
     public RequestCreator getPicassoRequestCreator(){
         return mPicassoRequestCreator;
     }
