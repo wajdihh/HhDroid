@@ -8,7 +8,6 @@ import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.droid.HhDroid;
 import com.hh.listeners.OnCDTColumnObserver;
 import com.hh.utility.PuDate;
-import com.hh.utility.PuUtils;
 
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -72,32 +71,6 @@ public class TCell implements Cloneable {
         _mValueType=pValueType;
     }
 
-    public void insertIntoDB(Object pValue) {
-
-        if (_mCDTStatus == CDTStatus.INSERT) {
-
-            if((_mValue!=null && pValue!=null) &&!_mValue.equals(pValue.toString()))
-                onValueChanged();
-
-            _mValue = String.valueOf(pValue);
-        } else
-            PuUtils.showMessage(_mContext, "Erreur d'insertion", "Le mode insertion est désactivée" +
-                    " il faut le reactiver en utilisant append() ou insert()");
-    }
-
-    public void updateFromDB(Object pValue) {
-
-        if (_mCDTStatus == CDTStatus.UPDATE) {
-
-            if((_mValue!=null && pValue!=null) &&!_mValue.equals(pValue.toString()))
-                onValueChanged();
-
-            _mValue = String.valueOf(pValue);
-
-        } else
-            PuUtils.showMessage(_mContext, "Erreur de modification", "Le mode update est désactivée" +
-                    " il faut le reactiver en utilisant edit()");
-    }
 
     public void setName(String name){
         _mName=name;
