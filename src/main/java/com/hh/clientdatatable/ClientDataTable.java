@@ -1207,6 +1207,15 @@ public class ClientDataTable {
 		return _mListOfRows.size();
 	}
 	/**
+	 * Return the number of rows
+	 *
+	 * @return
+	 */
+	public int size() {
+
+		return _mListOfRows.size();
+	}
+	/**
 	 * Return the liste of columns
 	 * @return
 	 */
