@@ -6,11 +6,10 @@ import android.content.Context;
 import android.util.Log;
 import com.hh.clientdatatable.ClientDataTable.CDTStatus;
 import com.hh.droid.HhDroid;
+import com.hh.execption.HhException;
 import com.hh.listeners.OnCDTColumnObserver;
-import com.hh.utility.PuDate;
 
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.util.Date;
 
 
@@ -43,8 +42,8 @@ public class TCell implements Cloneable {
 
         if (pValueType == ValueType.DATETIME) {
             try {
-                _mValue = String.valueOf(PuDate.parseDate((String) pValue));
-            } catch (ParseException e) {
+                _mValue = String.valueOf(HhDroid.getInstance(pContext).mPuDate.parse((String) pValue));
+            } catch (HhException e) {
                 _mValue=(String) pValue;
             }
         } else
@@ -166,7 +165,9 @@ public class TCell implements Cloneable {
                     case DOUBLE:
                         if(_mValue.contains(","))
                             _mValue=_mValue.replace(",",".");
-                        lResult = _mOnCDTColumnObserver.onGetValueDouble(Double.parseDouble(_mValue));
+
+                        double parsedValue=Double.parseDouble(_mValue);
+                        lResult = _mOnCDTColumnObserver.onGetValueDouble(parsedValue);
                         DecimalFormat format = new DecimalFormat();
                         format.setDecimalSeparatorAlwaysShown(false);
                         if(_mValue.contains(","))
@@ -174,7 +175,17 @@ public class TCell implements Cloneable {
                         lResult=format.format(Double.parseDouble(lResult));
                         break;
                     case DATETIME:
-                        lResult = _mOnCDTColumnObserver.onGetValueDate(Long.parseLong(_mValue));
+                        long parsedDate=0;
+                        try {
+                            parsedDate=Long.parseLong(_mValue);
+                        } catch (NumberFormatException e) {
+                            try {
+                                parsedDate = HhDroid.getInstance(_mContext).mPuDate.parse(_mValue);
+                            } catch (HhException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                        lResult = _mOnCDTColumnObserver.onGetValueDate(parsedDate);
                         break;
                     case TEXT:
                         lResult = _mOnCDTColumnObserver.onGetValue(_mValue);
@@ -195,7 +206,7 @@ public class TCell implements Cloneable {
                     if(dateLong==-3600000 || dateLong==-1)
                         lResult="";
                     else
-                        lResult = PuDate.getStringFromDate(dateLong);
+                        lResult =  HhDroid.getInstance(_mContext).mPuDate.format(dateLong);
                 }else if(_mValueType==ValueType.DOUBLE){
                     DecimalFormat format = new DecimalFormat();
                     format.setDecimalSeparatorAlwaysShown(false);
@@ -332,8 +343,7 @@ public class TCell implements Cloneable {
             /**
              * If date is in String format exp 12/12/2015 and it's valid (no exception)
              */
-            PuDate.parseDate(_mValue);
-
+            HhDroid.getInstance(_mContext).mPuDate.parse(_mValue);
             // return the date as it is
             lResult=_mValue;
         } catch (Exception e) {
@@ -342,7 +352,7 @@ public class TCell implements Cloneable {
         }
 
         if(mIsDateInLongFormat)
-            lResult = PuDate.getStringFromDate(Long.parseLong(_mValue));
+            lResult =  HhDroid.getInstance(_mContext).mPuDate.format(Long.parseLong(_mValue));
 
         return lResult;
     }
