@@ -20,6 +20,7 @@
     <color name="holo_gray_selection">#e0eaf1</color>
     <color name="transprent">#00ffffff</color>
     <color name="darkOpacity">#80000000</color>
+    <color name="lightOpacity">#4D000000</color>
 
     <!--Material design-->
     <color name="md_red_light">#e74c3c</color>
