@@ -430,6 +430,7 @@ public class ClientDataTable {
 
 		if(isConnectedToDB() && _mSqliteDataBase.isOpen() && (getCDTStatus()==CDTStatus.INSERT || getCDTStatus()==CDTStatus.UPDATE)){
 			int size = _mListOfRows.size();
+			int savedPosition=getPosition();
 			for (int i = 0; i < size; i++){
 
 				moveToPosition(i);
@@ -443,7 +444,8 @@ public class ClientDataTable {
 						mCdtObserverStack.notifyOnAfterEdit(_mOldRow,getCurrentRow(),true);
 			}
 
-
+			// Back to the saved position
+			moveToPosition(savedPosition);
 			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
 
 				size = _mListOfDeletedRows.size();
