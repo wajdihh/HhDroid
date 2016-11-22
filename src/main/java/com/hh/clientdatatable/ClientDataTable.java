@@ -126,7 +126,7 @@ public class ClientDataTable {
 		return _mCDTStatus;
 	}
 	public void setCDTStatus(CDTStatus pCdtStatus){
-		 _mCDTStatus=pCdtStatus;
+		_mCDTStatus=pCdtStatus;
 	}
 
 	public boolean isConnectedToDB(){
@@ -445,7 +445,8 @@ public class ClientDataTable {
 			}
 
 			// Back to the saved position
-			moveToPosition(savedPosition);
+			if(savedPosition!=-1)
+				moveToPosition(savedPosition);
 			if (_mListOfDeletedRows!=null && !_mListOfDeletedRows.isEmpty()) {
 
 				size = _mListOfDeletedRows.size();
