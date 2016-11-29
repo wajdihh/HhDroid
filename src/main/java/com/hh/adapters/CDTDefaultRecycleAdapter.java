@@ -13,5 +13,6 @@ import com.hh.clientdatatable.ClientDataTable;
 public class CDTDefaultRecycleAdapter extends  CDTRecycleAdapter{
     public CDTDefaultRecycleAdapter(Context pContext, int pLayoutRow, ClientDataTable pCDT) {
         super(pContext, pLayoutRow, pCDT);
+
     }
 }
