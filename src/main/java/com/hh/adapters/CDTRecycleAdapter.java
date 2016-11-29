@@ -31,6 +31,11 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
     private boolean _mIsEnableOnClickWidget;
     private int _mLayoutRes;
     private int mBase64OptionSize=2;
+    private boolean mIsNotUsePicassoCache=false;
+
+    public void setPicassoCachePolicy(boolean isDisableCache){
+        mIsNotUsePicassoCache=isDisableCache;
+    }
     public void setBase64OptionSize(int optionSize){
         mBase64OptionSize=optionSize;
     }
@@ -97,7 +102,7 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
                         }
                     }else {
                         UiPicassoImageView picassoImageView = (UiPicassoImageView) lWidget;
-                        picassoImageView.setData(data.asString());
+                        picassoImageView.setData(data.asString(),mIsNotUsePicassoCache);
                     }
                 } else if (lWidget instanceof ImageView) {
                     ImageView im= (ImageView) lWidget;

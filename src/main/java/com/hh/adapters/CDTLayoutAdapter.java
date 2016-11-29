@@ -46,6 +46,11 @@ public class CDTLayoutAdapter {
 	private ViewHolder _mHolder;
 	private ArrayList<String> _mListOfTags;
 	private int mBase64OptionSize=2;
+	private boolean mIsNotUsePicassoCache=false;
+
+	public void setPicassoCachePolicy(boolean isDisableCache){
+		mIsNotUsePicassoCache=isDisableCache;
+	}
 	public void setBase64OptionSize(int optionSize){
 		mBase64OptionSize=optionSize;
 	}
@@ -182,7 +187,7 @@ public class CDTLayoutAdapter {
 						}
 					}else {
 						UiPicassoImageView picassoImageView = (UiPicassoImageView) lWidget;
-						picassoImageView.setData(data.asString());
+						picassoImageView.setData(data.asString(),mIsNotUsePicassoCache);
 					}
 				} else if (lWidget instanceof ImageView) {
 					ImageView im= (ImageView) lWidget;

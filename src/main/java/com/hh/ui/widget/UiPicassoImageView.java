@@ -6,9 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 import com.hh.droid.R;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.RequestCreator;
-import com.squareup.picasso.Transformation;
+import com.squareup.picasso.*;
 
 import java.io.File;
 import java.util.concurrent.Executors;
@@ -28,17 +26,21 @@ public class UiPicassoImageView extends ImageView {
         super(context, attrs);
 
         mPicasso = new Picasso.Builder(context).executor(Executors.newSingleThreadExecutor()).build();
+
         mContext=context;
         setAttrs(context, attrs);
     }
 
-    public void setData(String uri){
+    public void setData(String uri,boolean isNotUseCache){
         // SI on a pas encore chargé l image par picosso
         mUrl=uri;
         if (uri.contains("http"))
-            mPicassoRequestCreator= mPicasso.load(uri);
+            mPicassoRequestCreator = mPicasso.load(uri);
         else
-            mPicassoRequestCreator= mPicasso.load(new File(uri));
+            mPicassoRequestCreator = mPicasso.load(new File(uri));
+
+        if(isNotUseCache)
+            mPicassoRequestCreator.memoryPolicy(MemoryPolicy.NO_CACHE).networkPolicy(NetworkPolicy.NO_CACHE);
 
         if(mDefaultDrawableError!=null)
             mPicassoRequestCreator.error(mDefaultDrawableError);
