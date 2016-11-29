@@ -180,10 +180,9 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
                         lCheckBox.setOnCheckedChangeListener(new onCheckedRowChangeListener(convertView, _mListOfTags.get(i),
                                 (Boolean) lWidget.getTag(R.id.TAG_IS_WIDGET_IN_CDT)));
                     }
-                    else if (lWidget instanceof TextView) {
-                        TextView lTextView = (TextView) lWidget;
-                        lTextView.addTextChangedListener(new MyTextWatcher(convertView, _mListOfTags.get(i),
-                                (Boolean) lWidget.getTag(R.id.TAG_IS_WIDGET_IN_CDT)));
+                    else if (lWidget instanceof EditText) {
+                        EditText lEditText = (EditText) lWidget;
+                        lEditText.addTextChangedListener(new MyTextWatcher(convertView,lEditText, _mListOfTags.get(i), (Boolean) lWidget.getTag(R.id.TAG_IS_WIDGET_IN_CDT)));
                     }
                 }
             }
@@ -407,12 +406,14 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
     class MyTextWatcher implements TextWatcher {
 
         private View _mRow;
+        private EditText mEditText;
         private String _mColumnName;
         private boolean mIsWidgetInCDT;
 
-        public MyTextWatcher(View pRow, String pColumnName,boolean pIsWidgetInCDT) {
+        public MyTextWatcher(View pRow,EditText pEditText, String pColumnName,boolean pIsWidgetInCDT) {
             _mRow = pRow;
             _mColumnName = pColumnName;
+            mEditText = pEditText;
             mIsWidgetInCDT=pIsWidgetInCDT;
         }
         @Override
@@ -430,7 +431,7 @@ public class CDTListAdapter extends BaseAdapter implements OnNotifyDataSetChange
             int lCurrentPos = (Integer) _mRow.getTag(R.id.TAG_POSITION);
             getItem(lCurrentPos);
 
-            if(mIsWidgetInCDT && !mClientDataTable.isEmpty()) {
+            if(mIsWidgetInCDT && !mClientDataTable.isEmpty() && mEditText.isFocusable() && mEditText.isFocusableInTouchMode()) {
                 if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
                     Log.i(this.getClass().getName(), "ClientDataTable is in default Mode, we can't change filed values");
                     return;

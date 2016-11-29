@@ -1,6 +1,6 @@
 package com.hh.listeners;
 
-import android.widget.TextView;
+import android.widget.EditText;
 
 /**
  * Created by Wajdi Hh on 13/08/2015.
@@ -8,5 +8,5 @@ import android.widget.TextView;
  */
 public interface OnRecycleTextWatcher {
 
-    public void afterTextChanged(boolean pIsWidgetInCDT,TextView v, String newText, int position) ;
+    public void afterTextChanged(boolean pIsWidgetInCDT,EditText v, String newText, int position) ;
 }

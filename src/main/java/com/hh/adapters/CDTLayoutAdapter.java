@@ -378,10 +378,10 @@ public class CDTLayoutAdapter {
 
 	class MyTextWatcher implements TextWatcher{
 
-		private TextView mTextView;
+		private EditText mEditText;
 		private boolean mIsWidgetInCDT;
-		public  MyTextWatcher(TextView v,boolean pIsWidgetInCDT){
-			mTextView=v;
+		public  MyTextWatcher(EditText v,boolean pIsWidgetInCDT){
+			mEditText=v;
 			mIsWidgetInCDT=pIsWidgetInCDT;
 		}
 		@Override
@@ -396,13 +396,13 @@ public class CDTLayoutAdapter {
 
 		@Override
 		public void afterTextChanged(Editable editable) {
-			if(mIsWidgetInCDT && !mClientDataTable.isEmpty()){
+			if(mIsWidgetInCDT && !mClientDataTable.isEmpty() && mEditText.isFocusable() && mEditText.isFocusableInTouchMode()){
 
 				if( mClientDataTable.getCDTStatus()==CDTStatus.DEFAULT){
 					Log.e(this.getClass().getName(),"ClientDataTable is in default Mode, we can't change filed values");
 					return;
 				}
-				String lColumnName=mTextView.getTag().toString();
+				String lColumnName=mEditText.getTag().toString();
 				mClientDataTable.cellByName(lColumnName).setValue(editable.toString());
 			}
 		}

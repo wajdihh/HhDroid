@@ -187,8 +187,8 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
         holder.setOnRecycleTextWatcher(new OnRecycleTextWatcher() {
             @Override
-            public void afterTextChanged(boolean isWidgetInCDT,TextView v, String newText, int position) {
-                if (!isWidgetInCDT || position >= mClientDataTable.getRowsCount())
+            public void afterTextChanged(boolean isWidgetInCDT,EditText v, String newText, int position) {
+                if (!isWidgetInCDT || position >= mClientDataTable.getRowsCount() || !(v.isFocusable() || v.isFocusableInTouchMode()))
                     return;
 
                 mClientDataTable.moveToPosition(position);
