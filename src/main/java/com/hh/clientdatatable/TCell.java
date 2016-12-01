@@ -351,7 +351,7 @@ public class TCell implements Cloneable {
             mIsDateInLongFormat=true;
         }
 
-        if(mIsDateInLongFormat)
+        if(mIsDateInLongFormat && !_mValue.isEmpty())
             lResult =  HhDroid.getInstance(_mContext).mPuDate.format(Long.parseLong(_mValue));
 
         return lResult;
