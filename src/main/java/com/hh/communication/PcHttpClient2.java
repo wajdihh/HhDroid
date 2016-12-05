@@ -1,22 +1,8 @@
 package com.hh.communication;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
 import com.hh.listeners.MyCallback;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.protocol.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -25,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PcHttpClient2 {
 
@@ -101,90 +88,38 @@ public class PcHttpClient2 {
 
 	public void execute(String url,RequestMethod method) throws IOException
 	{
-		executeRequest(url, method, null);
+		applyRequest(url, null, method);
 	}
 
 	public void execute(String url,RequestMethod method,MyCallback callback) throws JSONException {
 		try {
-			executeRequest(url, method, callback);
+			applyRequest(url, callback, method);
 		} catch (Exception e) {
 			e.printStackTrace();
 			if(callback!=null) callback.onError(_mResponse);
 		}
 	}
 
-	private void executeRequest(String url,RequestMethod method,MyCallback callback) throws IOException
-	{
-		switch(method) {
-			case GET:
-			{
-				//add parameters
-				String combinedParams = "";
-				if(!params.isEmpty()){
-					combinedParams += "?";
-					for(NameValuePair p : params)
-					{
-						String paramString = p.getName() + "=" + URLEncoder.encode(p.getValue(),"UTF-8");
-						if(combinedParams.length() > 1)
-						{
-							combinedParams  +=  "&" + paramString;
-						}
-						else
-						{
-							combinedParams += paramString;
-						}
-					}
-				}
-				apply(url,callback,RequestMethod.GET);
-				break;
-			}
-			case POST:
-			{
 
-				if(!params.isEmpty()){
-					request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
-				}
+	private void applyRequest(String myURL,MyCallback callback,RequestMethod requestMethod) throws IOException {
 
-				if(_mJsonObject!=null){
-					StringEntity se = new StringEntity( _mJsonObject.toString(),"UTF-8");
-					request.setEntity(se);
-				}
-
-				apply(url, callback, RequestMethod.POST);
-
-				break;
-			}
-			case PUT:
-			{
-				HttpPut request = new HttpPut(url);
-
-				//add headers
-				for(NameValuePair h : headers)
-				{
-					request.addHeader(h.getName(), h.getValue());
-				}
-
-				if(!params.isEmpty()){
-					request.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
-				}
-
-				if(_mJsonObject!=null){
-
-					request.setEntity(new StringEntity(_mJsonObject.toString(),"UTF-8"));
-				}
-
-				apply(url,callback,RequestMethod.PUT);
-				break;
-			}
-		}
-	}
-
-	private void apply(String myURL,MyCallback callback,RequestMethod requestMethod) throws IOException {
+		if(requestMethod==RequestMethod.GET)
+			myURL=myURL+getQuery(params);
 
 		URL url = new URL(myURL);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setReadTimeout(_mConnexionMaxTimeOut);
 		conn.setConnectTimeout(_mConnexionTimeOut);
+		conn.setDoInput(true);
+		conn.setDoOutput(true);
+		conn.setUseCaches(false);
+
+		// for the post and the PUT
+		OutputStream os = conn.getOutputStream();
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+		// For json Object
+		DataOutputStream printout;
+
 
 		switch (requestMethod){
 			case GET:
@@ -192,9 +127,36 @@ public class PcHttpClient2 {
 				break;
 			case PUT:
 				conn.setRequestMethod("PUT");
+				writer.write(getQuery(params));
+				writer.flush();
+				writer.close();
+				os.close();
+
+				// For Json Object
+				if(_mJsonObject!=null){
+					// Send POST output.
+					printout = new DataOutputStream(conn.getOutputStream ());
+					printout.writeBytes(URLEncoder.encode(_mJsonObject.toString(),"UTF-8"));
+					printout.flush ();
+					printout.close ();
+				}
 				break;
 			case POST:
+				// for Params
 				conn.setRequestMethod("POST");
+				writer.write(getQuery(params));
+				writer.flush();
+				writer.close();
+				os.close();
+
+				// For Json Object
+				if(_mJsonObject!=null){
+					// Send POST output.
+					printout = new DataOutputStream(conn.getOutputStream ());
+					printout.writeBytes(URLEncoder.encode(_mJsonObject.toString(),"UTF-8"));
+					printout.flush ();
+					printout.close ();
+				}
 				break;
 		}
 
@@ -238,43 +200,43 @@ public class PcHttpClient2 {
 
 	public void sendMultipartImage(String url,File imageFile,String multipartKeyName){
 
-		HttpPost httppost = new HttpPost(url);
-		//add headers
-		for(NameValuePair h : headers)
-		{
-			httppost.addHeader(h.getName(), h.getValue());
-		}
-
-		httppost.removeHeaders("Content-Type");
-
-
-		MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-
-		try {
-			BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-			Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
-
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			bitmap.compress(Bitmap.CompressFormat.JPEG, 75, bos);
-			byte[] data = bos.toByteArray();
-			ByteArrayBody bab = new ByteArrayBody(data, imageFile.getName());
-			reqEntity.addPart(multipartKeyName, bab);
-
-			httppost.setEntity(reqEntity);
-			HttpResponse response = httpClient.execute(httppost);
-			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-			String sResponse;
-			StringBuilder s = new StringBuilder();
-			while ((sResponse = reader.readLine()) != null) {
-				s = s.append(sResponse);
-			}
-			_mResponseCode = response.getStatusLine().getStatusCode();
-			_mMessageStatus = response.getStatusLine().getReasonPhrase();
-			_mResponse=s.toString();
-		}catch (Exception e) {
-			Log.e("EX", e.getLocalizedMessage(), e);
-		}
+//		HttpPost httppost = new HttpPost(url);
+//		//add headers
+//		for(NameValuePair h : headers)
+//		{
+//			httppost.addHeader(h.getName(), h.getValue());
+//		}
+//
+//		httppost.removeHeaders("Content-Type");
+//
+//
+//		MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+//
+//		try {
+//			BitmapFactory.Options options = new BitmapFactory.Options();
+//			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+//			Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+//
+//			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//			bitmap.compress(Bitmap.CompressFormat.JPEG, 75, bos);
+//			byte[] data = bos.toByteArray();
+//			ByteArrayBody bab = new ByteArrayBody(data, imageFile.getName());
+//			reqEntity.addPart(multipartKeyName, bab);
+//
+//			httppost.setEntity(reqEntity);
+//			HttpResponse response = httpClient.execute(httppost);
+//			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+//			String sResponse;
+//			StringBuilder s = new StringBuilder();
+//			while ((sResponse = reader.readLine()) != null) {
+//				s = s.append(sResponse);
+//			}
+//			_mResponseCode = response.getStatusLine().getStatusCode();
+//			_mMessageStatus = response.getStatusLine().getReasonPhrase();
+//			_mResponse=s.toString();
+//		}catch (Exception e) {
+//			Log.e("EX", e.getLocalizedMessage(), e);
+//		}
 	}
 
 
@@ -303,5 +265,31 @@ public class PcHttpClient2 {
 			index++;
 		}
 		return false;
+	}
+
+	private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException
+	{
+
+		if(params.isEmpty())
+			return "";
+
+
+		StringBuilder result = new StringBuilder();
+		result.append("?");
+		boolean first = true;
+
+		for (NameValuePair pair : params)
+		{
+			if (first)
+				first = false;
+			else
+				result.append("&");
+
+			result.append(URLEncoder.encode(pair.getName(), "UTF-8"));
+			result.append("=");
+			result.append(URLEncoder.encode(pair.getValue(), "UTF-8"));
+		}
+
+		return result.toString();
 	}
 }
