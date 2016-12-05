@@ -237,6 +237,7 @@ public class PcHttpClient2 {
 //		}catch (Exception e) {
 //			Log.e("EX", e.getLocalizedMessage(), e);
 //		}
+
 	}
 
 
