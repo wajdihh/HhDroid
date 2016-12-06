@@ -1,24 +1,16 @@
 package com.hh.communication;
 
 import com.hh.listeners.MyCallback;
-
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +18,11 @@ import java.util.List;
 public class PcHttpClient2 {
 
 
-	public enum RequestMethod {GET,POST,PUT}
+	public enum RequestMethod {GET,POST,PUT,DELETE,MULTIPART}
 
-	private int _mConnexionTimeOut=7000;
-	private int _mConnexionMaxTimeOut=7000;
+	private static final String LINE_FEED = "\r\n";
+	private int _mConnexionTimeOut=10000;
+	private int _mConnexionMaxTimeOut=15000;
 
 	private ArrayList <NameValuePair> params;
 	private ArrayList <NameValuePair> headers;
@@ -44,8 +37,8 @@ public class PcHttpClient2 {
 	}
 
 	public PcHttpClient2(){
-		params = new ArrayList<NameValuePair>();
-		headers = new ArrayList<NameValuePair>();
+		params = new ArrayList<>();
+		headers = new ArrayList<>();
 	}
 
 	public ArrayList<NameValuePair> getParams(){
@@ -71,17 +64,17 @@ public class PcHttpClient2 {
 		return _mResponseCode;
 	}
 
-	public void AddParam(String name, String value)
+	public void addParameter(String name, String value)
 	{
 		params.add(new BasicNameValuePair(name, value));
 	}
 
-	public void AddParam(ArrayList<NameValuePair> pListOfParams)
+	public void addParameters(ArrayList<NameValuePair> pListOfParams)
 	{
 		params=pListOfParams;
 	}
 
-	public void AddHeader(String name, String value)
+	public void addHeader(String name, String value)
 	{
 		/*
 		 * client.AddHeader("Content-Type", "application/json");
@@ -90,7 +83,7 @@ public class PcHttpClient2 {
 			headers.add(new BasicNameValuePair(name, value));
 	}
 
-	public void AddHeader(BasicNameValuePair headerParam)
+	public void addHeader(BasicNameValuePair headerParam)
 	{
 		if(!isHeaderContainValue(headerParam.getName()))
 			headers.add(headerParam);
@@ -98,12 +91,12 @@ public class PcHttpClient2 {
 
 	public void execute(String url,RequestMethod method) throws IOException
 	{
-		applyRequest(url, null, method);
+		applyRequest(url, null, method,null,null);
 	}
 
 	public void execute(String url,RequestMethod method,MyCallback callback) throws JSONException {
 		try {
-			applyRequest(url, callback, method);
+			applyRequest(url, callback, method,null,null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			if(callback!=null) callback.onError(_mResponse);
@@ -111,7 +104,22 @@ public class PcHttpClient2 {
 	}
 
 
-	private void applyRequest(String myURL,MyCallback callback,RequestMethod requestMethod) throws IOException  {
+	public void executeMultipart(String url,File fileToUpload,String multipartKeyName) throws IOException
+	{
+		applyRequest(url, null, RequestMethod.MULTIPART,multipartKeyName,fileToUpload);
+	}
+
+	public void executeMultipart(String url,File fileToUpload,String multipartKeyName,MyCallback callback) throws JSONException {
+		try {
+			applyRequest(url, callback, RequestMethod.MULTIPART,multipartKeyName,fileToUpload);
+		} catch (Exception e) {
+			e.printStackTrace();
+			if(callback!=null) callback.onError(_mResponse);
+		}
+	}
+
+
+	private void applyRequest(String myURL,MyCallback callback,RequestMethod requestMethod,String multiPartFiledName, File fileToUpload) throws IOException  {
 
 		HttpURLConnection conn=null;
 		if(requestMethod==RequestMethod.GET)
@@ -123,65 +131,104 @@ public class PcHttpClient2 {
 			conn.setReadTimeout(_mConnexionMaxTimeOut);
 			conn.setConnectTimeout(_mConnexionTimeOut);
 			conn.setDoInput(true);
+
+			/**
+			 * Header values
+			 */
+			for(NameValuePair h : headers)
+				conn.setRequestProperty(h.getName(), h.getValue());
+
+			/**
+			 * Methods Type requesst
+			 */
 			switch (requestMethod){
 				case GET:
 					conn.setDoOutput(false);
 					conn.setRequestMethod("GET");
 					break;
+				case DELETE:
+					conn.setDoOutput(true);
+					conn.setRequestMethod("DELETE");
+					break;
 				case PUT:
 					conn.setDoOutput(true);
 					conn.setRequestMethod("PUT");
-					// for the post and the PUT
-					OutputStream os = conn.getOutputStream();
-					BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
 
-					writer.write(getQuery(params));
-					writer.flush();
-					writer.close();
-					os.close();
+					// Write serialized JSON data to output stream.
+					OutputStream outPut = new BufferedOutputStream(conn.getOutputStream());
+					BufferedWriter writerPut = new BufferedWriter(new OutputStreamWriter(outPut, "UTF-8"));
+					//writerPost.write(getQuery(params));
+					if(_mJsonObject!=null)
+						writerPut.write(_mJsonObject.toString());
 
-					// For json Object
-					DataOutputStream printout;
-					if(_mJsonObject!=null){
-						// Send POST output.
-						printout = new DataOutputStream(conn.getOutputStream ());
-						printout.writeBytes(URLEncoder.encode(_mJsonObject.toString(),"UTF-8"));
-						printout.flush ();
-						printout.close ();
-					}
+					// Close streams and disconnect.
+					writerPut.flush();
+					writerPut.close();
+					outPut.close();
 					break;
+
 				case POST:
 					conn.setDoOutput(true);
 					conn.setRequestMethod("POST");
-					// for the post and the PUT
-					OutputStream os2 = conn.getOutputStream();
-					BufferedWriter writer2 = new BufferedWriter(new OutputStreamWriter(os2, "UTF-8"));
-					writer2.write(getQuery(params));
-					writer2.flush();
-					writer2.close();
-					os2.close();
 
-					// For json Object
-					DataOutputStream printout2;
-					if(_mJsonObject!=null){
-						// Send POST output.
-						printout2 = new DataOutputStream(conn.getOutputStream ());
-						printout2.writeBytes(URLEncoder.encode(_mJsonObject.toString(),"UTF-8"));
-						printout2.flush ();
-						printout2.close ();
+					// Write serialized JSON data to output stream.
+					OutputStream outPost = new BufferedOutputStream(conn.getOutputStream());
+					BufferedWriter writerPost = new BufferedWriter(new OutputStreamWriter(outPost, "UTF-8"));
+					//writerPost.write(getQuery(params));
+					if(_mJsonObject!=null)
+						writerPost.write(_mJsonObject.toString());
+
+					// Close streams and disconnect.
+					writerPost.flush();
+					writerPost.close();
+					outPost.close();
+					break;
+				case MULTIPART:
+					conn.setDoOutput(true); // indicates POST method
+
+					String  boundary = "===" + System.currentTimeMillis() + "===";
+					conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+					conn.setRequestProperty("User-Agent", "CodeJava Agent");
+					OutputStream outMultipart = conn.getOutputStream();
+					PrintWriter writer = new PrintWriter(new OutputStreamWriter(outMultipart, "UTF-8"), true);
+
+					String fileName = fileToUpload.getName();
+					writer.append("--" + boundary).append(LINE_FEED);
+					writer.append("Content-Disposition: form-data; name=\"" + multiPartFiledName + "\"; filename=\"" + fileName + "\"").append(LINE_FEED);
+					writer.append("Content-Type: " + URLConnection.guessContentTypeFromName(fileName)).append(LINE_FEED);
+					writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
+					writer.append(LINE_FEED);
+					writer.flush();
+
+					FileInputStream inputStream = new FileInputStream(fileToUpload);
+					byte[] buffer = new byte[4096];
+					int bytesRead = -1;
+					while ((bytesRead = inputStream.read(buffer)) != -1) {
+						outMultipart.write(buffer, 0, bytesRead);
 					}
+					outMultipart.flush();
+					inputStream.close();
+
+					writer.append(LINE_FEED).flush();
+					writer.append("--" + boundary + "--").append(LINE_FEED);
+					writer.close();
 					break;
 			}
 
-			for(NameValuePair h : headers)
-				conn.setRequestProperty(h.getName(), h.getValue());
-
-			//conn.connect();
+			//Returned string
 			_mResponseCode =conn.getResponseCode();
 			_mMessageStatus =conn.getResponseMessage();
-			_mResponse = convertStreamToString(conn.getInputStream());
+
+			InputStream in;
+			if(_mResponseCode >= HttpStatus.SC_BAD_REQUEST)
+				in = conn.getErrorStream();
+			else
+				in = conn.getInputStream();
+
+			_mResponse = convertStreamToString(in);
 
 			if(callback!=null) callback.onSuccess(_mResponse);
+
 		}catch (IOException e) {
 			throw new IOException(e);
 		}  finally {
@@ -212,13 +259,6 @@ public class PcHttpClient2 {
 			}
 		}
 		return sb.toString();
-	}
-
-	public void sendMultipartImage(String myURL,File imageFile,String multipartKeyName){
-
-
-
-
 	}
 
 
