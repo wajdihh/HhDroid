@@ -176,6 +176,8 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
             @Override
             public void onCheckedChanged(boolean isWidgetInCDT,CompoundButton buttonView, boolean isChecked, int position) {
 
+                onOnCheckedChangeWidget(buttonView,buttonView.getTag().toString(),isChecked,position);
+
                 if (!isWidgetInCDT || position >= mClientDataTable.getRowsCount())
                     return;
 
@@ -279,7 +281,14 @@ public class CDTRecycleAdapter extends RecyclerView.Adapter<RecycleViewHolder> {
 
         mClientDataTable.moveToPosition(position);
     }
-    ;
+
+
+    protected  void onOnCheckedChangeWidget(CompoundButton compoundButton,String tag,boolean b, int position){
+        if(position>=mClientDataTable.getRowsCount())
+            return;
+
+        mClientDataTable.moveToPosition(position);
+    }
     /**
      * override this method to capture the Long click on selected Row,
      * and we can create context Menu inside this method
