@@ -54,7 +54,6 @@ public class ClientDataTable {
 	private Cursor _mCursor;
 	private CDTStatus _mCDTStatus=CDTStatus.DEFAULT;
 	private ArrayList<TRow> _mListTempSortOfRows;
-	private TCell _mCellHowValueChanged;
 	private boolean _mIsExecInDateBase;
 	private boolean mIsCdtSorted;
 	private ArrayList<CDTNestedJSONObject> mNestedJSONObjects;
@@ -316,8 +315,7 @@ public class ClientDataTable {
 		commitIntoCDT(pIsUseCDTListener,pIsExecInDateBase);
 		setCDTStatus(CDTStatus.DEFAULT);
 
-		if(_mCellHowValueChanged!=null)
-			_mCellHowValueChanged.setValueChanged(false);
+		resetValuesChanged();
 
 		mCdtObserverStack.notifyOnAfterValidate(pIsExecInDateBase);
 
@@ -462,7 +460,7 @@ public class ClientDataTable {
 
 			setCDTStatus(CDTStatus.DEFAULT);
 
-			if (_mCellHowValueChanged!=null) _mCellHowValueChanged.setValueChanged(false);
+			resetValuesChanged();
 
 		}else
 			throw new AssertionError("The Database is closed !");
@@ -738,8 +736,6 @@ public class ClientDataTable {
 	/**
 	 * Sort the client data table with priority of columns passed in parametres
 	 *
-	 * @param pListOfSortedColumnsNames
-	 * @param TRowSortOrder
 	 *            : The order of Sort ASSENDING or Decedding
 	 */
 	public void sort(LinkedHashMap<String, SortType> pListOfSortedFieldName) {
@@ -1162,7 +1158,6 @@ public class ClientDataTable {
 	/**
 	 * allows to add a Row
 	 *
-	 * @param pColumn
 	 */
 	public void addRow(TRow pRow) {
 
@@ -1247,7 +1242,6 @@ public class ClientDataTable {
 	}
 	/**
 	 * Return if value existe
-	 * @param pFieldName
 	 * @param value
 	 * @return
 	 */
@@ -1326,13 +1320,23 @@ public class ClientDataTable {
 			for (TRow row :_mListOfRows){
 				TCell cell=row.cellByName(column.getName());
 				if(cell.isValueChanged()){
-					_mCellHowValueChanged=cell;
 					return  true;
 				}
 			}
 		}
 		return false;
 	}
+
+	private void resetValuesChanged(){
+
+		for (TColumn column:_mListOfColumns){
+			for (TRow row :_mListOfRows){
+				TCell cell=row.cellByName(column.getName());
+				cell.setValueChanged(false);
+			}
+		}
+	}
+
 	/**
 	 * Returns a new data table, with the same data and metadata as this one.
 	 * Any change to the returned table should not change this table and vice

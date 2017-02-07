@@ -251,7 +251,7 @@ public class CDTLayoutAdapter {
 	 */
 	protected  void onClickWidget(View v,String widgetTag){};
 
-	protected  void onItemClickWidget(View v,String widgetTag,int position){};
+	protected  void onItemClickWidget(Spinner v,String widgetTag,int position){};
 
 	protected  void onCheckRadioButtonWidget(View clickedView,String widgetTag,int radioButtonID){};
 	/**
@@ -464,7 +464,7 @@ public class CDTLayoutAdapter {
 			if(mSpinner!=null && mSpinner.getTag()!=null)
 				tag=mSpinner.getTag().toString();
 
-			onItemClickWidget(v,tag, position);
+			onItemClickWidget(mSpinner,tag, position);
 		}
 
 		@Override
