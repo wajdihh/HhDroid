@@ -109,25 +109,17 @@ public class PpJsonParser {
 	 * @throws JSONException
 	 */
 	public static void syncJsonArrayInCdt(JSONArray pJsArray,ClientDataTable pCDT) throws JSONException{
-
-		pCDT.clear();
 		parseJsonArrayIntoCDT(pJsArray, pCDT, false);
 	}
 
 	public static void syncJSONObjectInCdt(JSONObject pJsonObj,ClientDataTable pCDT) throws JSONException{
-
-		pCDT.clear();
 		parseJsonArrayIntoCDT(new JSONArray().put(pJsonObj),pCDT,false);
 	}
 	public static void syncJSONObjectInCdtWithExec(JSONObject pJsonObj,ClientDataTable pCDT) throws JSONException{
-
-		pCDT.clear();
 		parseJsonArrayIntoCDT(new JSONArray().put(pJsonObj),pCDT,true);
 	}
 
 	public static void syncJsonArrayInCdtWithExec(JSONArray pJsArray,ClientDataTable pCDT) throws JSONException{
-
-		pCDT.clear();
 		parseJsonArrayIntoCDT(pJsArray,pCDT,true);
 	}
 	/**
