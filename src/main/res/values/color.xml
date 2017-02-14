@@ -31,6 +31,8 @@
     <color name="md_orange_dark">#d35400</color>
     <color name="md_violet_light">#9b59b6</color>
     <color name="md_violet_dark">#8e44ad</color>
+    <color name="md_pink_light">#EC407A</color>
+    <color name="md_pink_dark">#880E4F</color>
     <color name="md_yellow_light">#f1c40f</color>
     <color name="md_yello_dark">#f39c12</color>
     <color name="md_white_light">#ecf0f1</color>
