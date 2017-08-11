@@ -305,7 +305,7 @@ public class TCell implements Cloneable {
 
     public Date asDate() {
 
-        Date lResult = new Date();
+        Date lResult = new Date(0);
         if(_mValue==null)
             return lResult;
         try {
