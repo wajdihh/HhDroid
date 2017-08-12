@@ -135,9 +135,14 @@ public class TCell implements Cloneable {
         if(_mValue==null)
             return lResult;
         try {
-            if (_mValue != null)
-                lResult = Boolean.parseBoolean(_mValue);
-
+            if (_mValue != null){
+                if(_mValue.equals("1"))
+                    lResult=true;
+                else if(_mValue.equals("0"))
+                    lResult=false;
+                else
+                    lResult = Boolean.parseBoolean(_mValue);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
