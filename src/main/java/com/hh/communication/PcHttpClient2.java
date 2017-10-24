@@ -122,8 +122,7 @@ public class PcHttpClient2 {
 	private void applyRequest(String myURL,MyCallback callback,RequestMethod requestMethod,String multiPartFiledName, File fileToUpload) throws IOException  {
 
 		HttpURLConnection conn=null;
-		if(requestMethod==RequestMethod.GET)
-			myURL=myURL+getQuery(params);
+		myURL=myURL+getQuery(params);
 
 		try {
 			URL url = new URL(myURL);
